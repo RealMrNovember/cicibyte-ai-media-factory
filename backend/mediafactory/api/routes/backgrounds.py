@@ -33,7 +33,7 @@ def list_clips(user: User = Depends(require_user)) -> dict:
 
 @router.post("", status_code=201)
 def upload_clip(
-    request: Request, file: UploadFile = File(...), licence: str = Form(..., min_length=2, max_length=500),
+    request: Request, file: UploadFile = File(...), licence: str = Form("", max_length=500),
     source: str = Form("", max_length=500), db: Session = Depends(get_db, scope="function"),
     user: User = Depends(require_user),
 ) -> dict:  # fmt: skip

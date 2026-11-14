@@ -95,3 +95,4 @@ input[type=color] { padding: 2px; height: 38px; cursor: pointer; }
 .progress { height: 6px; background: var(--bg); border-radius: 9px; margin-top: 12px; overflow: hidden; }
 .progress div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } .studio-preview { position: static; max-width: 320px; margin: 0 auto; } }
+.grid.videos { grid-template-columns: repeat(auto-fill, minmax(230px, 290px)); }

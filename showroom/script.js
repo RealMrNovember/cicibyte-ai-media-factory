@@ -21,6 +21,15 @@
     var langBtn = ev.target.closest("[data-set-lang]");
     if (langBtn) { setLang(langBtn.getAttribute("data-set-lang")); return; }
 
+    var tab = ev.target.closest("[data-shot]");
+    if (tab) {
+      var name = tab.getAttribute("data-shot");
+      document.querySelectorAll("[data-shot]").forEach(function (b) { b.setAttribute("aria-selected", String(b === tab)); });
+      document.querySelectorAll("[data-shot-img]").forEach(function (img) { img.hidden = img.getAttribute("data-shot-img") !== name; });
+      document.querySelectorAll("[data-shot-caption]").forEach(function (c) { c.hidden = c.getAttribute("data-shot-caption") !== name; });
+      return;
+    }
+
     var copyBtn = ev.target.closest("[data-copy-target]");
     if (copyBtn) {
       var el = document.getElementById(copyBtn.getAttribute("data-copy-target"));

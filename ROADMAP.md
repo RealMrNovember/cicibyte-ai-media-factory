@@ -1,9 +1,20 @@
 # CiciByte AI Media Factory: Yol Haritası
 
-**Son güncelleme:** 14 Kasım 2026 · **Sürüm:** 0.1.0.dev0 (`main`)
+**Son güncelleme:** 14 Kasım 2026 · **Sürüm:** 0.1.0 önizleme (`main`)
 **İlgili belgeler:** [Tasarım](docs/superpowers/specs/2026-11-14-media-factory-design.md) · [Ürün şartnamesi](docs/PROJECT_SPEC.md) · [Kaynak ve hak politikası](docs/SOURCE_RIGHTS.md) · [Kurulum](docs/DEPLOYMENT.md)
+**Site:** https://mediafactory.cicibyte.com
 
-**Hedef (v0.1):** Reddit'teki bir korku hikâyesinden ilham alınarak yazılmış **özgün** bir İngilizce (ve istenirse Türkçe) Shorts'u Hazır Video Kataloğu'na koymak, onayınla bir YouTube kanalına **private** yüklemek.
+**Hedef (v0.1):** Reddit'teki bir korku hikâyesinden ilham alınarak yazılmış **özgün** bir İngilizce (ve istenirse Türkçe) Shorts'u Hazır Videolar'a koymak, onayınla bir YouTube kanalına göndermek.
+**Durum:** Hedefin uygulama tarafı tamam. Geriye gerçek bir YouTube kanalıyla uçtan uca deneme kaldı (Google OAuth istemcisi gerekiyor).
+
+---
+
+## Mimari (karar verildi)
+
+- **Sunucu her işi yapar:** Veritabanı, kaynak toplama, AI senaryo, ses (Piper), altyazı, render (ffmpeg), zamanlayıcı ve YouTube yükleme sunucuda çalışır.
+- **Masaüstü uygulaması yalnızca istemcidir:** Windows uygulaması (kurulum sihirbazıyla) paneli kendi içinde taşır, istekleri Ayarlar'da girilen sunucuya iletir. Sunucuya ulaşılamasa da açılır.
+- **Giriş ekranı yok:** Kurulumun tek sahibi var. Koruma ağ düzeyinde: sunucu yalnızca Tailscale ya da `localhost` üzerinden erişilebilir olmalı, **internete açılmamalı**. Yazma isteklerinde zorunlu `X-MF-Client` başlığı, başka web sayfalarının gizlice istek atmasını engeller.
+- **Herkes kendi AI'ını ve anahtarlarını bağlar:** OpenAI uyumlu sağlayıcılar, Reddit API ve Google OAuth istemcisi Ayarlar'dan girilir, şifreli saklanır.
 
 ---
 
@@ -11,91 +22,108 @@
 
 | # | Parça | Durum |
 |---|---|---|
-| 1 | Temel: kurulum, giriş, AI yönlendirme, iş kuyruğu | ✅ Tamamlandı, `main`'de |
-| 2 | Kaynaklar ve alım | ✅ Tamamlandı, `main`'de |
-| 3 | Üretim hattı ve medya | ⬜ Sıradaki |
-| 4 | Yönetim paneli (React, tr/en) | ⬜ |
-| 5 | YouTube yayıncı ve DL380 dağıtımı | ⬜ |
-| — | Showroom ve indirme sitesi (`cicibytetechnology` sunucusu, `*.cicibyte.com`) | ⬜ v0.1 ekran görüntüleri hazır olunca |
+| 1 | Temel: kurulum, AI yönlendirme, iş kuyruğu, yedekleme | ✅ |
+| 2 | Kaynaklar ve alım (Reddit, RSS, web, dosya) | ✅ |
+| 3 | Üretim hattı: senaryo → ses → altyazı → 9:16 video | ✅ çekirdek · 🟡 gelişmiş adımlar kaldı |
+| 4 | Panel (tr/en) + Stüdyo | ✅ |
+| 5 | YouTube: kanal bağlama, yükleme, zamanlı yayın + Takvim | ✅ kod · 🟡 gerçek kanalla denenmedi |
+| 6 | Windows uygulaması ve kurulum sihirbazı | ✅ · Mac/Linux paketleri ⬜ |
+| — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
+| — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 224 otomatik testin hepsi geçiyor. Docker kurulumu, yedekleme/geri yükleme ve gerçek `r/nosleep` beslemesinden toplama, laptop'taki Docker'da uçtan uca denendi.
+**Test durumu:** 237 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
 ## ✅ Tamamlananlar
 
 ### Plan 1: Temel
-- **Kurulum ve bakım:**
-  - Docker Compose ile tek komutla kurulum (`deploy/install.sh`). İlk kurulumda rastgele gizli anahtar ve yönetici parolası üretiliyor.
-  - Yedekleme ve geri yükleme script'leri. Geri yükleme tek transaction'da yapılıyor ve öncesinde güvenlik yedeği alınıyor.
-- **Giriş ve oturum:**
-  - Argon2 parolalar, oturum çerezi, CSRF koruması, yönetici/editör rolleri, giriş deneme sınırı.
-  - Çıkış yapınca ve parola sıfırlanınca bütün oturumlar kapanıyor.
-- **Gizli bilgiler:** API anahtarları ve token'lar şifreli saklanıyor; loglarda ve denetim kaydında maskeleniyor.
-- **Denetim kaydı:** Kimin neyi ne zaman yaptığı tutuluyor.
-- **AI sağlayıcıları:** OpenAI uyumlu her uç nokta bağlanabiliyor (Ollama, llama.cpp, 9router, bulut).
-- **Görev yönlendirme:** Her görev için sıralı sağlayıcı listesi. Liste bitince **3 sn** bekleniyor ve en fazla **3 tur** deneniyor.
-- **İş kuyruğu:** PostgreSQL tabanlı. Aşama sınıfı başına eşzamanlılık sınırı (llm 1, render 1…), yeniden deneme, iptal, kaldığı yerden devam. Ölen worker'ın işleri heartbeat ile kurtarılıyor.
-- **Güvenlik varsayılanları:** Sağlık kontrolü, host kontrolü, güvenlik başlıkları, güvenilen proxy ayarı, 12 MB istek gövdesi sınırı.
+- Docker Compose ile tek komutla kurulum, yedekleme ve geri yükleme script'leri.
+- Gizli bilgiler (API anahtarları, token'lar) şifreli saklanıyor; loglarda ve denetim kaydında maskeleniyor. Denetim kaydı tutuluyor.
+- **AI sağlayıcıları:** OpenAI uyumlu her uç nokta (Ollama, llama.cpp, 9router, bulut). Görev başına sıralı sağlayıcı listesi, **3 sn** bekleme, en fazla **3 tur**.
+- **İş kuyruğu:** PostgreSQL tabanlı; aşama sınıfı başına eşzamanlılık sınırı, yeniden deneme, iptal, heartbeat ile ölü worker kurtarma.
 
 ### Plan 2: Kaynaklar ve alım
-- **Adaptörler:** `reddit_rss` (kimlik bilgisi gerekmez), `reddit` (resmî API; kimlik bilgisi Ayarlar'dan), `rss`, `web`, ve elle ekleme (metin, URL, `.txt` `.md` `.pdf` `.docx`).
-- **Güvenli çekici:**
-  - İç ağ adreslerini her yönlendirme adımında engelliyor (SSRF).
-  - Yanıt boyutu en fazla 5 MB; robots.txt'e uyuyor.
-  - Site başına istek aralığı ve 429 sonrası soğuma süresi API ile worker arasında **ortak**. `Retry-After` başlığına uyuluyor; Reddit için 5 sn aralık.
-- **Tekilleştirme ve hak kaydı:**
-  - Kanonik URL ve içerik hash'iyle tekilleştirme; içeriği değişen öğe "güncellendi" olarak işaretleniyor.
-  - Her öğe için hak durumu (varsayılan `unknown`) ve hak geçmişi.
-- **Zamanlayıcı:** Worker içinde çalışıyor. Hata alan kaynak üstel olarak geri çekiliyor (en fazla 24 saat); bir kaynağın hatası diğerlerini etkilemiyor.
-- **REST API:** Kaynak yönetimi, "şimdi topla" (60 sn kuralıyla), Gelen Kutusu filtreleri, hak değişikliği.
+- Adaptörler: `reddit_rss` (kimlik bilgisi gerekmez), `reddit` (resmî API), `rss`, `web`, elle ekleme (metin, URL, `.txt` `.md` `.pdf` `.docx`).
+- Güvenli çekici: SSRF engeli, 5 MB sınırı, robots.txt, site başına ortak istek aralığı ve 429 soğuması (Reddit 5 sn).
+- Kanonik URL + hash ile tekilleştirme, hak durumu ve hak geçmişi, hata alan kaynakta üstel geri çekilme.
+
+### Plan 3: Üretim hattı (çekirdek)
+- **Senaryo:** Bağlı AI ile özgün senaryo (hook, gelişme, twist, takip çağrısı); başlık, açıklama ve etiketler. Bozuk JSON'a dayanıklı ayrıştırma.
+- **Ses:** Piper; İngilizce `ryan-high`, Türkçe `dfki-medium`. Ses modelleri ilk kullanımda indiriliyor.
+- **Altyazı:** Ses süresinden tahmini kelime zamanlaması; ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
+- **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan.
+- **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
+- **Hazır Videolar:** Onayla / Reddet / İndir. İki dil seçilince aynı içerik için iki ayrı video.
+
+### Plan 4: Panel ve Stüdyo
+- Derleme gerektirmeyen panel (tr/en), sabit yan menü, mobil uyumlu.
+- Sayfalar: Genel Bakış, **Stüdyo**, Kaynaklar, Gelen Kutusu, Üretim (canlı log, iptal, yeniden dene), Hazır Videolar, **Takvim**, Ayarlar (sunucu, YouTube, AI sağlayıcıları, görev rotaları, Reddit).
+- **Stüdyo:**
+  - Hikâye seçimi (EN/TR filtresi), **kendi hikâyeni ekleme** (metin yapıştırma veya .txt/.md/.pdf/.docx) ya da **AI ile sıfırdan hikâye yazdırma** (konu + dil + uzunluk; Türkçe kaynak eksikliği için).
+  - Arka plan klibi seçimi ya da yükleme.
+  - Altyazı yazı tipi (Montserrat, Bebas Neue, Roboto, Open Sans, Lato, DejaVu), boyut, renkler, kontur, gölge, büyük harf, satır başına kelime.
+  - Konum (önizlemeye tıklayarak) ve animasyon: belirme, zıplama, kayma, **kelime vurgulu karaoke**.
+  - **Canlı önizleme** ve 5 hazır stil.
+- "Powered by CiciByte Technology" ve Buy Me a Coffee bağlantıları.
+
+### Plan 5: YouTube ve Takvim
+- **Kanal bağlama:** Kullanıcının kendi Google OAuth istemcisi (Masaüstü uygulaması türü), PKCE, sistem tarayıcısında giriş. Refresh token şifreli saklanıyor. Birden fazla kanal bağlanabiliyor.
+- **Gönderim:**
+  - Parçalı (resumable) yükleme. Gönderim hemen ya da **zamanlı** yapılabiliyor: zamanlı video YouTube'a gizli yüklenip `publishAt` ile o saatte YouTube tarafından yayına alınıyor.
+  - Görünürlük herkese açık, liste dışı ya da gizli seçilebiliyor.
+  - Sentetik içerik beyanı otomatik açık, "çocuklara yönelik değil" işaretli. Başlık, açıklama, etiketler ve `#shorts` senaryodan dolduruluyor.
+- **Takvim:**
+  - "Video üret" zamanlamaları: seçilen saat ve günlerde, kullanılmamış hikâyelerden üretiyor; adet, dil, süre, kaynak ve Stüdyo stili seçilebiliyor; isteğe bağlı otomatik onay.
+  - "YouTube'a gönder" zamanlamaları: her saatte en eski onaylı videoları gönderiyor.
+  - Saat dilimine duyarlı.
+
+### Plan 6: Masaüstü uygulaması
+- Windows uygulaması (pywebview / WebView2) ve **Inno Setup kurulum sihirbazı**: Türkçe/İngilizce kurulum, Başlat menüsü ve masaüstü kısayolu, kaldırma desteği.
+- Panel sunucudan yükleniyor (arayüz güncellemeleri için yeniden kurulum gerekmez); sunucuya ulaşılamazsa uygulamadaki kopya kullanılıyor. Sunucu adresi Ayarlar'dan değiştirilebiliyor. Google girişi gibi sayfalar sistem tarayıcısında açılıyor.
+- Derleme: `packaging/build_windows.ps1`.
+
+### Dağıtım (DL380)
+- **CT 175 `mediafactory`:** Debian 13; PostgreSQL 17, ffmpeg, yazı tipleri; systemd servisleri `mf-api` ve `mf-worker`.
+- Tailscale'de `mediafactory` adıyla görünüyor; uygulama `http://mediafactory:8080` adresine bağlanıyor.
+- AI, aynı sunucudaki 9router'dan geliyor (`mf-senaryo`, `mf-siniflandir` combo'ları).
+
+### Showroom
+- https://mediafactory.cicibyte.com, `cicibytetechnology` sunucusunda yayında: tanıtım, ekran görüntüleri, Windows indirmesi, sunucu kurulumu, yol haritası, destek.
 
 ---
 
 ## ⬜ Kalanlar
 
-### Plan 3: Üretim hattı ve medya *(sıradaki, en büyük parça)*
-- [ ] **Kanal ve konsept modelleri:** Dil(ler), ses, görsel stil, hedef süre, otomatik üretim, `ready_buffer` (varsayılan 10), günlük üretim sınırı (varsayılan 6), kaynak–konsept bağlantısı.
-- [ ] **Otomatik üretim:** Kaynak öğelerinden iş üretimi. Konsept filtreleri, stok hedefi ve çok dilli `content_group` desteğiyle.
-- [ ] **normalize:** Dil algılama ve uzunluk kontrolü.
-- [ ] **classify:** Kategori, hassasiyet, güven puanı. Düşük güvenli öğeler manuel incelemeye düşüyor.
-- [ ] **rights_review:** `inspired` modunda otomatik geçiş, `adaptation` modunda insan onayı.
-- [ ] **script:** Hook, gelişme, doruk, kapanış ve CTA; başlık, açıklama ve etiketler. **Script Doctor** öz-değerlendirme döngüsü; sürüm geçmişi.
-- [ ] **Özgünlük kontrolü:** Kaynak metinle n-gram örtüşmesine bakılıyor; eşik aşılırsa iş `needs_review`'e düşüyor.
-- [ ] **voice:** Kokoro (İngilizce) ve Piper (Türkçe); telaffuz sözlüğü, hız ayarı.
-- [ ] **subtitles:** faster-whisper ile kelime düzeyinde hizalama, SRT ve VTT, dile duyarlı büyük harf (Türkçe "i → İ").
-- [ ] **visuals:** Oyun arka planı kütüphanesi (lisans notu zorunlu), Coverr API ile arama ve ekleme, Mixkit tek dosya içe aktarma, art arda aynı klibi seçmeme.
-- [ ] **render:** ffmpeg ile 9:16, `libx264` (NVENC/VAAPI algılanırsa o), konsept bazlı render ayarları.
-- [ ] **thumbnail:** En iyi kare + başlık yazısı.
-- [ ] **quality_check:** Şartname §10'daki kontroller.
-- [ ] **Hazır Video Kataloğu:** "Yayına al", "Reddet", "Yeniden üret".
+### Yakın vade (v0.1'i kapatmak için)
+- [ ] **Gerçek YouTube denemesi:** Google OAuth istemcisi oluşturulup kanal bağlanacak, ilk video gönderilecek. **Senin yapman gereken bir adım.** Google'ın doğrulanmamış uygulamalardan yüklenen videoları gizliye kilitleme durumu kontrol edilecek.
+- [ ] **Arka plan klipleri:** Kütüphaneye ilk Minecraft/parkur kliplerinin (lisanslı) yüklenmesi.
+- [ ] **Türkçe kaynaklar:** Güvenilir Türkçe korku RSS kaynağı bulunamadı; şimdilik elle ekleme ve "AI ile yaz" kullanılıyor. İzinli Türkçe kaynak (ör. kendi blogun, izinli siteler) eklenecek.
+- [ ] **Reddit 429:** Reddit, sunucunun IP'sine sık sık 429 veriyor. Reddit API kimlik bilgisi Ayarlar'dan girilirse sorun çözülür; alternatif olarak istek aralığı uzatılacak.
+- [ ] **GitHub Releases:** Kurulum dosyasının sürüm olarak yayınlanması.
 
-### Plan 4: Yönetim paneli
-- [ ] React + TypeScript paneli, Türkçe ve İngilizce, mobil uyumlu, "Quiet Luxury" tarzı.
-- [ ] Sayfalar: Genel Bakış, Kanallar, Konseptler, Kaynaklar, Gelen Kutusu, Editoryal Kuyruk, Üretim Kuyruğu (canlı log), Video Kütüphanesi / Hazır Katalog, Sağlayıcılar ve görev rotaları, Ayarlar (kaynak kimlik bilgileri, Coverr anahtarı), Denetim Kaydı.
-- [ ] Alt bilgi ve "Hakkında" sayfası: "Powered by CiciByte Technology" ve Buy Me a Coffee.
-- [ ] `reddit_rss` öğelerinin "yedek yol / sınırlı metin" olarak işaretlenmesi.
+### Üretim kalitesi (Plan 3'ün devamı)
+- [ ] faster-whisper ile gerçek kelime hizalaması (şu an tahmini zamanlama).
+- [ ] Script Doctor öz-değerlendirme döngüsü ve senaryo düzenleme ekranı (üretimden önce metni elle düzeltme).
+- [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
+- [ ] Ses seçimi (Kokoro İngilizce; ses/hız ayarı Stüdyo'da), telaffuz sözlüğü.
+- [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
+- [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
+- [ ] Kapak görseli (thumbnail) ve kalite kontrolü (ses seviyesi, süre, siyah kare).
+- [ ] Arka plan müziği ve ses efektleri; 16:9 format (v0.2).
+- [ ] Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
 
-### Plan 5: YouTube yayıncı ve DL380'e dağıtım
-- [ ] Kanal başına Google OAuth bağlantısı: "Kanal bağla", şifreli refresh token, 7 günde bir düşen bağlantı için uyarı ve "Yeniden bağlan".
-- [ ] Parçalı (resumable) **private** yükleme, idempotency, kota yönetimi; thumbnail, playlist, altyazı, sentetik içerik beyanı, Made for Kids ayarı.
-- [ ] Kanal başına günlük yükleme sınırı (varsayılan 2). Public veya zamanlanmış yayın yalnızca açıkça etkinleştirilince.
-- [ ] Video açıklamasında isteğe bağlı CiciByte satırı (varsayılan kapalı, bizim kanallarımızda açık).
-- [ ] **DL380'e kurulum:**
-  - Yeni LXC `medya` container'ı (Docker, `vmbr0` + `vmbr1`).
-  - Sağlayıcı olarak 9router (`http://ai-router:20128/v1`), görevler `mf-senaryo` ve `mf-siniflandir` combo'larına yönlenecek.
-  - Panele Tailscale üzerinden erişim.
-- [ ] `OPERATIONS.md` (günlük bakım, hata giderme) ve `SECURITY.md`.
+### YouTube (Plan 5'in devamı)
+- [ ] Kanal başına günlük yükleme sınırı ve kota takibi.
+- [ ] Kapak görseli, oynatma listesi ve altyazı dosyasının da yüklenmesi.
+- [ ] Bağlantısı düşen kanal için uyarı ve "Yeniden bağlan".
+- [ ] Video açıklamasında isteğe bağlı CiciByte satırı.
 
-### Showroom ve indirme sitesi *(ayrı proje)*
-> **Nerede:** `cicibytetechnology` sunucusunda, `cicibyte.com` altında bir subdomain. **DL380'e kurulmayacak.**
-> DL380'e yalnızca medya fabrikası uygulamasının kendisi kurulacak (Plan 5).
-
-- [ ] Subdomain adının seçilmesi (öneri: `mediafactory.cicibyte.com`).
-- [ ] Cloudflare'de DNS kaydı. **Senin yapman gereken bir adım.**
-- [ ] `cicibytetechnology` sunucusunda aaPanel/nginx üzerinden yayın. Sunucuya dokunan her adım için önce onay alınacak.
-- [ ] İçerik: ürün tanıtımı, ekran görüntüleri, GitHub'dan kurulum, CiciByte tanıtımı, Buy Me a Coffee.
-- [ ] cicibyte.com'daki **Cicibyte Hub → AI & Data** listesine eklenmesi. **Senin yapman gereken bir adım.**
+### Dağıtım ve paketleme
+- [ ] Mac (`.dmg`) ve Linux (`.AppImage`) paketleri GitHub Releases'ta.
+- [ ] Windows kurulum dosyasının kod imzası (SmartScreen uyarısını kaldırmak için).
+- [ ] Docker kurulumunda Tailscale adı için `MF_ALLOWED_HOSTS` adımının kurulum script'ine eklenmesi.
+- [ ] `OPERATIONS.md` (bakım, güncelleme, hata giderme) ve `SECURITY.md`.
 
 ---
 
@@ -105,73 +133,35 @@
 |---|---|---|
 | DL380 erişimi (DHCP watchdog, Tailscale) | ✅ | — |
 | 9router sunucuda (CT 171), Funnel kapalı, combo'lar kuruldu | ✅ | — |
-| Yerel LLM için Qwen3.6-35B-A3B ve Gemma 4 26B-A4B indirildi | ✅ indirildi, **test edilmedi** | Ben |
-| Türkçe ve İngilizce model kalite testi, kazanan modelin `local`'e bağlanması | ⬜ | Ben |
-| 9router: ses, görsel ve STT combo'ları (yerel Piper ve whisper kurulunca) | ⬜ | Ben |
+| Üretim sunucusu CT 175 `mediafactory` | ✅ | — |
+| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ⬜ indirildi, **test edilmedi** | Ben |
+| Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
+| Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
+| Oyun arka planı klipleri (kendi kaydın / Coverr / Mixkit) | ⬜ | Sen + ben |
 | Sohbete yazılan Proxmox parolalarının değiştirilmesi | ⬜ | **Sen** |
 | Coverr API anahtarının yenilenmesi (sohbette açık geçti) | ⬜ | **Sen** |
-| Google Cloud OAuth projesi (YouTube için) | ⬜ Plan 5'te | **Sen** |
-| Reddit API uygulaması (isteğe bağlı) | ⬜ | **Sen** |
-| Oyun arka planı klipleri (kendi kaydın / Coverr / Mixkit) | ⬜ Plan 3'te | Sen + ben |
 | iLO kablosunun DL380'in 2. portuna bağlanması | ⬜ | **Sen** |
+| cicibyte.com **Cicibyte Hub → AI & Data** listesine ekleme | ⬜ | **Sen** |
 
 ---
 
-## 📋 Şartname §19 kabul kriterleri
+## 🐞 Bilinen eksikler
 
-| Kriter | Durum |
-|---|---|
-| Temiz Docker Compose kurulumu | ✅ |
-| Yeniden başlatmada verilerin korunması | ✅ |
-| Health check'ler | ✅ |
-| Güvenli admin oluşturma | ✅ |
-| Ollama/yerel LLM health check, JSON yanıt | 🟡 İstemci hazır, uygulamadan uçtan uca test yok |
-| Türkçe ve İngilizce örnek senaryo | ⬜ Plan 3 |
-| Runtime'da ücretli LLM çağrısı olmaması | 🟡 Mimari olarak öyle; Plan 3'te doğrulanacak |
-| RSS öğesi alınabiliyor | ✅ |
-| Reddit izinli erişimle çalışıyor ya da eksik kimlik bilgisini gösteriyor | ✅ |
-| Aynı URL/hash tekrar eklenmiyor | ✅ |
-| Kaynak ve hak durumu saklanıyor | ✅ |
-| Wattpad için izinsiz scraping yok | ✅ |
-| TTS, SRT/VTT, 9:16 ve 16:9 render, kalite kontrolleri, thumbnail | ⬜ Plan 3 (16:9 → v0.2) |
-| OAuth, private yükleme, video ID kaydı, mükerrer yükleme yok | ⬜ Plan 5 |
-| Public/zamanlanmış yayın onaysız etkinleşmiyor | ⬜ Plan 5 |
-| 2 kanal ve 3 konsept, farklı dil/ses/format | ⬜ Plan 3 |
-| İş panelden izlenip iptal edilip yeniden denenebiliyor | 🟡 API/kuyruk hazır, panel Plan 4'te |
-
----
-
-## 🐞 Bilinen küçük eksikler (ertelendi)
-
-**Temel (Plan 1):**
-- Veritabanı açılışta hazır değilse API container'ı birkaç kez yeniden başlıyor; Docker sonunda toparlıyor.
-- `MF_SECRET_KEY` eksikse anlaşılması zor bir hata çıktısı veriyor.
-- Giriş deneme sınırlayıcısının belleği zamanla büyüyor.
-- Giriş süresinden bir hesabın var olup olmadığı anlaşılabiliyor.
-- İzinli host listesinden `localhost` çıkarılırsa Docker sağlık kontrolü bozuluyor.
-- Yapılandırma hataları (TaskNotConfigured, 401) gereksiz yere yeniden deneniyor.
-- FastAPI dışındaki Python bağımlılıklarının sürümleri sabit değil.
-- E-posta benzersizliği büyük/küçük harfe duyarlı.
-- Sağlayıcı adresindeki `kullanıcı:parola@` kısmı maskelenmiyor.
-- `install.sh` her yönetici oluşturma hatasını "zaten var" diye bildiriyor.
-- Sağlık kontrolünün bağlantı bekleme süresi Docker'ın 5 sn sınırından uzun.
-
-**Kaynaklar (Plan 2):**
-- Siteler arası yönlendirmede `Authorization` başlığı da iletiliyor.
-- gzip ile sıkıştırılmış yanıt, tek bir parçada 5 MB sınırını kısa süreliğine aşabiliyor.
-- Bellekteki throttle, aynı süreç içindeki thread'ler arasında tam kesin değil (API ve worker veritabanı throttle'ını kullanıyor).
-- NAT64/6to4/Teredo biçimindeki IPv6 adreslerinin içine gömülü özel IPv4 adresleri yakalanmıyor.
-- 2000 karakterden uzun elle girilen URL'ler veritabanı hatası verebilir.
-- `.txt`/`.md` yüklemelerinde `<` ile `>` arasındaki metin siliniyor.
-- RSS 1.0/RDF beslemeleri ve Atom'un `xhtml` içerikleri okunmuyor.
-- Gizli anahtar değişince Reddit kimlik bilgisi "okunamıyor" yerine "yapılandırılmamış" görünüyor.
-- `reddit_rss` öğeleri panel için "yedek yol" olarak işaretlenmiyor (Plan 4'te ele alınacak).
+- **Ağ güvenliği:** Giriş olmadığı için sunucu portu internete açılmamalı (Tailscale veya `localhost` + reverse proxy kimlik doğrulaması).
+- **Altyazı zamanlaması:** Tahmini olduğu için uzun cümlelerde altyazı sesten biraz kayabilir (whisper hizalamasıyla düzelecek).
+- **Stüdyo önizlemesi:** Yazı tiplerini Google Fonts'tan yüklüyor; internet yoksa önizleme yedek yazı tipine düşer (videoyu etkilemez).
+- **Önizleme ve video farkı:** Önizleme CSS ile yapılıyor; konturda ve satır kırılmasında videodan küçük farklar olabilir.
+- **YouTube:** Yükleme yarıda kesilip tekrar denenirse aynı video iki kez yüklenebilir (idempotency yok).
+- **Kurulum dosyası imzasız:** Windows ilk açılışta SmartScreen uyarısı gösterebilir.
+- Plan 1–2'den ertelenen küçük maddeler (sağlık kontrolü süreleri, RSS 1.0 desteği, IPv6 gömülü adresler vb.) git geçmişindeki önceki ROADMAP sürümünde listeli.
 
 ---
 
 ## Sıradaki adım
 
-**Plan 3 (Üretim hattı ve medya)** için uygulama planını yazıp onayına sunmak. İlk iş, indirilmiş iki LLM'in Türkçe ve İngilizce senaryo testi olacak; kazanan model `local` sağlayıcısına bağlanacak.
+1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak.
+2. Senaryo düzenleme ekranı ve whisper ile altyazı hizalaması.
+3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 

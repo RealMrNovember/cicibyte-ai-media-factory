@@ -149,12 +149,32 @@ def make_handler(cfg: Config):
                 ctype += "; charset=utf-8"
             self._send(200, path.read_bytes(), ctype)
 
+        def _from_server(self) -> bool:
+            """Serve the panel from the server when it is reachable, so panel updates need no reinstall."""
+            target = urllib.parse.urlsplit(cfg.server_url)
+            try:
+                conn_cls = http.client.HTTPSConnection if target.scheme == "https" else http.client.HTTPConnection
+                conn = conn_cls(target.netloc, timeout=4)
+                conn.request("GET", (target.path or "") + self.path, headers={"Host": target.netloc})
+                resp = conn.getresponse()
+                body = resp.read()
+                conn.close()
+            except Exception:
+                return False
+            ctype = resp.getheader("Content-Type", "")
+            if resp.status != 200 or not (ctype.startswith(("text/", "image/")) or "javascript" in ctype):
+                return False
+            self._send(200, body, ctype)
+            return True
+
         def _route(self):
             if self.path.startswith("/desktop/config"):
                 return self._desktop_config()
             if self.path.startswith("/api/"):
                 return self._proxy()
             if self.command in ("GET", "HEAD"):
+                if self._from_server():
+                    return None
                 return self._static()
             return self._json(405, {"detail": "method not allowed"})
 

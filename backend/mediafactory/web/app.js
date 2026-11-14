@@ -35,7 +35,9 @@ const I18N = {
     readyHint: "Render edilmiş, onayını bekleyen videolar.",
   },
 };
-let lang = localStorage.getItem("mf_lang") || (navigator.language || "en").slice(0, 2);
+const urlLang = new URLSearchParams(location.search).get("lang");
+if (urlLang) { try { localStorage.setItem("mf_lang", urlLang); } catch { /* private mode */ } }
+let lang = urlLang || localStorage.getItem("mf_lang") || (navigator.language || "en").slice(0, 2);
 if (!I18N[lang]) lang = "en";
 const t = (k) => I18N[lang][k] || k;
 const $app = document.getElementById("app");
@@ -178,9 +180,11 @@ async function inbox(el) {
       <td>${pill(i.processing_status)}</td>
       <td class="small muted">${i.chars} ${t("chars")}<br>${when(i.fetched_at)}</td>
       <td><div class="row"><button class="btn primary" data-make="${i.id}">${t("make")}</button><button class="btn" data-open="${i.id}">${t("open")}</button></div></td></tr>`).join("");
-  el.innerHTML = `<div class="row"><h1>${t("inbox")}</h1><span class="spacer"></span><input id="q" style="max-width:260px" placeholder="${t("search")}" value="${esc(q)}"></div>
+  el.innerHTML = `<div class="row"><h1>${t("inbox")}</h1><span class="spacer"></span><input id="q" style="max-width:260px" placeholder="${t("search")}" value="${esc(q)}"><button class="btn" id="aiStory">✨ ${st("aiStory")}</button><button class="btn primary" id="addStory">＋ ${st("addStory")}</button></div>
     <p class="sub">${data.items.length} ${t("items").toLowerCase()}</p>
     <div class="card">${data.items.length ? `<table><tr><th></th><th>${t("rights")}</th><th>${t("status")}</th><th></th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>`;
+  document.getElementById("addStory").addEventListener("click", () => addStoryDialog(() => render()));
+  document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(() => render()));
   document.getElementById("q").addEventListener("change", (e) => { location.hash = "#inbox?q=" + encodeURIComponent(e.target.value); });
   on("[data-make]", "click", (e) => { studioState = null; location.hash = `#studio/${e.target.dataset.make}`; });
   on("[data-open]", "click", async (e) => {
@@ -234,15 +238,15 @@ async function ready(el) {
   const [data, approved, pub] = await Promise.all([api("/api/jobs?status=needs_review&limit=100"), api("/api/jobs?status=approved&limit=100"),
     Promise.all(["uploading", "scheduled", "published"].map((x) => api(`/api/jobs?status=${x}&limit=100`)))]);
   const published = pub.flatMap((r) => r.items);
-  const card = (j, actions) => `<div class="card video-card"><video controls preload="metadata" src="/api/jobs/${j.id}/video"></video>
+  const card = (j, actions) => `<div class="card video-card"><video controls preload="none" poster="/api/jobs/${j.id}/poster" src="/api/jobs/${j.id}/video"></video>
       <h3>${esc(j.title || "")}</h3><div class="muted small">#${j.id} · ${esc(j.language)} · ${j.duration_s ?? "?"}s</div>
       <div style="margin-top:6px">${ytBadge(j)}</div>
       <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a></div></div>`;
   const ytBtn = (j) => `<button class="btn primary" data-pub="${j.id}">▶ ${sc("sendYt")}</button>`;
   el.innerHTML = `<h1>${t("ready")}</h1><p class="sub">${t("readyHint")}</p>
-    <div class="grid g3">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
-    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid g3">${approved.items.map((j) => card(j, ytBtn(j))).join("")}</div>` : ""}
-    ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid g3">${published.map((j) => card(j, "")).join("")}</div>` : ""}`;
+    <div class="grid videos">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
+    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid videos">${approved.items.map((j) => card(j, ytBtn(j))).join("")}</div>` : ""}
+    ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid videos">${published.map((j) => card(j, "")).join("")}</div>` : ""}`;
   on("[data-dec]", "click", async (e) => {
     try { await api(`/api/jobs/${e.target.dataset.id}/decision`, { method: "POST", body: { decision: e.target.dataset.dec } }); render(); }
     catch (err) { toast(err.message, true); }

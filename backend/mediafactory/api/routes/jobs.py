@@ -142,8 +142,7 @@ def decide(
     return job_out(job)
 
 
-@router.get("/jobs/{jid}/video")
-def video_file(jid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)):
+def _video_path(db: Session, jid: int) -> Path:
     job = _job(db, jid)
     video = ((job.payload or {}).get("result") or {}).get("video")
     if not video:
@@ -152,4 +151,25 @@ def video_file(jid: int, db: Session = Depends(get_db, scope="function"), user: 
     root = (Path(get_settings().data_dir) / "videos").resolve()
     if root not in path.parents or not path.is_file():
         raise HTTPException(status_code=404, detail="video file missing")
-    return FileResponse(path, media_type="video/mp4", filename=f"short-{jid}.mp4")
+    return path
+
+
+@router.get("/jobs/{jid}/video")
+def video_file(jid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)):
+    return FileResponse(_video_path(db, jid), media_type="video/mp4", filename=f"short-{jid}.mp4")
+
+
+@router.get("/jobs/{jid}/poster")
+def video_poster(jid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)):
+    """A still from the finished video (cached next to it) for catalog cards."""
+    import subprocess
+
+    path = _video_path(db, jid)
+    poster = path.with_name("poster.jpg")
+    if not poster.exists():
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "4", "-i", str(path),
+                        "-frames:v", "1", "-vf", "scale=540:-2", "-q:v", "4", str(poster)],
+                       capture_output=True, timeout=60, check=False)  # fmt: skip
+    if not poster.exists():
+        raise HTTPException(status_code=404, detail="could not make a poster")
+    return FileResponse(poster, media_type="image/jpeg")

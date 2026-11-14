@@ -52,3 +52,16 @@ def test_upload_list_delete_via_api(client, tmp_path, monkeypatch):
     assert [c["name"] for c in client.get("/api/backgrounds").json()["items"]] == ["parkour.mp4"]
     assert client.delete("/api/backgrounds/parkour.mp4", headers=h).status_code == 200
     assert client.get("/api/backgrounds").json()["items"] == []
+
+
+def test_upload_without_licence_is_allowed(client, tmp_path, monkeypatch):
+    import io
+
+    from mediafactory.api.routes import backgrounds as route
+    from mediafactory.pipeline import backgrounds as lib
+
+    monkeypatch.setattr(route, "_data", lambda: tmp_path)
+    monkeypatch.setattr(lib, "thumbnail", lambda clip: clip)
+    r = client.post("/api/backgrounds", headers={"X-MF-Client": "1"},
+                    files={"file": ("minecraft.mp4", io.BytesIO(b"fake"), "video/mp4")})  # fmt: skip
+    assert r.status_code == 201 and r.json()["licence"] == ""

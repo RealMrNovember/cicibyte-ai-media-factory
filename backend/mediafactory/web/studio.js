@@ -5,25 +5,25 @@ const ST = {
   en: {
     studio: "Studio", studioSub: "Choose the story, background and caption style — then produce.",
     story: "Story", pickStory: "Choose a story…", background: "Background", random: "Random", none: "No clip (gradient)",
-    upload: "Upload clip", licence: "Licence / permission (required)", sourceUrl: "Where it came from (optional)",
+    upload: "Upload clip", licence: "Licence / note (optional)", sourceUrl: "Where it came from (optional)",
     uploading: "Uploading…", uploaded: "Clip added", captions: "Captions", font: "Font", size: "Size",
     textColor: "Text", highlight: "Highlight", outlineColor: "Outline", outline: "Outline width", shadow: "Shadow",
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
-    previewHint: "Click the preview to place the captions.", noStories: "No stories yet — add a source and collect.",
+    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
     noClips: "No clips yet. Upload gameplay or stock footage you are allowed to use.", sure: "Delete this clip?",
   },
   tr: {
     studio: "Stüdyo", studioSub: "Hikâyeyi, arka planı ve altyazı stilini seç — sonra üret.",
     story: "Hikâye", pickStory: "Bir hikâye seç…", background: "Arka plan", random: "Rastgele", none: "Klip yok (gradyan)",
-    upload: "Klip yükle", licence: "Lisans / izin (zorunlu)", sourceUrl: "Nereden geldi (isteğe bağlı)",
+    upload: "Klip yükle", licence: "Lisans / not (isteğe bağlı)", sourceUrl: "Nereden geldi (isteğe bağlı)",
     uploading: "Yükleniyor…", uploaded: "Klip eklendi", captions: "Altyazı", font: "Yazı tipi", size: "Boyut",
     textColor: "Yazı", highlight: "Vurgu", outlineColor: "Kontur", outline: "Kontur kalınlığı", shadow: "Gölge",
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
-    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
+    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
     noClips: "Henüz klip yok. Kullanma iznin olan oyun ya da stok görüntüsü yükle.", sure: "Bu klip silinsin mi?",
   },
 };
@@ -71,7 +71,8 @@ async function studio(el) {
   el.innerHTML = `<h1>${st("studio")}</h1><p class="sub">${st("studioSub")}</p>
     <div class="studio">
       <div class="studio-controls">
-        <div class="card"><h3>1 · ${st("story")}</h3><div id="storyBox"></div></div>
+        <div class="card"><div class="row"><h3>1 · ${st("story")}</h3><span class="spacer"></span>
+          <button class="btn" id="aiStory">✨ ${st("aiStory")}</button><button class="btn" id="addStory">＋ ${st("addStory")}</button></div><div id="storyBox"></div></div>
         <div class="card"><div class="row"><h3>2 · ${st("background")}</h3><span class="spacer"></span>
           <button class="btn" id="upBtn">＋ ${st("upload")}</button></div><div id="bgBox"></div></div>
         <div class="card"><h3>3 · ${st("captions")}</h3><div id="capBox"></div></div>
@@ -82,6 +83,12 @@ async function studio(el) {
     </div>`;
   drawStory(); drawBackgrounds(); drawCaptions(); drawOutput(); drawPreview();
   document.getElementById("upBtn").addEventListener("click", uploadDialog);
+  document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(async (item) => {
+    studioState.items = (await api("/api/items?limit=200")).items; studioState.itemId = item.id; studioState.langFilter = item.language || ""; drawStory(); drawPreview();
+  }));
+  document.getElementById("addStory").addEventListener("click", () => addStoryDialog(async (item) => {
+    studioState.items = (await api("/api/items?limit=200")).items; studioState.itemId = item.id; drawStory(); drawPreview();
+  }));
   document.getElementById("phone").addEventListener("click", (e) => {
     const r = e.currentTarget.getBoundingClientRect();
     setStyle({ position: Math.max(8, Math.min(92, Math.round(((e.clientY - r.top) / r.height) * 100))) });
@@ -93,13 +100,67 @@ function setStyle(patch) { Object.assign(studioState.style, patch); saveStyle(st
 
 function drawStory() {
   const s = studioState, box = document.getElementById("storyBox");
-  if (!s.items.length) { box.innerHTML = `<p class="muted">${st("noStories")}</p>`; return; }
-  const cur = s.items.find((i) => i.id === s.itemId) || s.items[0];
+  const lf = s.langFilter || "";
+  const list = s.items.filter((i) => !lf || (i.language || "en") === lf);
+  const filter = `<div class="row" style="margin-bottom:10px">${[["", st("allLangs")], ["en", "English"], ["tr", "Türkçe"]].map(([v, l]) =>
+    `<button class="btn small-btn ${lf === v ? "primary" : ""}" data-lf="${v}">${l}</button>`).join("")}</div>`;
+  if (!list.length) {
+    box.innerHTML = filter + `<p class="muted">${st("noStories")}</p>`;
+    box.querySelectorAll("[data-lf]").forEach((b) => b.addEventListener("click", () => { s.langFilter = b.dataset.lf; drawStory(); }));
+    return;
+  }
+  const cur = list.find((i) => i.id === s.itemId) || list[0];
   s.itemId = cur.id;
-  box.innerHTML = `<select id="story">${s.items.map((i) => `<option value="${i.id}" ${i.id === cur.id ? "selected" : ""}>${esc(i.title)}</option>`).join("")}</select>
+  box.innerHTML = filter + `<select id="story">${list.map((i) => `<option value="${i.id}" ${i.id === cur.id ? "selected" : ""}>${(i.language || "en").toUpperCase()} · ${esc(i.title)}</option>`).join("")}</select>
     <p class="muted small clip3" style="margin:10px 0 0">${esc(cur.text)}</p>
     <p class="muted small" style="margin:6px 0 0">${cur.chars} ${t("chars")} · <span class="pill">${esc(cur.rights_status)}</span></p>`;
   document.getElementById("story").addEventListener("change", (e) => { s.itemId = Number(e.target.value); drawStory(); drawPreview(); });
+  box.querySelectorAll("[data-lf]").forEach((b) => b.addEventListener("click", () => { s.langFilter = b.dataset.lf; drawStory(); drawPreview(); }));
+}
+
+function aiStoryDialog(onAdded) {
+  const m = modal(`<h1>${st("aiTitle")}</h1><form id="aif">
+    <label>${st("topic")}</label><input name="topic" maxlength="500" placeholder="${esc(st("topicPh"))}">
+    <div class="grid g2"><div><label>${t("languages")}</label><select name="language"><option value="tr">Türkçe</option><option value="en">English</option></select></div>
+    <div><label>${st("length")}</label><select name="words"><option value="350">${st("short")}</option><option value="600" selected>${st("medium")}</option><option value="1000">${st("long")}</option></select></div></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary">✨ ${st("aiStory")}</button></div></form>`);
+  m.querySelector("#aif").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target, btn = f.querySelector("button.primary");
+    btn.disabled = true; btn.textContent = st("writing");
+    try {
+      const r = await api("/api/items/ai-story", { method: "POST", body: { topic: f.topic.value, language: f.language.value, words: Number(f.words.value) } });
+      m.remove(); toast(st("storyAdded"));
+      if (onAdded) await onAdded(r.item);
+    } catch (err) { toast(err.message, true); btn.disabled = false; btn.textContent = "✨ " + st("aiStory"); }
+  });
+}
+
+function addStoryDialog(onAdded) {
+  const m = modal(`<h1>${st("addStory")}</h1><form id="storyf">
+    <label>${st("storyTitle")}</label><input name="title" maxlength="500">
+    <label>${st("storyText")}</label><textarea name="text" style="min-height:220px"></textarea>
+    <label>${st("orFile")}</label><input type="file" name="file" accept=".txt,.md,.pdf,.docx">
+    <label>${st("storyLang")}</label><select name="language"><option value="en">English</option><option value="tr" ${lang === "tr" ? "selected" : ""}>Türkçe</option></select>
+    <div class="row" style="margin-top:14px"><button class="btn primary">${t("add")}</button></div></form>`);
+  m.querySelector("#storyf").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target, file = f.file.files[0], text = f.text.value.trim();
+    if (!file && !text) return toast(st("needText"), true);
+    try {
+      let r;
+      if (file) {
+        const fd = new FormData();
+        fd.append("file", file); fd.append("language", f.language.value);
+        if (f.title.value.trim()) fd.append("title", f.title.value.trim());
+        r = await api("/api/items/manual/upload", { method: "POST", body: fd });
+      } else {
+        r = await api("/api/items/manual", { method: "POST", body: { title: f.title.value.trim() || null, text, language: f.language.value, rights_status: "user_owned" } });
+      }
+      m.remove(); toast(r.duplicate ? st("storyDup") : st("storyAdded"));
+      if (onAdded) await onAdded(r.item);
+    } catch (err) { toast(err.message, true); }
+  });
 }
 
 function drawBackgrounds() {
@@ -129,7 +190,7 @@ function drawBackgrounds() {
 function uploadDialog() {
   const m = modal(`<h1>${st("upload")}</h1><form id="upf">
     <label>Video (mp4, mov, mkv, webm)</label><input type="file" name="file" accept="video/*" required>
-    <label>${st("licence")}</label><input name="licence" required minlength="2" placeholder="Mixkit Free License / Coverr / own recording">
+    <label>${st("licence")}</label><input name="licence" placeholder="Mixkit Free License / Coverr / own recording">
     <label>${st("sourceUrl")}</label><input name="source" placeholder="https://mixkit.co/...">
     <div class="progress" hidden><div></div></div>
     <div class="row" style="margin-top:14px"><button class="btn primary">${st("upload")}</button></div></form>`);

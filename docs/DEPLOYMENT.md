@@ -12,50 +12,54 @@ and `worker` (production queue). Everything lives in two volumes: `mf_pg` (datab
 
 ## Install / Kurulum
 
+Install [Tailscale](https://tailscale.com) on the server first (recommended), then:
+
 ```bash
 git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
 cd cicibyte-ai-media-factory
-bash deploy/install.sh you@example.com
+bash deploy/install.sh
 ```
 
 The script:
 
 1. creates `.env` with a random `MF_SECRET_KEY` and database password (never overwrites an existing `.env`),
-2. builds the image and starts `db`, `api`, `worker`,
-3. waits for `GET /api/health`,
-4. creates the admin account and **prints its password once** — store it safely.
+2. publishes the panel on this machine's **Tailscale address** if Tailscale is running (otherwise on
+   `127.0.0.1` only) and allows its tailnet names in `MF_ALLOWED_HOSTS`,
+3. builds the image and starts `db`, `api`, `worker`, then waits for `GET /api/health`,
+4. prints the address to enter in the desktop app (**Settings → Server**), e.g. `http://my-server:8080`.
 
-The panel listens on **`127.0.0.1:8080` only** (change with `MF_BIND_PORT` in `.env`).
+> ⚠️ **There is no sign-in.** Anyone who can reach the port controls the factory. Keep it on a private
+> network (Tailscale or your LAN) and **never expose it to the internet** — no port forwarding, no
+> `tailscale funnel`.
 
-> ⚠️ **Do not expose the panel directly to the internet.** Use Tailscale (recommended) or a reverse
-> proxy with HTTPS.
+### Desktop app
 
-### Remote access with Tailscale (recommended)
+Download the Windows installer from https://mediafactory.cicibyte.com, install it, open **Settings → Server**
+and enter the address printed by `install.sh`. All heavy work runs on the server; the app only shows the panel.
 
-Install Tailscale on the server, then either open `http://<server>:8080` through an SSH tunnel or serve it
-on your tailnet only:
+### Other networks
 
-```bash
-sudo tailscale serve --bg 8080
-```
+- **LAN only:** set `MF_PUBLISH_ADDR=192.168.1.20` (the server's LAN address) and add that address and the
+  server's name to `MF_ALLOWED_HOSTS`, then `docker compose -f deploy/docker-compose.yml --env-file .env up -d`.
+- **Behind a reverse proxy with its own authentication** (VPN, SSO, IP allow-list): keep
+  `MF_PUBLISH_ADDR=127.0.0.1`, proxy to `127.0.0.1:8080`, allow request bodies up to 2 GB on
+  `/api/backgrounds` (clip uploads) and add the proxy host name to `MF_ALLOWED_HOSTS`.
 
-Add the tailnet host name to `MF_ALLOWED_HOSTS` in `.env`, e.g.
-`MF_ALLOWED_HOSTS=["localhost","127.0.0.1","media.tail1234.ts.net"]`, then
-`docker compose -f deploy/docker-compose.yml --env-file .env up -d`.
-Never use `tailscale funnel` for the panel — that publishes it to the internet.
+`MF_ALLOWED_HOSTS` is a safety check against DNS-rebinding attacks from web pages; list only the names you use.
 
-### Reverse proxy (Caddy example)
+## YouTube
 
-```
-media.example.com {
-    request_body {
-        max_size 12MB
-    }
-    reverse_proxy 127.0.0.1:8080
-}
-```
+Each installation uses its own Google OAuth client:
 
-Restrict access (VPN/IP allow-list) and add `media.example.com` to `MF_ALLOWED_HOSTS`.
+1. In Google Cloud Console create a project and enable **YouTube Data API v3**.
+2. Configure the **OAuth consent screen** (External) and add your Google account under *Test users*.
+3. Create **Credentials → OAuth client ID → Desktop app**.
+4. In the app open **Settings → YouTube**, paste the client ID and secret, save, then **Connect a channel**.
+   Google sign-in opens in your normal browser and returns to the app.
+
+Videos can be sent from **Ready videos** (now or at a chosen time; YouTube publishes scheduled videos itself)
+or by a publishing schedule under **Schedule**. Google may keep videos uploaded by an unverified app private
+until the app passes Google's audit.
 
 ## Source collection
 
@@ -68,7 +72,7 @@ MF_FETCH_ALLOWLIST=["wiki.lan"]
 ```
 
 For the official Reddit API, create a *script* app at https://www.reddit.com/prefs/apps and enter its client
-id and secret in Settings → Source credentials (admin only; stored encrypted). Without it, use the
+id and secret in Settings → Reddit (stored encrypted). Without it, use the
 `reddit_rss` adapter.
 
 ## Update / Güncelleme
@@ -90,12 +94,6 @@ bash deploy/restore.sh backups/mf-....sql.gz   # asks for confirmation, replaces
 Schedule backups with cron, e.g. `30 3 * * * cd /opt/mediafactory && bash deploy/backup.sh`.
 Back up `.env` separately and securely: without `MF_SECRET_KEY` stored API keys and OAuth tokens cannot
 be decrypted.
-
-## Admin password reset
-
-```bash
-docker compose -f deploy/docker-compose.yml --env-file .env exec api mf create-admin --email you@example.com --reset
-```
 
 ## Logs
 

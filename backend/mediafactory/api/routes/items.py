@@ -207,6 +207,33 @@ def create_manual(
     )  # fmt: skip
 
 
+class AIStoryIn(BaseModel):
+    topic: str = Field(default="", max_length=500)
+    language: Literal["en", "tr"] = "tr"
+    words: int = Field(default=600, ge=150, le=1500)
+
+
+@router.post("/ai-story", status_code=201)
+def create_ai_story(
+    body: AIStoryIn, request: Request, response: Response, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    """The connected AI writes a new original story, which is added like a manual story."""
+    from mediafactory.ai.router import TaskNotConfigured
+    from mediafactory.pipeline.story import write_story
+
+    try:
+        story = write_story(db, body.topic, language=body.language, words=body.words)
+    except TaskNotConfigured:
+        raise HTTPException(status_code=409, detail="no AI is set up for the 'script' task (Settings)") from None
+    except Exception as exc:  # provider down, bad output…
+        raise HTTPException(status_code=502, detail=f"AI could not write the story: {exc}") from None
+    raw = RawItem(external_id="", url=None, title=story["title"], text=story["story"], language=body.language)
+    return _store_manual(db, raw, user=user, rights="user_owned", attribution=False,
+                         note=f"written by AI ({story['model']}) from topic: {body.topic[:200]}",
+                         ip=client_ip(request), response=response)  # fmt: skip
+
+
 @router.post("/manual/upload", status_code=201)
 def upload_manual(
     request: Request,

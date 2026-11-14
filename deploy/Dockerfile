@@ -1,5 +1,5 @@
 # CiciByte AI Media Factory — api + worker image. Powered by CiciByte Technology (https://cicibyte.com)
-FROM python:3.12.8-slim-bookworm
+FROM python:3.12-slim-trixie
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core \
+       fonts-montserrat fonts-roboto fonts-open-sans fonts-bebas-neue fonts-lato \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --uid 10001 --create-home --home-dir /home/mf --shell /usr/sbin/nologin mf \

@@ -4,18 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CiciByte AI Media Factory</title>
-<meta name="description" content="Self-hosted, free and open-source (MIT) AI YouTube media factory. Your sources, your AI, your server. Early preview, in active development.">
+<meta name="description" content="Free, open-source (MIT) AI YouTube Shorts factory you run on your own server. Sources in, original scripts, voice, styled captions and 9:16 video out — approve, then publish now or on a schedule. Windows app included.">
 <meta name="theme-color" content="#0b0b0c">
 <meta property="og:title" content="CiciByte AI Media Factory">
-<meta property="og:description" content="Self-hosted, open-source AI YouTube media factory. Your sources, your AI, your approval.">
+<meta property="og:description" content="Your own AI Shorts factory: original scripts, voice, styled captions, 9:16 video and scheduled YouTube publishing. Free and open source.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mediafactory.cicibyte.com/">
-<meta property="og:image" content="https://mediafactory.cicibyte.com/assets/cicibyte-logo.png">
+<meta property="og:image" content="https://mediafactory.cicibyte.com/assets/shots/studio-en.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
 
@@ -26,10 +27,11 @@
       <span class="brand-sub">Media Factory</span>
     </a>
     <nav class="nav">
+      <a href="#screens"><span lang="en">Tour</span><span lang="tr">Tur</span></a>
       <a href="#features"><span lang="en">Features</span><span lang="tr">Özellikler</span></a>
-      <a href="#how"><span lang="en">How it works</span><span lang="tr">Nasıl çalışır</span></a>
-      <a href="#install"><span lang="en">Install</span><span lang="tr">Kurulum</span></a>
-      <a href="#status"><span lang="en">Status</span><span lang="tr">Durum</span></a>
+      <a href="#download"><span lang="en">Download</span><span lang="tr">İndir</span></a>
+      <a href="#status"><span lang="en">Roadmap</span><span lang="tr">Yol haritası</span></a>
+      <a href="#faq"><span lang="en">FAQ</span><span lang="tr">SSS</span></a>
     </nav>
     <div class="lang-toggle" role="group" aria-label="Language">
       <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
@@ -41,139 +43,252 @@
 <main id="top">
 
   <section class="hero">
-    <div class="wrap">
-      <p class="eyebrow">
-        <span class="pill"><span lang="en">Early preview · v0.1 in development</span><span lang="tr">Erken önizleme · v0.1 geliştiriliyor</span></span>
-      </p>
-      <h1>CiciByte AI Media&nbsp;Factory</h1>
-      <p class="lead">
-        <span lang="en">A self-hosted, open-source AI YouTube media factory. Collect stories from sources you manage, turn them into original scripts with the AI you connect, and publish Shorts only after you approve.</span>
-        <span lang="tr">Kendi sunucuna kurulan, açık kaynak AI YouTube içerik fabrikası. Yönettiğin kaynaklardan içerik toplar, bağladığın yapay zekâ ile özgün senaryoya çevirir; Shorts'ları yalnızca senin onayınla yayınlar.</span>
-      </p>
-      <div class="cta">
-        <a class="btn btn-primary" href="https://github.com/RealMrNovember/cicibyte-ai-media-factory" target="_blank" rel="noopener">
-          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub
-        </a>
-        <a class="btn" href="#install"><span lang="en">Install</span><span lang="tr">Kurulum</span></a>
-        <a class="btn btn-ghost" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">
-          <span lang="en">Buy me a coffee</span><span lang="tr">Bana bir kahve ısmarla</span>
-        </a>
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">
+          <span class="pill"><span lang="en">v0.1 preview · Windows app available</span><span lang="tr">v0.1 önizleme · Windows uygulaması hazır</span></span>
+        </p>
+        <h1>CiciByte AI Media&nbsp;Factory</h1>
+        <p class="lead">
+          <span lang="en">Your own AI Shorts factory. It collects stories from sources you choose, writes an <em>original</em> script with the AI you connect, adds voice and styled captions, renders a 9:16 video — and publishes to YouTube only after you approve, right away or on a schedule.</span>
+          <span lang="tr">Kendi AI Shorts fabrikan. Seçtiğin kaynaklardan hikâye toplar, bağladığın yapay zekâyla <em>özgün</em> senaryo yazar, ses ve stilli altyazı ekler, 9:16 video üretir; YouTube'a yalnızca senin onayınla, hemen ya da zamanlayarak gönderir.</span>
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="#download">
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15"><path fill="currentColor" d="M0 2.3 6.5 1.4v6.2H0zm7.3-1L16 0v7.6H7.3zM0 8.4h6.5v6.3L0 13.8zm7.3 0H16V16l-8.7-1.2z"/></svg>
+            <span lang="en">Download for Windows</span><span lang="tr">Windows için indir</span>
+          </a>
+          <a class="btn" href="https://github.com/RealMrNovember/cicibyte-ai-media-factory" target="_blank" rel="noopener">
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+          </a>
+          <a class="btn btn-ghost" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">☕ <span lang="en">Buy me a coffee</span><span lang="tr">Bir kahve ısmarla</span></a>
+        </div>
+        <ul class="facts">
+          <li><span lang="en">Free &amp; MIT licensed</span><span lang="tr">Ücretsiz, MIT lisanslı</span></li>
+          <li><span lang="en">Runs on your server</span><span lang="tr">Kendi sunucunda çalışır</span></li>
+          <li><span lang="en">English &amp; Turkish</span><span lang="tr">İngilizce ve Türkçe</span></li>
+          <li><span lang="en">No paid API needed</span><span lang="tr">Ücretli API şart değil</span></li>
+        </ul>
       </div>
-      <ul class="facts">
-        <li><span lang="en">Free &amp; MIT licensed</span><span lang="tr">Ücretsiz, MIT lisanslı</span></li>
-        <li><span lang="en">Runs on your server</span><span lang="tr">Kendi sunucunda çalışır</span></li>
-        <li><span lang="en">English &amp; Turkish</span><span lang="tr">İngilizce ve Türkçe</span></li>
-      </ul>
+      <figure class="phone-demo">
+        <div class="phone">
+          <video src="assets/demo.mp4" poster="assets/demo.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Example Short made by Media Factory"></video>
+        </div>
+        <figcaption>
+          <span lang="en">A real Short from the factory: AI script, Piper voice, word-by-word captions.</span>
+          <span lang="tr">Fabrikadan gerçek bir Short: AI senaryo, Piper ses, kelime kelime altyazı.</span>
+        </figcaption>
+      </figure>
     </div>
   </section>
 
-  <section id="features" class="section">
+  <section id="screens" class="section">
+    <div class="wrap">
+      <h2><span lang="en">A quick tour</span><span lang="tr">Kısa bir tur</span></h2>
+      <p class="section-lead">
+        <span lang="en">Real screens from the Windows app connected to a home server. Everything heavy — AI, voice, rendering — runs on the server; the app is your control room.</span>
+        <span lang="tr">Ev sunucusuna bağlı Windows uygulamasından gerçek ekranlar. Ağır işlerin hepsi (AI, ses, render) sunucuda çalışır; uygulama senin kontrol odan.</span>
+      </p>
+      <div class="tabs" role="tablist" aria-label="Screens">
+        <button type="button" role="tab" aria-selected="true" data-shot="studio"><span lang="en">Studio</span><span lang="tr">Stüdyo</span></button>
+        <button type="button" role="tab" aria-selected="false" data-shot="ready"><span lang="en">Ready videos</span><span lang="tr">Hazır videolar</span></button>
+        <button type="button" role="tab" aria-selected="false" data-shot="schedule"><span lang="en">Schedule</span><span lang="tr">Takvim</span></button>
+        <button type="button" role="tab" aria-selected="false" data-shot="production"><span lang="en">Production</span><span lang="tr">Üretim</span></button>
+      </div>
+      <div class="window">
+        <div class="window-bar"><i></i><i></i><i></i><span>CiciByte AI Media Factory</span></div>
+        <div class="window-body">
+          <img class="shot" data-shot-img="studio" lang="en" src="assets/shots/studio-en.png" alt="Studio: story, background clip, caption style and live phone preview" width="1980" height="1320">
+          <img class="shot" data-shot-img="studio" lang="tr" src="assets/shots/studio-tr.png" alt="Stüdyo: hikâye, arka plan klibi, altyazı stili ve canlı telefon önizlemesi" width="1980" height="1320" loading="lazy">
+          <img class="shot" data-shot-img="ready" lang="en" src="assets/shots/ready-en.png" alt="Ready videos waiting for approval" width="1980" height="1320" loading="lazy" hidden>
+          <img class="shot" data-shot-img="ready" lang="tr" src="assets/shots/ready-tr.png" alt="Onay bekleyen hazır videolar" width="1980" height="1320" loading="lazy" hidden>
+          <img class="shot" data-shot-img="schedule" lang="en" src="assets/shots/schedule-en.png" alt="Schedule: recurring production and YouTube publishing" width="1980" height="1320" loading="lazy" hidden>
+          <img class="shot" data-shot-img="schedule" lang="tr" src="assets/shots/schedule-tr.png" alt="Takvim: tekrarlayan üretim ve YouTube yayını" width="1980" height="1320" loading="lazy" hidden>
+          <img class="shot" data-shot-img="production" lang="en" src="assets/shots/production-en.png" alt="Production queue with live status" width="1980" height="1320" loading="lazy" hidden>
+          <img class="shot" data-shot-img="production" lang="tr" src="assets/shots/production-tr.png" alt="Canlı durumlu üretim kuyruğu" width="1980" height="1320" loading="lazy" hidden>
+        </div>
+      </div>
+      <p class="shot-caption" data-shot-caption="studio"><span lang="en"><b>Studio</b> — pick the story and a background clip, style the captions (font, colours, position, karaoke highlight) and watch a live preview before you produce.</span><span lang="tr"><b>Stüdyo</b> — hikâyeyi ve arka plan klibini seç, altyazıyı biçimlendir (yazı tipi, renk, konum, karaoke vurgusu), üretmeden önce canlı önizlemede gör.</span></p>
+      <p class="shot-caption" data-shot-caption="ready" hidden><span lang="en"><b>Ready videos</b> — every video waits for your approval. Approve, reject, download, or send to YouTube now or at a time you pick.</span><span lang="tr"><b>Hazır videolar</b> — her video onayını bekler. Onayla, reddet, indir ya da YouTube'a hemen veya seçtiğin saatte gönder.</span></p>
+      <p class="shot-caption" data-shot-caption="schedule" hidden><span lang="en"><b>Schedule</b> — “make 2 videos every day at 09:00” and “publish one approved video at 18:00 on weekdays”, in your own time zone.</span><span lang="tr"><b>Takvim</b> — “her gün 09:00'da 2 video üret”, “hafta içi 18:00'de bir onaylı videoyu yayınla”; kendi saat diliminde.</span></p>
+      <p class="shot-caption" data-shot-caption="production" hidden><span lang="en"><b>Production</b> — follow each job through script, voice, captions and render, with logs, cancel and retry.</span><span lang="tr"><b>Üretim</b> — her işi senaryo, ses, altyazı ve render aşamalarında izle; log, iptal ve yeniden deneme.</span></p>
+    </div>
+  </section>
+
+  <section id="features" class="section section-alt">
     <div class="wrap">
       <h2><span lang="en">What it does</span><span lang="tr">Ne yapar</span></h2>
       <p class="section-lead">
-        <span lang="en">One pipeline from source to Short. Parts marked “Planned” are on the roadmap and not yet shipped.</span>
-        <span lang="tr">Kaynaktan Shorts'a tek bir hat. “Planlandı” etiketli parçalar yol haritasında; henüz yayınlanmadı.</span>
+        <span lang="en">One pipeline from source to Short, under your control at every step.</span>
+        <span lang="tr">Kaynaktan Shorts'a tek bir hat; her adımda kontrol sende.</span>
       </p>
       <div class="grid">
         <article class="card">
           <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
-          <h3><span lang="en">Your sources, fully managed</span><span lang="tr">Kaynakların tamamen senin elinde</span></h3>
-          <p><span lang="en">Reddit, RSS/Atom feeds, web pages and your own files (.txt, .md, .pdf, .docx). Add, edit, pause or remove them at any time. Items are deduplicated by URL and content hash.</span><span lang="tr">Reddit, RSS/Atom beslemeleri, web sayfaları ve kendi dosyaların (.txt, .md, .pdf, .docx). İstediğin an ekle, düzenle, duraklat ya da kaldır. Öğeler URL ve içerik hash'iyle tekilleştirilir.</span></p>
+          <h3><span lang="en">Your sources</span><span lang="tr">Kaynakların</span></h3>
+          <p><span lang="en">Reddit, RSS/Atom, web pages, your own story or file (.txt, .md, .pdf, .docx) — or let the AI write a brand-new story on any topic, in English or Turkish. Deduplicated, rate-limited, with a rights status on every story.</span><span lang="tr">Reddit, RSS/Atom, web sayfaları, kendi hikâyen ya da dosyan (.txt, .md, .pdf, .docx); istersen AI istediğin konuda Türkçe veya İngilizce yepyeni bir hikâye yazsın. Tekilleştirilir, istek sınırına uyulur, her hikâyenin hak durumu tutulur.</span></p>
         </article>
         <article class="card">
           <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
-          <h3><span lang="en">Bring your own AI</span><span lang="tr">Kendi yapay zekânı bağla</span></h3>
-          <p><span lang="en">Ollama, llama.cpp, any OpenAI-compatible endpoint or router, or cloud APIs. Each task gets an ordered provider list with fallback and retries. Local-first; no paid API required.</span><span lang="tr">Ollama, llama.cpp, OpenAI uyumlu her uç nokta ya da router, veya bulut API'leri. Her görev için sıralı sağlayıcı listesi, yedekleme ve yeniden deneme. Önce yerel; ücretli API şart değil.</span></p>
+          <h3><span lang="en">Bring your own AI</span><span lang="tr">Kendi yapay zekân</span></h3>
+          <p><span lang="en">Ollama, llama.cpp, 9router or any OpenAI-compatible endpoint. Ordered fallbacks per task, retries, local-first. Your keys stay encrypted on your server.</span><span lang="tr">Ollama, llama.cpp, 9router ya da OpenAI uyumlu her uç nokta. Görev başına sıralı yedekler, yeniden deneme, önce yerel. Anahtarların sunucunda şifreli kalır.</span></p>
         </article>
         <article class="card">
           <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
-          <h3><span lang="en">Source- and rights-aware</span><span lang="tr">Kaynak ve hak bilinci</span></h3>
-          <p><span lang="en">Every item keeps its source, hash and rights status (default “unknown”) with a full rights history. The fetcher respects robots.txt and per-site rate limits.</span><span lang="tr">Her öğe kaynağını, hash'ini ve hak durumunu (varsayılan “unknown”) hak geçmişiyle birlikte saklar. Çekici robots.txt'e ve site başına istek sınırlarına uyar.</span></p>
+          <h3><span lang="en">Original scripts</span><span lang="tr">Özgün senaryo</span></h3>
+          <p><span lang="en">Sources are inspiration, not copy. The AI writes a new story with a hook, a twist and a follow call — plus title, description and tags.</span><span lang="tr">Kaynak ilhamdır, kopya değil. Yapay zekâ kanca, sürpriz son ve takip çağrısıyla yeni bir hikâye yazar; başlık, açıklama ve etiketlerle.</span></p>
         </article>
         <article class="card">
-          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
-          <h3><span lang="en">Original scripts, not copies</span><span lang="tr">Kopya değil, özgün senaryo</span></h3>
-          <p><span lang="en">Sources are inspiration. The AI writes a new script with hook, build-up, climax and call to action, plus title, description and tags. An originality check flags text that overlaps the source.</span><span lang="tr">Kaynaklar ilham içindir. Yapay zekâ kanca, gelişme, doruk ve çağrı içeren yeni bir senaryo; başlık, açıklama ve etiketler yazar. Özgünlük kontrolü kaynakla örtüşen metni işaretler.</span></p>
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Voice &amp; styled captions</span><span lang="tr">Ses ve stilli altyazı</span></h3>
+          <p><span lang="en">Local Piper voices in English and Turkish. Captions with six fonts, colours, outline, position and animations — including word-by-word karaoke highlight.</span><span lang="tr">İngilizce ve Türkçe yerel Piper sesleri. Altı yazı tipi, renk, kontur, konum ve animasyonlu altyazı; kelime kelime karaoke vurgusu dahil.</span></p>
         </article>
         <article class="card">
-          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
-          <h3><span lang="en">Voice, captions &amp; 9:16 video, locally</span><span lang="tr">Ses, altyazı ve 9:16 video, yerelde</span></h3>
-          <p><span lang="en">Local text-to-speech, word-level captions (SRT/VTT) and vertical Shorts rendered with ffmpeg on your own hardware, CPU included, with a thumbnail and quality checks.</span><span lang="tr">Yerel seslendirme, kelime düzeyinde altyazı (SRT/VTT) ve ffmpeg ile kendi donanımında, CPU'da bile üretilen dikey Shorts; kapak görseli ve kalite kontrolleriyle.</span></p>
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">9:16 video, your backgrounds</span><span lang="tr">9:16 video, senin arka planların</span></h3>
+          <p><span lang="en">1080×1920 renders with ffmpeg on your hardware. Upload gameplay or stock clips to your own library, with an optional licence note per clip.</span><span lang="tr">ffmpeg ile kendi donanımında 1080×1920 render. Oyun ya da stok kliplerini kendi kütüphanene yükle; istersen her klibe lisans notu ekle.</span></p>
         </article>
         <article class="card">
-          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
           <h3><span lang="en">Approve, then publish</span><span lang="tr">Önce onay, sonra yayın</span></h3>
-          <p><span lang="en">Publish to multiple YouTube channels, each with its own concepts and languages. Uploads are private by default and nothing goes out without your approval.</span><span lang="tr">Her biri kendi konseptleri ve dilleriyle birden fazla YouTube kanalına yayın. Yüklemeler varsayılan olarak gizlidir; onayın olmadan hiçbir şey yayınlanmaz.</span></p>
+          <p><span lang="en">Connect your channels with your own Google client. Upload now, or schedule a time and let YouTube publish it. AI-content disclosure is set for you.</span><span lang="tr">Kanallarını kendi Google istemcinle bağla. Hemen yükle ya da saat seç, YouTube o saatte yayına alsın. Yapay zekâ içerik beyanı otomatik ayarlanır.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Schedule everything</span><span lang="tr">Her şeyi zamanla</span></h3>
+          <p><span lang="en">Recurring production and publishing slots by time of day and weekday, with optional auto-approve. Two languages at once make two separate videos.</span><span lang="tr">Saat ve güne göre tekrarlayan üretim ve yayın; istersen otomatik onay. İki dil seçince iki ayrı video üretilir.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Windows app</span><span lang="tr">Windows uygulaması</span></h3>
+          <p><span lang="en">A real desktop app with an installer. It opens even when the server is offline, and you set the server address in Settings. No sign-in screen.</span><span lang="tr">Kurulum sihirbazlı gerçek bir masaüstü uygulaması. Sunucu kapalıyken bile açılır, sunucu adresini Ayarlar'dan girersin. Giriş ekranı yok.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag"><span lang="en">Next</span><span lang="tr">Sırada</span></span>
+          <h3><span lang="en">Script editor &amp; exact timing</span><span lang="tr">Senaryo düzenleme ve tam zamanlama</span></h3>
+          <p><span lang="en">Edit the script before rendering, whisper-aligned word timing, voice picker, thumbnails and quality checks. Mac and Linux apps.</span><span lang="tr">Render'dan önce senaryoyu düzenleme, whisper ile kelime hizalama, ses seçimi, kapak görseli ve kalite kontrolü. Mac ve Linux uygulamaları.</span></p>
         </article>
       </div>
     </div>
   </section>
 
-  <section id="how" class="section section-alt">
+  <section id="how" class="section">
     <div class="wrap">
       <h2><span lang="en">How it works</span><span lang="tr">Nasıl çalışır</span></h2>
       <ol class="flow">
         <li><span class="num">01</span><strong><span lang="en">Sources</span><span lang="tr">Kaynaklar</span></strong><small><span lang="en">Reddit, RSS, web, files</span><span lang="tr">Reddit, RSS, web, dosya</span></small></li>
         <li><span class="num">02</span><strong><span lang="en">AI script</span><span lang="tr">AI senaryo</span></strong><small><span lang="en">Original, with your model</span><span lang="tr">Özgün, senin modelinle</span></small></li>
-        <li><span class="num">03</span><strong><span lang="en">Voice &amp; captions</span><span lang="tr">Ses ve altyazı</span></strong><small><span lang="en">Local TTS, word timing</span><span lang="tr">Yerel TTS, kelime zamanlaması</span></small></li>
-        <li><span class="num">04</span><strong><span lang="en">Video</span><span lang="tr">Video</span></strong><small><span lang="en">9:16 Shorts render</span><span lang="tr">9:16 Shorts üretimi</span></small></li>
-        <li><span class="num">05</span><strong><span lang="en">Approve</span><span lang="tr">Onay</span></strong><small><span lang="en">You review every video</span><span lang="tr">Her videoyu sen incelersin</span></small></li>
-        <li><span class="num">06</span><strong>YouTube</strong><small><span lang="en">Private by default</span><span lang="tr">Varsayılan olarak gizli</span></small></li>
+        <li><span class="num">03</span><strong><span lang="en">Voice &amp; captions</span><span lang="tr">Ses ve altyazı</span></strong><small><span lang="en">Piper TTS, your caption style</span><span lang="tr">Piper TTS, senin altyazı stilin</span></small></li>
+        <li><span class="num">04</span><strong><span lang="en">Video</span><span lang="tr">Video</span></strong><small><span lang="en">9:16 render on your server</span><span lang="tr">Sunucunda 9:16 render</span></small></li>
+        <li><span class="num">05</span><strong><span lang="en">Approve</span><span lang="tr">Onay</span></strong><small><span lang="en">Or auto-approve by schedule</span><span lang="tr">Ya da takvimle otomatik</span></small></li>
+        <li><span class="num">06</span><strong>YouTube</strong><small><span lang="en">Now or scheduled</span><span lang="tr">Hemen ya da zamanlı</span></small></li>
       </ol>
     </div>
   </section>
 
-  <section id="install" class="section">
-    <div class="wrap narrow">
-      <h2><span lang="en">Install</span><span lang="tr">Kurulum</span></h2>
+  <section id="download" class="section section-alt">
+    <div class="wrap">
+      <h2><span lang="en">Download &amp; install</span><span lang="tr">İndir ve kur</span></h2>
       <p class="section-lead">
-        <span lang="en">Requires Docker and Docker Compose v2. The installer generates a random secret key and an admin password on first run. Replace the e-mail with your admin address.</span>
-        <span lang="tr">Docker ve Docker Compose v2 gerekir. Kurulum ilk çalıştırmada rastgele bir gizli anahtar ve yönetici parolası üretir. E-postayı kendi yönetici adresinle değiştir.</span>
+        <span lang="en">Two parts: the <b>server</b> does the work (a Linux box, home server or VM), the <b>app</b> is how you drive it.</span>
+        <span lang="tr">İki parça: işi <b>sunucu</b> yapar (bir Linux makine, ev sunucusu ya da sanal makine), <b>uygulama</b> ile onu yönetirsin.</span>
       </p>
-      <div class="code">
-        <button type="button" class="copy" data-copy-target="install-cmd">
-          <span class="copy-label"><span lang="en">Copy</span><span lang="tr">Kopyala</span></span>
-          <span class="copied-label"><span lang="en">Copied</span><span lang="tr">Kopyalandı</span></span>
-        </button>
+      <div class="dl-grid">
+        <article class="card dl-card">
+          <span class="step">1</span>
+          <h3><span lang="en">Server</span><span lang="tr">Sunucu</span></h3>
+          <p><span lang="en">Linux with Docker Compose v2 and <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>. 4 CPU cores and 8 GB RAM are comfortable; no GPU needed. At the end the installer prints the address for the app.</span><span lang="tr">Docker Compose v2 ve <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a> kurulu Linux. 4 çekirdek ve 8 GB RAM rahat yeter; GPU gerekmez. Kurulum sonunda uygulamaya yazacağın adresi gösterir.</span></p>
+          <div class="code">
+            <button type="button" class="copy" data-copy-target="install-cmd">
+              <span class="copy-label"><span lang="en">Copy</span><span lang="tr">Kopyala</span></span>
+              <span class="copied-label"><span lang="en">Copied</span><span lang="tr">Kopyalandı</span></span>
+            </button>
 <pre id="install-cmd"><code>git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
 cd cicibyte-ai-media-factory
-bash deploy/install.sh you@example.com</code></pre>
+bash deploy/install.sh</code></pre>
+          </div>
+          <p class="note"><span lang="en">There is no sign-in, so keep the server on a private network (Tailscale or your LAN), never the open internet. Details in <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a>.</span><span lang="tr">Giriş ekranı olmadığı için sunucuyu özel ağda tut (Tailscale ya da yerel ağ); asla açık internete açma. Ayrıntılar <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a> belgesinde.</span></p>
+        </article>
+        <article class="card dl-card">
+          <span class="step">2</span>
+          <h3><span lang="en">Desktop app</span><span lang="tr">Masaüstü uygulaması</span></h3>
+          <p><span lang="en">Install, open, and enter your server address under <b>Settings → Server</b> (for example <code>http://my-server:8080</code>).</span><span lang="tr">Kur, aç ve sunucu adresini <b>Ayarlar → Sunucu</b> kısmına yaz (ör. <code>http://sunucum:8080</code>).</span></p>
+          <a class="btn btn-primary btn-wide" href="downloads/CiciByteMediaFactory-Setup-0.1.0.exe" download>
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15"><path fill="currentColor" d="M0 2.3 6.5 1.4v6.2H0zm7.3-1L16 0v7.6H7.3zM0 8.4h6.5v6.3L0 13.8zm7.3 0H16V16l-8.7-1.2z"/></svg>
+            <span lang="en">Windows installer</span><span lang="tr">Windows kurulumu</span> <small>v0.1.0 · 26 MB</small>
+          </a>
+          <ul class="platforms">
+            <li><span lang="en">Windows 10 / 11 (64-bit)</span><span lang="tr">Windows 10 / 11 (64 bit)</span> · <span class="ok">✓</span></li>
+            <li>macOS · <span lang="en">coming soon on GitHub</span><span lang="tr">yakında GitHub'da</span></li>
+            <li>Linux · <span lang="en">coming soon on GitHub</span><span lang="tr">yakında GitHub'da</span></li>
+          </ul>
+          <p class="note"><span lang="en">The installer is not code-signed yet, so Windows SmartScreen may ask you to confirm: “More info → Run anyway”.</span><span lang="tr">Kurulum dosyası henüz imzalı değil; Windows SmartScreen onay isteyebilir: “Ek bilgi → Yine de çalıştır”.</span></p>
+        </article>
       </div>
-      <p class="note">
-        <span lang="en">The panel binds to <code>127.0.0.1:8080</code>. See <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a> for Tailscale or reverse-proxy access, updates and backups.</span>
-        <span lang="tr">Panel <code>127.0.0.1:8080</code> adresine bağlanır. Tailscale veya reverse proxy erişimi, güncelleme ve yedekleme için <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a> belgesine bak.</span>
-      </p>
     </div>
   </section>
 
-  <section class="section section-alt">
+  <section class="section">
     <div class="wrap narrow private">
       <h2><span lang="en">Self-hosted &amp; private</span><span lang="tr">Kendi sunucunda, gizli</span></h2>
       <p>
-        <span lang="en">Your sources, scripts, keys and videos stay on your machine. API keys and tokens are stored encrypted and masked in logs. There is no CiciByte cloud, no account and no telemetry to sign up for: you run it, you own it.</span>
-        <span lang="tr">Kaynakların, senaryoların, anahtarların ve videoların kendi makinende kalır. API anahtarları ve token'lar şifreli saklanır, loglarda maskelenir. Kayıt olunacak bir CiciByte bulutu ya da hesabı yok: sen çalıştırırsın, senindir.</span>
+        <span lang="en">Your sources, scripts, keys and videos stay on your machines. There is no CiciByte cloud, no account and no telemetry. You connect your own AI, your own Reddit and Google credentials, and you decide what gets published: you run it, you own it.</span>
+        <span lang="tr">Kaynakların, senaryoların, anahtarların ve videoların kendi makinelerinde kalır. CiciByte bulutu, hesap ya da telemetri yok. Kendi yapay zekânı, kendi Reddit ve Google bilgilerini bağlarsın; neyin yayınlanacağına sen karar verirsin: sen çalıştırırsın, senindir.</span>
       </p>
     </div>
   </section>
 
-  <section id="status" class="section">
+  <section id="status" class="section section-alt">
     <div class="wrap narrow">
       <h2><span lang="en">Roadmap &amp; status</span><span lang="tr">Yol haritası ve durum</span></h2>
       <p class="section-lead">
-        <span lang="en">Under active development toward v0.1: an original English (and optionally Turkish) Short, inspired by a source story, uploaded privately to a YouTube channel after your approval.</span>
-        <span lang="tr">v0.1 hedefine doğru aktif geliştirmede: bir kaynak hikâyeden ilham alan özgün bir İngilizce (istenirse Türkçe) Shorts'un, onayınla bir YouTube kanalına gizli olarak yüklenmesi.</span>
+        <span lang="en">v0.1 goal: an original English (and optionally Turkish) Short, inspired by a source story, published to YouTube after your approval.</span>
+        <span lang="tr">v0.1 hedefi: bir kaynak hikâyeden ilham alan özgün bir İngilizce (istenirse Türkçe) Shorts'un, onayınla YouTube'a gönderilmesi.</span>
       </p>
       <ul class="roadmap">
-        <li class="done"><span class="dot"></span><div><strong><span lang="en">Foundation</span><span lang="tr">Temel</span></strong><small><span lang="en">Docker install, auth, AI provider routing, job queue, backups</span><span lang="tr">Docker kurulumu, giriş, AI yönlendirme, iş kuyruğu, yedekleme</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
-        <li class="done"><span class="dot"></span><div><strong><span lang="en">Sources &amp; ingestion</span><span lang="tr">Kaynaklar ve alım</span></strong><small><span lang="en">Reddit, RSS, web, files; dedup, rights tracking, scheduler</span><span lang="tr">Reddit, RSS, web, dosya; tekilleştirme, hak takibi, zamanlayıcı</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
-        <li class="next"><span class="dot"></span><div><strong><span lang="en">Production pipeline &amp; media</span><span lang="tr">Üretim hattı ve medya</span></strong><small><span lang="en">Script, originality check, voice, captions, render, thumbnail</span><span lang="tr">Senaryo, özgünlük kontrolü, ses, altyazı, render, kapak</span></small></div><em><span lang="en">Next</span><span lang="tr">Sıradaki</span></em></li>
-        <li><span class="dot"></span><div><strong><span lang="en">Admin panel</span><span lang="tr">Yönetim paneli</span></strong><small><span lang="en">Web panel in English and Turkish, mobile-friendly</span><span lang="tr">İngilizce ve Türkçe web paneli, mobil uyumlu</span></small></div><em><span lang="en">Planned</span><span lang="tr">Planlandı</span></em></li>
-        <li><span class="dot"></span><div><strong><span lang="en">YouTube publisher</span><span lang="tr">YouTube yayıncı</span></strong><small><span lang="en">Per-channel OAuth, private uploads, quotas, daily limits</span><span lang="tr">Kanal başına OAuth, gizli yükleme, kota, günlük sınır</span></small></div><em><span lang="en">Planned</span><span lang="tr">Planlandı</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Foundation</span><span lang="tr">Temel</span></strong><small><span lang="en">Install, AI provider routing, job queue, backups</span><span lang="tr">Kurulum, AI yönlendirme, iş kuyruğu, yedekleme</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Sources &amp; ingestion</span><span lang="tr">Kaynaklar ve alım</span></strong><small><span lang="en">Reddit, RSS, web, files; dedup, rights tracking</span><span lang="tr">Reddit, RSS, web, dosya; tekilleştirme, hak takibi</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Production pipeline</span><span lang="tr">Üretim hattı</span></strong><small><span lang="en">Script, voice, captions, 9:16 render, background library</span><span lang="tr">Senaryo, ses, altyazı, 9:16 render, arka plan kütüphanesi</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Panel, Studio &amp; Windows app</span><span lang="tr">Panel, Stüdyo ve Windows uygulaması</span></strong><small><span lang="en">English &amp; Turkish, caption styles, live preview, installer</span><span lang="tr">İngilizce ve Türkçe, altyazı stilleri, canlı önizleme, kurulum</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">YouTube &amp; Schedule</span><span lang="tr">YouTube ve Takvim</span></strong><small><span lang="en">Channel connect, upload now or scheduled, recurring jobs</span><span lang="tr">Kanal bağlama, hemen ya da zamanlı yükleme, tekrarlayan işler</span></small></div><em>Beta</em></li>
+        <li class="next"><span class="dot"></span><div><strong><span lang="en">Quality &amp; platforms</span><span lang="tr">Kalite ve platformlar</span></strong><small><span lang="en">Script editor, whisper timing, thumbnails, Mac &amp; Linux apps</span><span lang="tr">Senaryo düzenleme, whisper zamanlaması, kapak, Mac ve Linux</span></small></div><em><span lang="en">Next</span><span lang="tr">Sıradaki</span></em></li>
       </ul>
       <p class="note">
         <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/ROADMAP.md" target="_blank" rel="noopener"><span lang="en">Full roadmap on GitHub</span><span lang="tr">Yol haritasının tamamı GitHub'da</span> &rarr;</a>
       </p>
+    </div>
+  </section>
+
+  <section id="faq" class="section">
+    <div class="wrap narrow">
+      <h2><span lang="en">Questions</span><span lang="tr">Sık sorulanlar</span></h2>
+      <div class="faq">
+        <details>
+          <summary><span lang="en">Is it really free?</span><span lang="tr">Gerçekten ücretsiz mi?</span></summary>
+          <p><span lang="en">Yes. It is MIT-licensed open source. You only pay for what you choose to connect, and local models cost nothing.</span><span lang="tr">Evet. MIT lisanslı açık kaynak. Yalnızca kendi bağlamayı seçtiğin şeylere ödeme yaparsın; yerel modeller ücretsizdir.</span></p>
+        </details>
+        <details>
+          <summary><span lang="en">Do I need a GPU?</span><span lang="tr">Ekran kartı gerekir mi?</span></summary>
+          <p><span lang="en">No. Voice and video run on the CPU (a 40-second Short renders in about two minutes on a home server). A GPU only helps if you run large local AI models.</span><span lang="tr">Hayır. Ses ve video CPU'da çalışır (40 saniyelik bir Short ev sunucusunda yaklaşık iki dakikada hazır). Ekran kartı yalnızca büyük yerel AI modelleri çalıştıracaksan işe yarar.</span></p>
+        </details>
+        <details>
+          <summary><span lang="en">Which AI can I use?</span><span lang="tr">Hangi yapay zekâyı kullanabilirim?</span></summary>
+          <p><span lang="en">Anything with an OpenAI-compatible API: Ollama, llama.cpp, LM Studio, 9router, or cloud providers. You can list several per task as fallbacks.</span><span lang="tr">OpenAI uyumlu API'si olan her şey: Ollama, llama.cpp, LM Studio, 9router ya da bulut sağlayıcılar. Her görev için yedek olarak birkaç tane sıralayabilirsin.</span></p>
+        </details>
+        <details>
+          <summary><span lang="en">Does it upload without asking me?</span><span lang="tr">Bana sormadan yükler mi?</span></summary>
+          <p><span lang="en">Only if you tell it to. By default every video waits in Ready videos for your approval. Auto-approve and publishing slots are opt-in per schedule.</span><span lang="tr">Ancak sen istersen. Varsayılan olarak her video Hazır videolar'da onayını bekler. Otomatik onay ve yayın saatleri, her zamanlamada ayrı ayrı senin açmanla çalışır.</span></p>
+        </details>
+        <details>
+          <summary><span lang="en">What about copyright?</span><span lang="tr">Telif hakları ne olacak?</span></summary>
+          <p><span lang="en">Stories are used as inspiration and the AI writes a new script, but you are responsible for what you publish. Each story keeps its source and rights status, and you can note the licence of every background clip. Respect the terms of the sites you collect from.</span><span lang="tr">Hikâyeler ilham olarak kullanılır ve yapay zekâ yeni bir senaryo yazar; ama yayınladığından sen sorumlusun. Her hikâye kaynağını ve hak durumunu saklar; her arka plan klibine lisans notu ekleyebilirsin. Topladığın sitelerin kurallarına uy.</span></p>
+        </details>
+        <details>
+          <summary><span lang="en">How do I connect YouTube?</span><span lang="tr">YouTube'u nasıl bağlarım?</span></summary>
+          <p><span lang="en">Create an OAuth client (type “Desktop app”) in Google Cloud with YouTube Data API v3 enabled, paste its ID and secret into Settings → YouTube, then click “Connect a channel”.</span><span lang="tr">Google Cloud'da YouTube Data API v3 etkin bir OAuth istemcisi (tür: “Masaüstü uygulaması”) oluştur, ID ve secret'ı Ayarlar → YouTube'a yapıştır, sonra “Kanal bağla”ya tıkla.</span></p>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -184,7 +299,7 @@ bash deploy/install.sh you@example.com</code></pre>
         <span lang="en">The Media Factory is free and always will be. If it helps you, a coffee keeps the work going.</span>
         <span lang="tr">Media Factory ücretsiz ve hep öyle kalacak. İşine yararsa bir kahve, çalışmanın sürmesine yardım eder.</span>
       </p>
-      <a class="btn btn-primary" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener"><span lang="en">Buy me a coffee</span><span lang="tr">Bana bir kahve ısmarla</span></a>
+      <a class="btn btn-primary" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">☕ <span lang="en">Buy me a coffee</span><span lang="tr">Bana bir kahve ısmarla</span></a>
     </div>
   </section>
 
@@ -211,6 +326,6 @@ bash deploy/install.sh you@example.com</code></pre>
   </div>
 </footer>
 
-<script src="script.js" defer></script>
+<script src="script.js?v=2" defer></script>
 </body>
 </html>
