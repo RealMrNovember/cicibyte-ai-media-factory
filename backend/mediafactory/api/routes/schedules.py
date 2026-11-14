@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from mediafactory.api.deps import client_ip, get_db, require_user
 from mediafactory.audit.service import record_audit
 from mediafactory.db.models import Schedule, User
+from mediafactory.pipeline.music import MusicSettings
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.voice import VoiceSettings
 from mediafactory.schedule.runner import ACTIONS, plan_next
@@ -26,6 +27,7 @@ class ProduceParams(BaseModel):
     background: str = Field(default="random", max_length=120)
     style: CaptionStyle = Field(default_factory=CaptionStyle)
     voice: VoiceSettings = Field(default_factory=VoiceSettings)
+    music: MusicSettings = Field(default_factory=MusicSettings)
     auto_approve: bool = False
     source_id: int | None = None
     min_chars: int | None = Field(default=None, ge=0, le=100_000)

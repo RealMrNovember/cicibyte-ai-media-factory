@@ -11,7 +11,7 @@ const ST = {
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
-    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
+    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", music: "Music", noMusic: "No music", randomMusic: "Random from my library", ambiences: "Ambiences (royalty-free)", myTracks: "My tracks", musicVol: "Music volume", ducking: "Lower the music while the narrator speaks", uploadMusic: "Upload track", musicHint: "Upload music you are allowed to use (mp3, wav, ogg, m4a, flac).", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
     noClips: "No clips yet. Upload gameplay or stock footage you are allowed to use.", sure: "Delete this clip?",
   },
   tr: {
@@ -23,7 +23,7 @@ const ST = {
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
-    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
+    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", music: "Müzik", noMusic: "Müzik yok", randomMusic: "Kütüphanemden rastgele", ambiences: "Ambiyanslar (telifsiz)", myTracks: "Parçalarım", musicVol: "Müzik seviyesi", ducking: "Anlatıcı konuşurken müziği kıs", uploadMusic: "Parça yükle", musicHint: "Kullanma iznin olan müziği yükle (mp3, wav, ogg, m4a, flac).", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
     noClips: "Henüz klip yok. Kullanma iznin olan oyun ya da stok görüntüsü yükle.", sure: "Bu klip silinsin mi?",
   },
 };
@@ -100,6 +100,80 @@ async function drawVoice() {
   }));
 }
 
+const DEFAULT_MUSIC = { track: "none", volume_db: -18, ducking: true };
+function loadMusic() {
+  try { return { ...DEFAULT_MUSIC, ...JSON.parse(localStorage.getItem("mf_music") || "{}") }; } catch { return { ...DEFAULT_MUSIC }; }
+}
+function saveMusic(m) { try { localStorage.setItem("mf_music", JSON.stringify(m)); } catch { /* private mode */ } }
+
+async function drawMusic(refresh = false) {
+  const box = document.getElementById("musicBox");
+  if (!box) return;
+  const s = studioState;
+  s.music = s.music || loadMusic();
+  if (!s.musicList || refresh) { try { s.musicList = await api("/api/music"); } catch { s.musicList = { generated: [], tracks: [] }; } }
+  const m = s.music, L = s.musicList;
+  const known = ["none", "random", ...L.generated.map((g) => g.id), ...L.tracks.map((x) => x.name)];
+  if (!known.includes(m.track)) m.track = "none";
+  const opt = (v, label) => `<option value="${esc(v)}" ${m.track === v ? "selected" : ""}>${esc(label)}</option>`;
+  box.innerHTML = `<div class="row" style="flex-wrap:nowrap"><select data-mk="track">
+      ${opt("none", st("noMusic"))}${L.tracks.length ? opt("random", st("randomMusic")) : ""}
+      <optgroup label="${esc(st("ambiences"))}">${L.generated.map((g) => opt(g.id, g.label[lang] || g.label.en)).join("")}</optgroup>
+      ${L.tracks.length ? `<optgroup label="${esc(st("myTracks"))}">${L.tracks.map((x) => opt(x.name, x.name)).join("")}</optgroup>` : ""}
+    </select><button class="btn" id="musicPlay">▶</button>
+    ${L.tracks.some((x) => x.name === m.track) ? `<button class="btn danger" id="musicDel" title="${t("delete")}">×</button>` : ""}</div>
+    <div class="grid g2" style="margin-top:6px">
+      <div><label>${st("musicVol")} <b class="val">${m.volume_db} dB</b></label><input type="range" data-mk="volume_db" min="-35" max="-6" step="1" value="${m.volume_db}"></div>
+      <div style="align-self:end"><label class="row"><input type="checkbox" data-mk="ducking" ${m.ducking ? "checked" : ""} style="width:auto"> ${st("ducking")}</label></div>
+    </div><p class="muted small" style="margin:6px 0 0">${st("musicHint")}</p>`;
+  box.querySelectorAll("[data-mk]").forEach((n) => n.addEventListener("input", () => {
+    const k = n.dataset.mk;
+    m[k] = n.type === "checkbox" ? n.checked : n.type === "range" ? Number(n.value) : n.value;
+    saveMusic(m);
+    if (k === "volume_db") n.parentElement.querySelector(".val").textContent = `${m.volume_db} dB`;
+    if (k === "track") drawMusic();
+  }));
+  box.querySelector("#musicPlay").addEventListener("click", () => {
+    if (s.audio) s.audio.pause();
+    const pick = m.track === "random" ? (L.tracks[0] || {}).name : m.track;
+    if (!pick || pick === "none") return;
+    s.audio = new Audio(`/api/music/${encodeURIComponent(pick)}/audio`);
+    s.audio.volume = Math.min(1, Math.pow(10, (m.volume_db + 12) / 20));
+    s.audio.play().catch((err) => toast(err.message, true));
+  });
+  const del = box.querySelector("#musicDel");
+  del && del.addEventListener("click", async () => {
+    if (!confirm(st("sure"))) return;
+    try { await api(`/api/music/${encodeURIComponent(m.track)}`, { method: "DELETE" }); m.track = "none"; saveMusic(m); drawMusic(true); }
+    catch (err) { toast(err.message, true); }
+  });
+}
+
+function uploadMusicDialog() {
+  const md = modal(`<h1>${st("uploadMusic")}</h1><form id="umf">
+    <label>Audio (mp3, wav, ogg, m4a, flac)</label><input type="file" name="file" accept="audio/*" required>
+    <label>${st("licence")}</label><input name="licence" placeholder="Pixabay Music / YouTube Audio Library / own recording">
+    <div class="progress" hidden><div></div></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary">${st("uploadMusic")}</button></div></form>`);
+  md.querySelector("#umf").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target), bar = md.querySelector(".progress"), btn = md.querySelector("button.primary");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/music");
+    xhr.setRequestHeader("X-MF-Client", "panel");
+    bar.hidden = false; btn.disabled = true; btn.textContent = st("uploading");
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.firstElementChild.style.width = `${(ev.loaded / ev.total) * 100}%`; };
+    xhr.onload = async () => {
+      let d = null; try { d = JSON.parse(xhr.responseText); } catch { /* not json */ }
+      if (xhr.status !== 201) { btn.disabled = false; btn.textContent = st("uploadMusic"); return toast((d && d.detail) || xhr.statusText, true); }
+      md.remove(); toast(st("uploaded"));
+      studioState.music = { ...(studioState.music || loadMusic()), track: d.name }; saveMusic(studioState.music); drawMusic(true);
+    };
+    xhr.onerror = () => { btn.disabled = false; btn.textContent = st("uploadMusic"); toast(t("offline"), true); };
+    xhr.send(fd);
+  });
+}
+
 function loadStyle() {
   try { return { ...DEFAULT_STYLE, ...JSON.parse(localStorage.getItem("mf_style") || "{}") }; } catch { return { ...DEFAULT_STYLE }; }
 }
@@ -124,12 +198,15 @@ async function studio(el) {
           <button class="btn" id="upBtn">＋ ${st("upload")}</button></div><div id="bgBox"></div></div>
         <div class="card"><h3>3 · ${st("captions")}</h3><div id="capBox"></div></div>
         <div class="card"><h3>4 · ${st("voice")}</h3><div id="voiceBox"></div></div>
-        <div class="card"><h3>5 · ${st("output")}</h3><div id="outBox"></div></div>
+        <div class="card"><div class="row"><h3>5 · ${st("music")}</h3><span class="spacer"></span>
+          <button class="btn" id="upMusic">＋ ${st("uploadMusic")}</button></div><div id="musicBox"></div></div>
+        <div class="card"><h3>6 · ${st("output")}</h3><div id="outBox"></div></div>
       </div>
       <div class="studio-preview"><div class="phone" id="phone"><div class="phone-bg" id="phoneBg"></div>
         <div class="cap" id="cap"></div></div><p class="muted small" style="text-align:center">${st("previewHint")}</p></div>
     </div>`;
-  drawStory(); drawBackgrounds(); drawCaptions(); drawVoice(); drawOutput(); drawPreview();
+  drawStory(); drawBackgrounds(); drawCaptions(); drawVoice(); drawMusic(); drawOutput(); drawPreview();
+  document.getElementById("upMusic").addEventListener("click", uploadMusicDialog);
   document.getElementById("upBtn").addEventListener("click", uploadDialog);
   document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(async (item) => {
     studioState.items = (await api("/api/items?limit=200")).items; studioState.itemId = item.id; studioState.langFilter = item.language || ""; drawStory(); drawPreview();
@@ -306,7 +383,7 @@ function drawOutput() {
     if (!s.languages.length) return toast(t("languages"), true);
     e.target.disabled = true;
     try {
-      await api(`/api/items/${s.itemId}/make`, { method: "POST", body: { languages: s.languages, seconds: s.seconds, background: s.background, style: s.style, review_script: !!s.reviewFirst, voice: s.voice || loadVoice() } });
+      await api(`/api/items/${s.itemId}/make`, { method: "POST", body: { languages: s.languages, seconds: s.seconds, background: s.background, style: s.style, review_script: !!s.reviewFirst, voice: s.voice || loadVoice(), music: s.music || loadMusic() } });
       toast(t("makeStarted")); location.hash = "#production";
     } catch (err) { toast(err.message, true); e.target.disabled = false; }
   });

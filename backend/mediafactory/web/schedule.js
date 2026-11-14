@@ -6,7 +6,7 @@ const SC = {
     schedule: "Schedule", scheduleSub: "Produce new videos and publish approved ones automatically, at the times you choose.",
     newSchedule: "New schedule", kindProduce: "Produce videos", kindPublish: "Publish to YouTube", kind: "Type",
     times: "Times (e.g. 09:00, 18:30)", days: "Days", tz: "Time zone", count: "How many each time",
-    perSlot: "Videos per time slot", autoApprove: "Approve automatically (skip my review)", useStudio: "Use my current Studio caption style and voice",
+    perSlot: "Videos per time slot", autoApprove: "Approve automatically (skip my review)", useStudio: "Use my current Studio caption style, voice and music",
     source: "From source", anySource: "Any source", privacy: "Visibility", public: "Public", unlisted: "Unlisted", private: "Private",
     nextRun: "Next run", lastRun: "Last run", runNow: "Run now", enabled: "On", disabled: "Off", edit: "Edit",
     dayNames: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], anyLang: "Any language",
@@ -21,7 +21,7 @@ const SC = {
     schedule: "Takvim", scheduleSub: "Seçtiğin saatlerde otomatik video üret ve onaylı videoları YouTube'a gönder.",
     newSchedule: "Yeni zamanlama", kindProduce: "Video üret", kindPublish: "YouTube'a gönder", kind: "Tür",
     times: "Saatler (ör. 09:00, 18:30)", days: "Günler", tz: "Saat dilimi", count: "Her seferinde kaç tane",
-    perSlot: "Her saatte kaç video", autoApprove: "Otomatik onayla (benim incelememi atla)", useStudio: "Stüdyo'daki mevcut altyazı stilimi ve sesimi kullan",
+    perSlot: "Her saatte kaç video", autoApprove: "Otomatik onayla (benim incelememi atla)", useStudio: "Stüdyo'daki mevcut altyazı stilimi, sesimi ve müziğimi kullan",
     source: "Kaynak", anySource: "Tüm kaynaklar", privacy: "Görünürlük", public: "Herkese açık", unlisted: "Liste dışı", private: "Gizli",
     nextRun: "Sonraki", lastRun: "Son", runNow: "Şimdi çalıştır", enabled: "Açık", disabled: "Kapalı", edit: "Düzenle",
     dayNames: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"], anyLang: "Her dil",
@@ -105,7 +105,7 @@ function scheduleDialog(s, sources) {
     if (kindV === "produce") {
       params = { count: Number(f.count.value), seconds: Number(f.seconds.value), languages: ["en", "tr"].filter((l) => f[l].checked),
         auto_approve: f.auto.checked, source_id: f.source.value ? Number(f.source.value) : null, background: p.background || "random",
-        style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()) };
+        style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
     } else {
       params = { count: Number(f.count.value), privacy: f.privacy.value, language: f.language.value || null };
     }

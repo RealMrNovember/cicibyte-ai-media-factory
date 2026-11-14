@@ -12,6 +12,7 @@ from mediafactory.audit.service import record_audit
 from mediafactory.core.config import get_settings
 from mediafactory.db.models import JobStageRun, ProductionJob, SourceItem, User
 from mediafactory.pipeline.handlers import MAKE_SHORT
+from mediafactory.pipeline.music import MusicSettings
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.voice import VoiceSettings
 from mediafactory.queue.jobs import JobBusy, cancel_job, create_job, enqueue_stage, retry_failed
@@ -26,6 +27,7 @@ class MakeIn(BaseModel):
     style: CaptionStyle = Field(default_factory=CaptionStyle)
     review_script: bool = False
     voice: VoiceSettings = Field(default_factory=VoiceSettings)
+    music: MusicSettings = Field(default_factory=MusicSettings)
 
 
 def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
@@ -79,7 +81,7 @@ def make_from_item(
 
     jobs = start_production(db, item, languages=body.languages, seconds=body.seconds, background=body.background,
                             style=body.style, review_script=body.review_script,
-                            voice=body.voice.model_dump())  # fmt: skip
+                            voice=body.voice.model_dump(), music=body.music.model_dump())  # fmt: skip
     record_audit(db, actor_id=user.id, action="job.make", target_type="source_item", target_id=str(iid),
                  details={"languages": body.languages, "jobs": [j.id for j in jobs]}, ip=client_ip(request))  # fmt: skip
     return {"jobs": [job_out(j) for j in jobs]}

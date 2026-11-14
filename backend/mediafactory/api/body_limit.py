@@ -4,7 +4,7 @@ import json
 
 MAX_BODY_BYTES = 12 * 1024 * 1024  # a 10 MB upload plus multipart overhead
 # Paths that legitimately take big uploads (background video clips).
-LARGE_UPLOADS = {"/api/backgrounds": 2 * 1024 * 1024 * 1024}
+LARGE_UPLOADS = {"/api/backgrounds": 2 * 1024 * 1024 * 1024, "/api/music": 300 * 1024 * 1024}
 
 
 class BodyTooLarge(Exception):

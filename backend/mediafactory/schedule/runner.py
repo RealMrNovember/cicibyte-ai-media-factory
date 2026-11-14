@@ -34,7 +34,7 @@ def run_produce(db: Session, schedule: Schedule) -> str:
         jobs += len(start_production(
             db, item, languages=p.get("languages") or ["en"], seconds=int(p.get("seconds", 50)),
             background=p.get("background", "random"), style=p.get("style"), auto_approve=bool(p.get("auto_approve")),
-            voice=p.get("voice"),
+            voice=p.get("voice"), music=p.get("music"),
             origin=f"schedule:{schedule.id}",
         ))  # fmt: skip
     return f"{len(items)} stories → {jobs} videos" if items else "no unused stories to produce from"

@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 281 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 288 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -70,6 +70,11 @@
   - Model `MF_WHISPER_MODEL` (varsayılan `small`), CPU'da int8; 40 sn'lik ses için birkaç saniye.
   - Çıktılar: ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
 - **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan. Ses −14 LUFS'e normalize ediliyor ve sınırlayıcıyla kırpılması önleniyor.
+- **Arka plan müziği:**
+  - Kendi parçalarını yükleyebiliyorsun (mp3, wav, ogg, m4a, flac; lisans notu isteğe bağlı).
+  - ffmpeg ile sentezlenen 3 telifsiz ambiyans var: Karanlık uğultu, Gerilim nabzı, Gizem.
+  - Stüdyo'da parça seçimi, dinle, ses seviyesi ve anlatıcı konuşurken müziği kısma (ducking) var; başta ve sonda yumuşak geçiş yapılıyor.
+  - Takvim aynı müzik ayarını kullanabiliyor.
 - **Kapak görseli:** Arka plan klibinden en canlı ve altyazısız kare seçiliyor; üzerine Stüdyo yazı tipi ve vurgu rengiyle büyük başlık yazılıyor. Uzun başlıkta yazı küçülüyor. YouTube'a yüklerken kapak da gönderiliyor (kanal doğrulanmamışsa YouTube reddedebilir; yükleme yine tamamlanır).
 - **Kalite kontrolü:** Her videoda çözünürlük, süre, ses varlığı, ses yüksekliği (LUFS), tepe seviyesi, uzun sessizlik, siyah ekran ve altyazı kontrol ediliyor. Hazır Videolar'da ✓/⚠ rozeti ve ayrıntı penceresi var. QC'den geçmeyen video, otomatik onaylı takvimde bile incelemeye düşüyor.
 - **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
@@ -133,7 +138,8 @@
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [x] Kapak görseli ve kalite kontrolü.
-- [ ] Arka plan müziği ve ses efektleri; 16:9 format (v0.2).
+- [x] Arka plan müziği (kütüphane + telifsiz ambiyanslar, kısma).
+- [ ] Ses efektleri (kapı gıcırtısı, kalp atışı…) ve 16:9 format (v0.2).
 - [ ] Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
 
 ### YouTube (Plan 5'in devamı)
@@ -182,7 +188,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Daha doğal sesler (özellikle Türkçe) ve arka plan müziği.
+2. Daha doğal sesler (özellikle Türkçe).
 3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---

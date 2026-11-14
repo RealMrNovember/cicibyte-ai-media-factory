@@ -4,6 +4,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from mediafactory.pipeline.music import MusicSettings, audio_graph, source_for
+
 WIDTH, HEIGHT, FPS = 1080, 1920, 30
 
 
@@ -16,7 +18,7 @@ def ffmpeg_bin() -> str:
 
 def render_short(
     out_dir: Path, *, audio: str, captions_ass: str, duration: float, background: Path | None = None,
-    output: str = "short.mp4",
+    output: str = "short.mp4", music: "MusicSettings | None" = None, data_dir: Path | None = None,
 ) -> Path:  # fmt: skip
     """All file names are relative to out_dir (ffmpeg runs there, so paths need no filter escaping)."""
     total = round(duration + 0.6, 2)
@@ -31,13 +33,15 @@ def render_short(
                  f"gradients=s={WIDTH}x{HEIGHT}:c0=0x07070c:c1=0x2b0a10:c2=0x0c1420:c3=0x140a1c:"
                  f"speed=0.012:duration={total}:rate={FPS}"]  # fmt: skip
         bg = "[0:v]noise=alls=6:allf=t,vignette=PI/4"
-    graph = f"{bg},ass={captions_ass}[v]"
+    music = music or MusicSettings()
+    music_in = source_for(data_dir or out_dir, music, seconds=total) if music.track != "none" else None
+    # Audio: narration (+ music ducked under it), mastered to -14 LUFS with a limiter (no clipping after AAC).
+    agraph = audio_graph(music, total=total, music_input=2 if music_in else None)
+    graph = f"{bg},ass={captions_ass}[v];{agraph}"
     cmd = [
         ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
-        *bg_in, "-i", audio,
-        "-filter_complex", graph, "-map", "[v]", "-map", "1:a",
-        # -14 LUFS like YouTube; the limiter keeps true peaks under ~-1.5 dBTP even after AAC encoding.
-        "-af", "loudnorm=I=-14:TP=-2:LRA=11,alimiter=limit=0.75:level=false", "-ar", "48000",
+        *bg_in, "-i", audio, *(music_in or []),
+        "-filter_complex", graph, "-map", "[v]", "-map", "[a]", "-ar", "48000",
         "-t", str(total), "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", output,
     ]  # fmt: skip

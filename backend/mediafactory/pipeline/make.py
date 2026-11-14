@@ -11,6 +11,7 @@ from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
+from mediafactory.pipeline.music import MusicSettings
 from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
 from mediafactory.pipeline.thumbnail import make_thumbnail
@@ -22,7 +23,7 @@ from mediafactory.pipeline.voice import VoiceSettings
 def make_short(
     session: Session, item_id: int, *, language: str, data_dir: Path, seconds: int = 50,
     background: Path | None = None, background_choice: str = "random", style: dict | None = None,
-    script: dict | None = None, voice: dict | None = None, log=print,
+    script: dict | None = None, voice: dict | None = None, music: dict | None = None, log=print,
 ) -> dict:  # fmt: skip
     caption_style = CaptionStyle(**(style or {}))
     item = session.get(SourceItem, item_id)
@@ -65,7 +66,11 @@ def make_short(
     if background is None and background_choice != "none":
         background = pick_background(data_dir)
     log(f"[4/4] render 1080x1920 over {background.name if background else 'generated gradient'}")
-    video = render_short(out, audio="voice.wav", captions_ass="captions.ass", duration=duration, background=background)
+    ms = MusicSettings(**(music or {}))
+    if ms.track != "none":
+        log(f"      music: {ms.track} at {ms.volume_db} dB{', ducked under the voice' if ms.ducking else ''}")
+    video = render_short(out, audio="voice.wav", captions_ass="captions.ass", duration=duration, background=background,
+                         music=ms, data_dir=data_dir)  # fmt: skip
 
     log("[+] cover image and quality check")
     thumb = None
