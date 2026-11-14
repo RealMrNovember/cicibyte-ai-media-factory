@@ -1,18 +1,25 @@
-"""Desktop app: a native window onto a Media Factory server.
+"""Desktop app: a native window for a Media Factory server.
 
-All production (database, AI, voice, captions, rendering, scheduling) runs on the server; this app only
-shows its panel. The server address is asked on first start and kept in
-%LOCALAPPDATA%\\CiciByteMediaFactory\\config.json (or ~/.cicibyte-media-factory/config.json).
+All production (database, AI, voice, captions, rendering, scheduling) runs on the server. The app ships the
+panel itself and serves it from a private local port; /api requests are forwarded to the server address set
+in Settings (kept in %LOCALAPPDATA%\\CiciByteMediaFactory\\config.json). The window always opens — when the
+server cannot be reached the panel says so and Settings stays usable.
 Powered by CiciByte Technology — https://cicibyte.com
 """
 
+import http.client
 import json
+import mimetypes
 import os
-import urllib.request
+import threading
+import urllib.parse
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 APP_NAME = "CiciByte AI Media Factory"
 DEFAULT_SERVER = "http://mediafactory:8080"
+WEB_DIR = Path(__file__).resolve().parent / "web"
+HOP_HEADERS = {"connection", "keep-alive", "transfer-encoding", "upgrade", "host", "proxy-connection", "te", "trailer"}
 
 
 def app_home() -> Path:
@@ -22,88 +29,153 @@ def app_home() -> Path:
     return home
 
 
-def load_config(home: Path) -> dict:
-    path = home / "config.json"
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-
-
-def save_config(home: Path, cfg: dict) -> None:
-    (home / "config.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
-
-
 def normalize(url: str) -> str:
-    url = url.strip().rstrip("/")
+    url = (url or "").strip().rstrip("/")
     if url and "://" not in url:
         url = "http://" + url
     return url
 
 
+class Config:
+    def __init__(self, home: Path):
+        self.path = home / "config.json"
+        try:
+            self.data = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            self.data = {}
+        self.lock = threading.Lock()
+
+    @property
+    def server_url(self) -> str:
+        return normalize(os.environ.get("MF_SERVER_URL") or self.data.get("server_url") or DEFAULT_SERVER)
+
+    def set_server(self, url: str) -> None:
+        with self.lock:
+            self.data["server_url"] = normalize(url)
+            self.path.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
+
+
 def reachable(url: str, timeout: float = 4.0) -> bool:
     try:
-        with urllib.request.urlopen(f"{url}/api/health", timeout=timeout) as r:  # noqa: S310 (user-chosen server)
-            return r.status == 200 and json.loads(r.read()).get("status") == "ok"
+        u = urllib.parse.urlsplit(url)
+        conn = (http.client.HTTPSConnection if u.scheme == "https" else http.client.HTTPConnection)(u.netloc, timeout=timeout)
+        conn.request("GET", (u.path or "") + "/api/health")
+        ok = conn.getresponse().status == 200
+        conn.close()
+        return ok
     except Exception:
         return False
 
 
-SETUP_HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
-body{margin:0;background:#0b0b0e;color:#ececf1;font:15px/1.5 "Segoe UI",system-ui,sans-serif;display:grid;place-items:center;height:100vh}
-.c{background:#131318;border:1px solid #26262f;border-radius:14px;padding:28px;width:min(460px,92vw)}
-h1{font-size:20px;margin:0 0 4px}p{color:#8e8e9c;margin:0 0 18px;font-size:14px}
-input{width:100%;box-sizing:border-box;background:#0b0b0e;border:1px solid #26262f;border-radius:9px;padding:10px 12px;color:inherit;font:inherit}
-button{margin-top:14px;width:100%;background:#c9a96e;color:#1a1408;border:0;border-radius:9px;padding:10px;font-weight:600;font:inherit;cursor:pointer}
-#e{color:#e0645c;font-size:13px;min-height:18px;margin-top:10px}small{display:block;margin-top:18px;color:#8e8e9c;font-size:12px}
-a{color:#c9a96e}</style></head><body><div class="c">
-<h1>CiciByte AI Media Factory</h1>
-<p>Sunucu adresi / Server address — üretim bu sunucuda çalışır.</p>
-<input id="u" value="__URL__" placeholder="http://mediafactory:8080" autofocus>
-<button onclick="go()">Bağlan / Connect</button><div id="e">__ERR__</div>
-<small>Powered by CiciByte Technology · cicibyte.com</small></div>
-<script>
-async function go(){document.getElementById('e').textContent='…';
- const r=await window.pywebview.api.connect(document.getElementById('u').value);
- if(r!==true)document.getElementById('e').textContent=r;}
-document.getElementById('u').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
-</script></body></html>"""
+def make_handler(cfg: Config):
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
 
+        def log_message(self, *args):  # keep the console quiet
+            pass
 
-class Api:
-    def __init__(self, home: Path, cfg: dict):
-        self.home, self.cfg, self.window = home, cfg, None
+        def _send(self, status: int, body: bytes, ctype: str = "application/json", extra: dict | None = None):
+            self.send_response(status)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            for k, v in (extra or {}).items():
+                self.send_header(k, v)
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(body)
 
-    def connect(self, url: str):
-        url = normalize(url)
-        if not reachable(url):
-            return f"Sunucuya ulaşılamadı / Cannot reach {url}"
-        self.cfg["server_url"] = url
-        save_config(self.home, self.cfg)
-        self.window.load_url(url + "/")
-        return True
+        def _json(self, status: int, data: dict, extra: dict | None = None):
+            self._send(status, json.dumps(data).encode(), extra=extra)
 
+        def _body(self) -> bytes:
+            n = int(self.headers.get("Content-Length") or 0)
+            return self.rfile.read(n) if n else b""
 
-def setup_page(url: str, err: str = "") -> str:
-    esc = lambda s: s.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")  # noqa: E731
-    return SETUP_HTML.replace("__URL__", esc(url)).replace("__ERR__", esc(err))
+        def _desktop_config(self):
+            if self.command == "POST":
+                if not self.headers.get("X-MF-Client"):
+                    return self._json(403, {"detail": "missing X-MF-Client header"})
+                try:
+                    url = normalize(json.loads(self._body() or b"{}").get("server_url", ""))
+                except ValueError:
+                    url = ""
+                if not url.startswith(("http://", "https://")):
+                    return self._json(400, {"detail": "invalid address"})
+                cfg.set_server(url)
+            url = cfg.server_url
+            return self._json(200, {"server_url": url, "reachable": reachable(url)})
+
+        def _proxy(self):
+            target = urllib.parse.urlsplit(cfg.server_url)
+            body = self._body()
+            headers = {k: v for k, v in self.headers.items() if k.lower() not in HOP_HEADERS}
+            headers["Host"] = target.netloc
+            try:
+                conn_cls = http.client.HTTPSConnection if target.scheme == "https" else http.client.HTTPConnection
+                conn = conn_cls(target.netloc, timeout=600)
+                conn.request(self.command, (target.path or "") + self.path, body=body or None, headers=headers)
+                resp = conn.getresponse()
+            except Exception as exc:
+                return self._json(502, {"detail": f"server unreachable: {exc}"}, {"X-MF-Desktop": "1"})
+            self.send_response(resp.status)
+            length = resp.getheader("Content-Length")
+            for k, v in resp.getheaders():
+                if k.lower() not in HOP_HEADERS:
+                    self.send_header(k, v)
+            if length is None:
+                self.send_header("Transfer-Encoding", "chunked")
+            self.end_headers()
+            try:
+                while chunk := resp.read(64 * 1024):
+                    if length is None:
+                        self.wfile.write(f"{len(chunk):X}\r\n".encode() + chunk + b"\r\n")
+                    else:
+                        self.wfile.write(chunk)
+                if length is None:
+                    self.wfile.write(b"0\r\n\r\n")
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            finally:
+                conn.close()
+
+        def _static(self):
+            rel = urllib.parse.unquote(urllib.parse.urlsplit(self.path).path).lstrip("/") or "index.html"
+            path = (WEB_DIR / rel).resolve()
+            if WEB_DIR not in path.parents or not path.is_file():
+                path = WEB_DIR / "index.html"
+            ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+            if ctype.startswith("text/") or ctype.endswith("javascript"):
+                ctype += "; charset=utf-8"
+            self._send(200, path.read_bytes(), ctype)
+
+        def _route(self):
+            if self.path.startswith("/desktop/config"):
+                return self._desktop_config()
+            if self.path.startswith("/api/"):
+                return self._proxy()
+            if self.command in ("GET", "HEAD"):
+                return self._static()
+            return self._json(405, {"detail": "method not allowed"})
+
+        do_GET = do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = _route
+
+    return Handler
 
 
 def main() -> None:
     import webview
 
-    home = app_home()
-    cfg = load_config(home)
-    url = normalize(os.environ.get("MF_SERVER_URL") or cfg.get("server_url") or DEFAULT_SERVER)
-    api = Api(home, cfg)
-    if reachable(url):
-        window = webview.create_window(APP_NAME, url + "/", js_api=api, width=1320, height=880, min_size=(420, 600))
-    else:
-        err = "" if not cfg.get("server_url") else f"Sunucuya ulaşılamadı / Cannot reach {url}"
-        window = webview.create_window(APP_NAME, html=setup_page(url, err), js_api=api, width=1320, height=880,
-                                       min_size=(420, 600))  # fmt: skip
-    api.window = window
-    webview.start(private_mode=False, storage_path=str(home / "webview"))
+    cfg = Config(app_home())
+    server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(cfg))
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, name="local-panel", daemon=True).start()
+    url = f"http://127.0.0.1:{server.server_address[1]}/"
+    webview.create_window(APP_NAME, url, width=1320, height=880, min_size=(420, 600), background_color="#0b0b0e")
+    try:
+        webview.start(private_mode=False, storage_path=str(app_home() / "webview"))
+    finally:
+        server.shutdown()
 
 
 if __name__ == "__main__":

@@ -89,11 +89,6 @@ def test_test_endpoint_reports_failure(client, make_user):
     assert r["ok"] is False and r["error"]
 
 
-def test_editor_cannot_manage_providers(client, make_user):
-    make_user(email="ed@example.com", role="editor")
-    login(client, email="ed@example.com")
-    assert client.post("/api/providers", json=NEW, headers=csrf_headers(client)).status_code == 403
-
 
 def test_duplicate_name_keeps_session_usable(client, make_user):
     h = admin(client, make_user)

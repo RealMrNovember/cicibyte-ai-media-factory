@@ -1,6 +1,7 @@
 def login(client, email="admin@example.com", password="correct horse battery"):
-    return client.post("/api/auth/login", json={"email": email, "password": password})
+    """There is no sign-in any more; kept so older tests read the same."""
+    return client.get("/api/health")
 
 
 def csrf_headers(client):
-    return {"X-CSRF-Token": client.cookies.get("mf_csrf", "")}
+    return {"X-MF-Client": "1"}

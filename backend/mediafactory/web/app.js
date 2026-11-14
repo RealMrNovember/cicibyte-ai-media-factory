@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -46,18 +46,16 @@ let pollTimer = null;
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-function csrf() {
-  const m = document.cookie.match(/(?:^|; )mf_csrf=([^;]+)/);
-  return m ? decodeURIComponent(m[1]) : "";
-}
+let desktop = null; // {server_url} when running inside the desktop app
+let offline = false;
 async function api(path, opts = {}) {
   const headers = { ...(opts.body && !(opts.body instanceof FormData) ? { "Content-Type": "application/json" } : {}) };
-  if (opts.method && opts.method !== "GET") headers["X-CSRF-Token"] = csrf();
+  if (opts.method && opts.method !== "GET") headers["X-MF-Client"] = "panel";
   const res = await fetch(path, {
     ...opts, headers, credentials: "same-origin",
     body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body) : opts.body,
   });
-  if (res.status === 401 && !path.startsWith("/api/auth/")) { me = null; render(); throw new Error("unauthorized"); }
+  if (res.status === 502 && res.headers.get("X-MF-Desktop")) { offline = true; throw new Error(t("offline")); }
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) throw new Error((data && data.detail && (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))) || res.statusText);
   return data;
@@ -84,52 +82,36 @@ function shell(inner) {
   const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${t(r)}</a>`).join("");
   return `<div class="shell">
     <aside class="side">
-      <div class="brand">CiciByte AI Media Factory<small>${esc(me.email)}</small></div>
+      <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(desktop.server_url) : ""}</small></div>
       <nav class="nav">${nav}</nav>
       <div class="grow"></div>
       <div class="foot">
-        <a href="#" id="lang">${lang === "tr" ? "English" : "Türkçe"}</a> · <a href="#" id="logout">${t("logout")}</a><br>
+        <a href="#" id="lang">${lang === "tr" ? "English" : "Türkçe"}</a><br>
         ${t("poweredBy")} <a href="https://cicibyte.com" target="_blank" rel="noopener">CiciByte Technology</a><br>
         <a href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">☕ ${t("support")}</a>
       </div>
     </aside>
-    <main class="main" id="main">${inner}</main>
+    <main class="main">${offline ? `<div class="card banner">${t("offline")} <a href="#settings">${t("settings")} →</a></div>` : ""}<div id="main">${inner}</div></main>
   </div>`;
 }
 
 async function render() {
   clearInterval(pollTimer);
-  if (!me) {
-    try { me = await api("/api/auth/me"); } catch { me = null; }
-    if (!me) { try { me = (await api("/api/auth/auto", { method: "POST" })).user; } catch { me = null; } }
-  }
-  if (!me) return renderLogin();
+  if (desktop === null) { try { desktop = await (await fetch("/desktop/config")).json(); } catch { desktop = false; } }
+  offline = false;
+  try { me = await api("/api/auth/me"); } catch { me = null; }
   $app.innerHTML = shell(`<p class="muted">…</p>`);
-  on("#lang", "click", (e) => { e.preventDefault(); lang = lang === "tr" ? "en" : "tr"; localStorage.setItem("mf_lang", lang); render(); });
-  on("#logout", "click", async (e) => { e.preventDefault(); await api("/api/auth/logout", { method: "POST" }).catch(() => {}); me = null; render(); });
+  bindShell();
   const page = { overview, sources, inbox, production, ready, settings }[route()];
-  try { await page(document.getElementById("main")); } catch (err) { if (err.message !== "unauthorized") toast(err.message, true); }
+  try { await page(document.getElementById("main")); } catch (err) {
+    if (offline && route() !== "settings") { $app.innerHTML = shell(`<h1>${t(route())}</h1><p class="muted">${t("offline")}</p>`); bindShell(); }
+    else toast(err.message, true);
+  }
+}
+function bindShell() {
+  on("#lang", "click", (e) => { e.preventDefault(); lang = lang === "tr" ? "en" : "tr"; localStorage.setItem("mf_lang", lang); render(); });
 }
 window.addEventListener("hashchange", render);
-
-function renderLogin() {
-  $app.innerHTML = `<div class="login card">
-    <h1>CiciByte AI Media Factory</h1><p class="sub">${t("welcome")}</p>
-    <form id="f"><label>${t("email")}</label><input name="email" type="email" required autocomplete="username">
-    <label>${t("password")}</label><input name="password" type="password" required autocomplete="current-password">
-    <div class="row" style="margin-top:16px"><button class="btn primary">${t("login")}</button><span class="spacer"></span>
-    <a href="#" id="lang">${lang === "tr" ? "English" : "Türkçe"}</a></div></form>
-    <p class="muted small" style="margin-top:18px">${t("poweredBy")} <a href="https://cicibyte.com">CiciByte Technology</a></p></div>`;
-  on("#lang", "click", (e) => { e.preventDefault(); lang = lang === "tr" ? "en" : "tr"; localStorage.setItem("mf_lang", lang); renderLogin(); });
-  document.getElementById("f").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      const r = await api("/api/auth/login", { method: "POST", body: { email: fd.get("email"), password: fd.get("password") } });
-      me = r.user; location.hash = "#overview"; render();
-    } catch (err) { toast(err.message, true); }
-  });
-}
 
 // ---------- pages ----------
 async function overview(el) {
@@ -279,13 +261,36 @@ async function ready(el) {
   });
 }
 
+function serverCard() {
+  if (!desktop) return "";
+  return `<div class="card" style="margin-bottom:16px"><h3>${t("server")}</h3><p class="muted small">${t("serverHelp")}</p>
+    <form id="srv" class="row"><input name="url" value="${esc(desktop.server_url)}" placeholder="http://mediafactory:8080" style="flex:1;min-width:220px">
+    <button class="btn primary">${t("save")}</button></form></div>`;
+}
+function bindServerCard() {
+  const f = document.getElementById("srv");
+  if (!f) return;
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const r = await fetch("/desktop/config", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
+      body: JSON.stringify({ server_url: new FormData(f).get("url") }) });
+    const d = await r.json();
+    if (!r.ok) return toast(d.detail || "error", true);
+    desktop = d; toast(d.reachable ? t("connected") : t("offline"), !d.reachable); render();
+  });
+}
 async function settings(el) {
-  if (me.role !== "admin") { el.innerHTML = `<h1>${t("settings")}</h1><p class="muted">admin only</p>`; return; }
-  const [prov, routes, creds] = await Promise.all([api("/api/providers"), api("/api/task-routes"), api("/api/source-credentials")]);
+  let prov, routes, creds;
+  try {
+    [prov, routes, creds] = await Promise.all([api("/api/providers"), api("/api/task-routes"), api("/api/source-credentials")]);
+  } catch (err) {
+    el.innerHTML = `<h1>${t("settings")}</h1>${serverCard()}<p class="muted">${esc(err.message)}</p>`;
+    return bindServerCard();
+  }
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · Reddit</p>
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · Reddit</p>${serverCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -304,6 +309,7 @@ async function settings(el) {
         <div><label>${t("clientId")}</label><input name="client_id" required></div>
         <div><label>${t("clientSecret")}</label><input name="client_secret" type="password" required autocomplete="off"></div>
         <div><button class="btn primary">${t("save")}</button></div></form></div>`;
+  bindServerCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });
   document.getElementById("prov").addEventListener("submit", async (e) => {
     e.preventDefault(); const f = new FormData(e.target);

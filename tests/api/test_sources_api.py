@@ -20,9 +20,6 @@ def h(client, make_user):
     return csrf_headers(client)
 
 
-def test_unauthenticated_401(client):
-    assert client.get("/api/sources").status_code == 401
-
 
 def test_create_source_validates_params_422(client, h):
     bad = {**NEW, "params": {"subreddit": "no/sleep"}}

@@ -35,12 +35,6 @@ def test_delete_credentials(client, make_user, db):
     assert get_reddit_credentials(db) is None
 
 
-def test_credentials_admin_only(client, make_user):
-    make_user(email="ed@example.com", role="editor")
-    login(client, email="ed@example.com")
-    assert client.get("/api/source-credentials").status_code == 403
-    assert client.put("/api/source-credentials/reddit", json=BODY, headers=csrf_headers(client)).status_code == 403
-
 
 def test_credentials_audited_masked(client, make_user, db):
     h = admin(client, make_user)

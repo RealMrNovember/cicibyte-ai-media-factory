@@ -26,7 +26,6 @@ def test_commit_failure_is_not_reported_as_success(db, make_user, monkeypatch):
     from mediafactory.auth import service
 
     service.reset_rate_limits()
-    make_user()
 
     class FailingCommit(Session):
         def commit(self):
@@ -36,7 +35,7 @@ def test_commit_failure_is_not_reported_as_success(db, make_user, monkeypatch):
         deps, "SessionLocal", lambda: FailingCommit(bind=db.connection(), join_transaction_mode="create_savepoint")
     )
     client = TestClient(create_app(), raise_server_exceptions=False)
-    assert login(client).status_code == 500
+    assert client.get("/api/auth/me").status_code == 500  # creating the owner must commit
 
 
 # --- Important 3: trusted proxy headers give real client IP and https scheme --------------------
@@ -54,51 +53,34 @@ def _proxy_app(db, trusted):
     return TestClient(app)
 
 
-def test_trusted_proxy_headers_used(db, make_user):
-    make_user()
+def _create_provider(client, headers):
+    return client.post(
+        "/api/providers", json={"name": "p", "base_url": "http://ai.example/v1"},
+        headers={"X-MF-Client": "1", **headers},
+    )  # fmt: skip
+
+
+def test_trusted_proxy_headers_used(db):
     client = _proxy_app(db, ["*"])
-    r = client.post(
-        "/api/auth/login",
-        json={"email": "admin@example.com", "password": "correct horse battery"},
-        headers={"X-Forwarded-For": "203.0.113.9", "X-Forwarded-Proto": "https"},
-    )
-    assert r.status_code == 200
-    assert "secure" in r.headers["set-cookie"].lower()
-    row = db.scalar(select(AuditLog).where(AuditLog.action == "auth.login"))
+    r = _create_provider(client, {"X-Forwarded-For": "203.0.113.9", "X-Forwarded-Proto": "https"})
+    assert r.status_code == 201
+    row = db.scalar(select(AuditLog).where(AuditLog.action == "provider.create"))
     assert row.ip == "203.0.113.9"
 
 
-def test_untrusted_proxy_headers_ignored(db, make_user):
-    make_user()
+def test_untrusted_proxy_headers_ignored(db):
     client = _proxy_app(db, ["10.9.9.9"])
-    client.post(
-        "/api/auth/login",
-        json={"email": "admin@example.com", "password": "correct horse battery"},
-        headers={"X-Forwarded-For": "203.0.113.9"},
-    )
-    row = db.scalar(select(AuditLog).where(AuditLog.action == "auth.login"))
+    _create_provider(client, {"X-Forwarded-For": "203.0.113.9"})
+    row = db.scalar(select(AuditLog).where(AuditLog.action == "provider.create"))
     assert row.ip != "203.0.113.9"
 
 
+def test_writes_without_client_header_refused(client):
+    r = client.post("/api/providers", json={"name": "p", "base_url": "http://ai.example/v1"})
+    assert r.status_code == 403
+
+
 # --- Important 4: logout / password reset end existing sessions --------------------------------
-def test_cookie_replay_after_logout_rejected(client, make_user):
-    make_user()
-    login(client)
-    stolen = dict(client.cookies)
-    client.post("/api/auth/logout", headers=csrf_headers(client))
-    replay = TestClient(client.app, cookies=stolen)
-    assert replay.get("/api/auth/me").status_code == 401
-
-
-def test_password_reset_ends_sessions(client, make_user, db):
-    from mediafactory.auth.service import end_all_sessions
-
-    user = make_user()
-    login(client)
-    assert client.get("/api/auth/me").status_code == 200
-    end_all_sessions(user)
-    db.flush()
-    assert client.get("/api/auth/me").status_code == 401
 
 
 # --- Important 2: stale running stages are reclaimed ------------------------------------------
