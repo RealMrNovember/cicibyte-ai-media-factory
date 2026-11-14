@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", updates: "Updates", updHelp: "The server checks GitHub every 30 minutes and installs new versions by itself. It waits while a video is being made and goes back automatically if a new version does not start.", updAuto: "Automatic", updVersion: "Running", updLatest: "Latest on GitHub", updState: "Status", updChecked: "Last check", updLast: "last update", updLog: "Update log", updNow: "Check & update now", updPending: "Update requested…", updRequested: "Update requested — the panel reloads when the server is back", updMissing: "Automatic updates are not installed on this server yet. Run once on the server:", upd_up_to_date: "Up to date", upd_available: "Update available", upd_updating: "Updating…", upd_updated: "Updated", upd_deferred: "Waiting for running jobs", upd_rolled_back: "Rolled back", upd_failed: "Failed", upd_error: "Can't reach GitHub", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", updates: "Güncellemeler", updHelp: "Sunucu 30 dakikada bir GitHub'ı kontrol eder ve yeni sürümleri kendisi kurar. Video üretilirken bekler; yeni sürüm açılmazsa otomatik olarak eskisine döner.", updAuto: "Otomatik", updVersion: "Çalışan sürüm", updLatest: "GitHub'daki son sürüm", updState: "Durum", updChecked: "Son kontrol", updLast: "son güncelleme", updLog: "Güncelleme kaydı", updNow: "Şimdi kontrol et ve güncelle", updPending: "Güncelleme istendi…", updRequested: "Güncelleme istendi — sunucu geri gelince panel yenilenecek", updMissing: "Bu sunucuda otomatik güncelleme henüz kurulu değil. Sunucuda bir kez çalıştır:", upd_up_to_date: "Güncel", upd_available: "Yeni sürüm var", upd_updating: "Güncelleniyor…", upd_updated: "Güncellendi", upd_deferred: "Çalışan işler bekleniyor", upd_rolled_back: "Geri alındı", upd_failed: "Başarısız", upd_error: "GitHub'a ulaşılamıyor", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -330,6 +330,52 @@ function bindServerCard() {
     desktop = d; toast(d.reachable ? t("connected") : t("offline"), !d.reachable); render();
   });
 }
+async function updatesCard() {
+  let s;
+  try { s = await api("/api/system"); } catch { return ""; }
+  const u = s.update;
+  const short = (x) => (x ? esc(String(x).slice(0, 7)) : "—");
+  const state = u ? (t("upd_" + u.state) !== "upd_" + u.state ? t("upd_" + u.state) : esc(u.state)) : "";
+  const body = u
+    ? `<table><tr><td class="muted">${t("updVersion")}</td><td><b>v${esc(s.version)}</b> · <a href="${esc(s.repository)}/commit/${esc(u.current || "")}" data-ext="${esc(s.repository)}/commit/${esc(u.current || "")}">${short(u.current)}</a></td></tr>
+        <tr><td class="muted">${t("updLatest")}</td><td>${short(u.latest)} <span class="muted">(${esc(u.branch || "main")})</span></td></tr>
+        <tr><td class="muted">${t("updState")}</td><td><span class="pill ${["updated", "up_to_date"].includes(u.state) ? "ok" : ["failed", "error", "rolled_back"].includes(u.state) ? "bad" : "warn"}">${state}</span> <span class="muted small">${esc(u.message || "")}</span></td></tr>
+        <tr><td class="muted">${t("updChecked")}</td><td>${when(u.checked_at)}${u.last_update_at ? ` · ${t("updLast")}: ${when(u.last_update_at)}` : ""}</td></tr></table>
+      ${s.log ? `<details style="margin-top:8px"><summary class="muted small">${t("updLog")}</summary><pre>${esc(s.log)}</pre></details>` : ""}`
+    : `<p class="muted small">${t("updMissing")}</p><pre>sudo bash deploy/update/install-autoupdate.sh</pre>`;
+  return `<div class="card" style="margin-bottom:16px"><div class="row"><h3 style="margin:0">${t("updates")}</h3><span class="spacer"></span>
+      <label class="row small" style="margin:0;gap:8px">${t("updAuto")} <span class="switch"><input type="checkbox" id="updAuto" ${s.auto ? "checked" : ""}><span></span></span></label></div>
+    <p class="muted small">${t("updHelp")}</p>${body}
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="updNow" ${s.pending ? "disabled" : ""}>⟳ ${s.pending ? t("updPending") : t("updNow")}</button></div></div>`;
+}
+
+function bindUpdatesCard() {
+  const auto = document.getElementById("updAuto");
+  if (!auto) return;
+  auto.addEventListener("change", async () => {
+    try { await api("/api/system/update-config", { method: "PUT", body: { auto: auto.checked } }); toast(t("saved")); }
+    catch (err) { auto.checked = !auto.checked; toast(err.message, true); }
+  });
+  document.getElementById("updNow").addEventListener("click", async (e) => {
+    e.target.disabled = true;
+    try {
+      await api("/api/system/update", { method: "POST", body: {} });
+      toast(t("updRequested"));
+      // The server restarts while updating: keep asking until it is back, then reload the panel.
+      let n = 0;
+      const timer = setInterval(async () => {
+        n += 1;
+        try {
+          const s = await api("/api/system");
+          if (!s.pending && s.update && !["updating"].includes(s.update.state)) { clearInterval(timer); location.reload(); }
+        } catch { /* restarting */ }
+        if (n > 120) clearInterval(timer);
+      }, 5000);
+    } catch (err) { toast(err.message, true); e.target.disabled = false; }
+  });
+  on("[data-ext]", "click", (ev) => { ev.preventDefault(); openExternal(ev.currentTarget.dataset.ext); });
+}
+
 async function settings(el) {
   let prov, routes, creds;
   try {
@@ -341,8 +387,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  const yt = await youtubeCard();
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${yt}
+  const [yt, upd] = await Promise.all([youtubeCard(), updatesCard()]);
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${upd}${yt}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -363,6 +409,7 @@ async function settings(el) {
         <div><button class="btn primary">${t("save")}</button></div></form></div>`;
   bindServerCard();
   bindYoutubeCard();
+  bindUpdatesCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });
   document.getElementById("prov").addEventListener("submit", async (e) => {
     e.preventDefault(); const f = new FormData(e.target);

@@ -144,3 +144,22 @@ def create_admin(
     typer.echo(f"admin {action}: {email}")
     typer.echo(f"password: {password}")
     typer.echo("Store it safely; it will not be shown again.")
+
+
+def _session_factory():
+    from mediafactory.db.session import SessionLocal
+
+    return SessionLocal
+
+
+@app.command("busy")
+def busy() -> None:
+    """Exit 0 when no production stage is running, 3 when one is (the updater waits for it)."""
+    from sqlalchemy import func, select
+
+    from mediafactory.db.models import JobStageRun
+
+    with _session_factory()() as s:
+        running = s.scalar(select(func.count()).select_from(JobStageRun).where(JobStageRun.state == "running")) or 0
+    typer.echo(f"{running} running")
+    raise typer.Exit(3 if running else 0)

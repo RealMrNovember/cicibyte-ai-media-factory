@@ -1,0 +1,10 @@
+[Unit]
+Description=CiciByte Media Factory — check GitHub and update
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/mediafactory/update.env
+ExecStart=/usr/local/sbin/mf-update
+TimeoutStartSec=30min

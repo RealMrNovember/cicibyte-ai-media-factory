@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the updater when "Update now" is pressed in the app
+
+[Path]
+PathExists=/var/lib/mediafactory/data/update/update-request
+Unit=mf-update.service
+
+[Install]
+WantedBy=multi-user.target
