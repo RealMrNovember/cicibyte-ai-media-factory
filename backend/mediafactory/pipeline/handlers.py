@@ -41,6 +41,7 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
         script=inputs.get("script"),
         voice=inputs.get("voice"),
         music=inputs.get("music"),
+        category=inputs.get("category"),
         data_dir=Path(get_settings().data_dir),
         log=ctx.log,
     )
@@ -49,6 +50,19 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
     # A video that fails the quality check always waits for a person, even when auto-approve is on.
     qc_ok = (result.get("qc") or {}).get("passed", True)
     status = "approved" if (ctx.job.payload or {}).get("auto_approve") and qc_ok else "needs_review"
+    auto_publish = (ctx.job.payload or {}).get("auto_publish")
+    if status == "approved" and auto_publish:
+        from mediafactory.youtube.publish import queue_upload
+
+        ctx.job.status = "approved"
+        try:
+            queue_upload(ctx.session, ctx.job, privacy=auto_publish.get("privacy", "public"))
+            ctx.log("queued for YouTube (autopilot)")
+            status = "uploading"
+        except ValueError as exc:  # e.g. no channel connected: keep it approved for later
+            ctx.log(f"not published automatically: {exc}")
+    elif auto_publish and not qc_ok:
+        ctx.log("quality check failed: waiting for your review instead of publishing")
     return StageOutcome(next_status=status, outputs=result)
 
 

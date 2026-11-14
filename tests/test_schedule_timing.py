@@ -28,3 +28,32 @@ def test_bad_input_rejected():
         parse_times(["25:00"])
     with pytest.raises(ValueError):
         next_run(["09:00"], [0], "Mars/Base", utc(2026, 1, 1))
+
+
+from mediafactory.schedule.timing import next_interval  # noqa: E402
+
+
+def test_interval_without_window():
+    assert next_interval(120, [], None, "UTC", utc(2026, 11, 16, 10, 0)) == utc(2026, 11, 16, 12, 0)
+
+
+def test_interval_jumps_to_window_start_next_day():
+    # every 2 h between 09:00 and 23:00 Istanbul; 22:30 local (19:30 UTC) + 2 h is outside -> next day 09:00 local
+    assert next_interval(120, [], ["09:00", "23:00"], "Europe/Istanbul", utc(2026, 11, 16, 19, 30)) == utc(2026, 11, 17, 6, 0)
+
+
+def test_interval_before_window_starts_at_window():
+    # 05:00 local + 2 h = 07:00, before 09:00 -> 09:00 local (06:00 UTC)
+    assert next_interval(120, [], ["09:00", "23:00"], "Europe/Istanbul", utc(2026, 11, 16, 2, 0)) == utc(2026, 11, 16, 6, 0)
+
+
+def test_interval_respects_weekdays():
+    # Monday 2026-11-16; only Wednesday (2)
+    assert next_interval(60, [2], None, "UTC", utc(2026, 11, 16, 10, 0)) == utc(2026, 11, 18, 0, 0)
+
+
+def test_interval_validation():
+    with pytest.raises(ValueError):
+        next_interval(5, [], None, "UTC", utc(2026, 1, 1))
+    with pytest.raises(ValueError):
+        next_interval(60, [], ["23:00", "09:00"], "UTC", utc(2026, 1, 1))

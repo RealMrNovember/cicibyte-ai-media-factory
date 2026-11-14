@@ -30,11 +30,45 @@ def resolve(data_dir: Path, name: str) -> Path | None:
     return p if p.is_file() and p.suffix.lower() in VIDEO_EXT else None
 
 
-def info(clip: Path) -> dict:
+def _meta(clip: Path) -> dict:
     side = clip.with_suffix(clip.suffix + ".json")
-    meta = json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
+    try:
+        return json.loads(side.read_text(encoding="utf-8")) if side.exists() else {}
+    except ValueError:
+        return {}
+
+
+def info(clip: Path) -> dict:
+    meta = _meta(clip)
     return {"name": clip.name, "size": clip.stat().st_size, "licence": meta.get("licence", ""),
-            "source": meta.get("source", "")}  # fmt: skip
+            "source": meta.get("source", ""), "tags": meta.get("tags", [])}  # fmt: skip
+
+
+def clean_tags(tags) -> list[str]:
+    from mediafactory.sources.catalog import CATEGORIES
+
+    allowed = set(CATEGORIES) | {"manual", "other"}
+    return sorted({str(t).strip() for t in tags or [] if str(t).strip() in allowed})
+
+
+def set_tags(data_dir: Path, name: str, tags) -> list[str] | None:
+    clip = resolve(data_dir, name)
+    if clip is None:
+        return None
+    meta = {**_meta(clip), "tags": clean_tags(tags)}
+    clip.with_suffix(clip.suffix + ".json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return meta["tags"]
+
+
+def story_category(session, item) -> str | None:
+    """The topic of a story (from its source), used to pick a matching background clip."""
+    if item is None or item.source_type == "manual" or item.source_id is None:
+        return "manual"
+    from mediafactory.db.models import SourceConnector
+    from mediafactory.sources.catalog import category_for
+
+    c = session.get(SourceConnector, item.source_id)
+    return category_for(c.adapter, c.params) if c else None
 
 
 def safe_filename(original: str) -> str:
@@ -44,7 +78,7 @@ def safe_filename(original: str) -> str:
     return (SAFE_NAME.sub("-", stem).strip("-.") or "clip")[:80] + ext
 
 
-def add_clip(data_dir: Path, filename: str, stream, *, licence: str, source: str = "") -> Path:
+def add_clip(data_dir: Path, filename: str, stream, *, licence: str, source: str = "", tags=None) -> Path:
     name = safe_filename(filename)
     dest = library_dir(data_dir) / name
     n = 2
@@ -54,7 +88,7 @@ def add_clip(data_dir: Path, filename: str, stream, *, licence: str, source: str
     with dest.open("wb") as f:
         shutil.copyfileobj(stream, f, length=1024 * 1024)
     dest.with_suffix(dest.suffix + ".json").write_text(
-        json.dumps({"licence": licence, "source": source}, ensure_ascii=False), encoding="utf-8"
+        json.dumps({"licence": licence, "source": source, "tags": clean_tags(tags)}, ensure_ascii=False), encoding="utf-8"
     )
     return dest
 
@@ -88,11 +122,15 @@ def thumbnail(clip: Path) -> Path:
     return out
 
 
-def pick_background(data_dir: Path, *, rng: random.Random | None = None) -> Path | None:
-    """A random clip, avoiding the one used last time. None when the library is empty."""
+def pick_background(data_dir: Path, *, rng: random.Random | None = None, category: str | None = None) -> Path | None:
+    """A random clip, avoiding the one used last time. With a category, clips tagged with it are preferred;
+    if none is tagged with it, any clip is used. None when the library is empty."""
     found = clips(data_dir)
     if not found:
         return None
+    if category:
+        tagged = [c for c in found if category in _meta(c).get("tags", [])]
+        found = tagged or found
     state = library_dir(data_dir) / ".last_used.json"
     last = json.loads(state.read_text(encoding="utf-8")).get("name") if state.exists() else None
     choices = [c for c in found if c.name != last] or found

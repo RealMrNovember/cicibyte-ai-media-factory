@@ -41,3 +41,31 @@ def next_run(times: list[str], weekdays: list[int], tz: str, after: datetime) ->
             if cand > local:
                 return cand.astimezone(timezone.utc)
     raise ValueError("no upcoming slot")  # unreachable with at least one weekday
+
+
+def next_interval(
+    interval_min: int, weekdays: list[int], window: list[str] | None, tz: str, after: datetime
+) -> datetime:
+    """`after` + interval, moved forward into the allowed weekdays and the daily window [start, end]."""
+    if not 15 <= interval_min <= 7 * 24 * 60:
+        raise ValueError("interval must be between 15 minutes and 7 days")
+    days, z = set(weekdays or range(7)), zone(tz)
+    start = end = None
+    if window:
+        (sh, sm), (eh, em) = parse_times([window[0]])[0], parse_times([window[1]])[0]
+        start, end = sh * 60 + sm, eh * 60 + em
+        if start >= end:
+            raise ValueError("the active hours must start before they end (e.g. 09:00–23:00)")
+    cand = (after + timedelta(minutes=interval_min)).astimezone(z)
+    for _ in range(15):
+        minute = cand.hour * 60 + cand.minute
+        day_ok = cand.weekday() in days
+        if day_ok and (start is None or start <= minute <= end):
+            return cand.astimezone(timezone.utc)
+        if day_ok and start is not None and minute < start:
+            cand = cand.replace(hour=start // 60, minute=start % 60, second=0, microsecond=0)
+            continue
+        nxt = (cand + timedelta(days=1)).date()
+        sm_ = start or 0
+        cand = datetime(nxt.year, nxt.month, nxt.day, sm_ // 60, sm_ % 60, tzinfo=z)
+    raise ValueError("no upcoming slot")

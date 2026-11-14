@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, Text
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from mediafactory.db.base import Base, utcnow
 
-SCHEDULE_KINDS = ("produce", "publish")
+SCHEDULE_KINDS = ("produce", "publish", "autopilot")
 
 
 class Schedule(Base):
@@ -21,6 +21,9 @@ class Schedule(Base):
     times: Mapped[list] = mapped_column(JSONB, default=list)  # ["09:00", "18:30"]
     weekdays: Mapped[list] = mapped_column(JSONB, default=lambda: [0, 1, 2, 3, 4, 5, 6])  # Monday = 0
     timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+    # Either fixed `times`, or every `interval_min` minutes inside an optional daily `window` ["09:00", "23:00"].
+    interval_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    window: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     params: Mapped[dict] = mapped_column(JSONB, default=dict)
     next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

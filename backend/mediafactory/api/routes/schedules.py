@@ -39,11 +39,27 @@ class PublishParams(BaseModel):
     language: Literal["en", "tr"] | None = None
 
 
+class AutopilotParams(BaseModel):
+    """Every run: pick a random unused story (of a topic), make the video and publish it."""
+
+    topic: str = Field(default="random", max_length=20)
+    language: Literal["random", "en", "tr"] = "random"
+    seconds: int = Field(default=50, ge=15, le=170)
+    background: str = Field(default="random", max_length=120)
+    style: CaptionStyle = Field(default_factory=CaptionStyle)
+    voice: VoiceSettings = Field(default_factory=VoiceSettings)
+    music: MusicSettings = Field(default_factory=MusicSettings)
+    publish: bool = True
+    privacy: Literal["public", "unlisted", "private"] = "public"
+
+
 class ScheduleIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
-    kind: Literal["produce", "publish"]
+    kind: Literal["produce", "publish", "autopilot"]
     enabled: bool = True
-    times: list[str] = Field(min_length=1, max_length=24)
+    times: list[str] = Field(default_factory=list, max_length=24)
+    interval_min: int | None = Field(default=None, ge=15, le=7 * 24 * 60)
+    window: list[str] | None = Field(default=None, min_length=2, max_length=2)
     weekdays: list[int] = Field(default_factory=lambda: list(range(7)), max_length=7)
     timezone: str = Field(default="UTC", max_length=64)
     params: dict = Field(default_factory=dict)
@@ -51,7 +67,17 @@ class ScheduleIn(BaseModel):
     @field_validator("times")
     @classmethod
     def _times(cls, v: list[str]) -> list[str]:
-        return [f"{h:02d}:{m:02d}" for h, m in parse_times(v)]
+        return [f"{h:02d}:{m:02d}" for h, m in parse_times(v)] if v else []
+
+    @field_validator("window")
+    @classmethod
+    def _window(cls, v: list[str] | None) -> list[str] | None:
+        if not v:
+            return None
+        (sh, sm), (eh, em) = parse_times([v[0]])[0], parse_times([v[1]])[0]
+        if sh * 60 + sm >= eh * 60 + em:
+            raise ValueError("the active hours must start before they end (e.g. 09:00–23:00)")
+        return [f"{sh:02d}:{sm:02d}", f"{eh:02d}:{em:02d}"]
 
     @field_validator("weekdays")
     @classmethod
@@ -67,14 +93,16 @@ class ScheduleIn(BaseModel):
         return v
 
     def clean_params(self) -> dict:
-        model = ProduceParams if self.kind == "produce" else PublishParams
+        if not self.times and not self.interval_min:
+            raise ValueError("choose times of day or an interval")
+        model = {"produce": ProduceParams, "publish": PublishParams, "autopilot": AutopilotParams}[self.kind]
         return model(**self.params).model_dump()
 
 
 def out(s: Schedule) -> dict:
     return {
         "id": s.id, "name": s.name, "kind": s.kind, "enabled": s.enabled, "times": s.times, "weekdays": s.weekdays,
-        "timezone": s.timezone, "params": s.params,
+        "timezone": s.timezone, "params": s.params, "interval_min": s.interval_min, "window": s.window,
         "next_run_at": s.next_run_at.isoformat() if s.next_run_at else None,
         "last_run_at": s.last_run_at.isoformat() if s.last_run_at else None, "last_result": s.last_result,
     }  # fmt: skip
@@ -94,6 +122,7 @@ def _apply(s: Schedule, body: ScheduleIn) -> None:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     s.name, s.kind, s.enabled, s.times, s.weekdays, s.timezone, s.params = (
         body.name, body.kind, body.enabled, body.times, body.weekdays, body.timezone, params)  # fmt: skip
+    s.interval_min, s.window = (body.interval_min, body.window) if body.interval_min else (None, None)
     plan_next(s, datetime.now(timezone.utc))
 
 

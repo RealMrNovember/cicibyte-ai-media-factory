@@ -13,7 +13,7 @@ from mediafactory.queue.jobs import create_job, enqueue_stage
 def start_production(
     db: Session, item: SourceItem, *, languages: list[str], seconds: int = 50, background: str = "random",
     style: CaptionStyle | dict | None = None, auto_approve: bool = False, origin: str = "manual",
-    review_script: bool = False, voice: dict | None = None, music: dict | None = None,
+    review_script: bool = False, voice: dict | None = None, music: dict | None = None, extra_payload: dict | None = None,
 ) -> list[ProductionJob]:  # fmt: skip
     """One job per language, same content group, each queued for the make_short stage."""
     style_dict = style.model_dump() if isinstance(style, CaptionStyle) else CaptionStyle(**(style or {})).model_dump()
@@ -26,7 +26,8 @@ def start_production(
         make = {"item_id": item.id, "language": lang, "seconds": seconds, "background": background, "style": style_dict,
                 "voice": voice_dict, "music": music_dict}  # fmt: skip
         job = create_job(db, status="discovered", source_item_id=item.id, language=lang, content_group=group,
-                         payload={"title": item.title, "auto_approve": auto_approve, "origin": origin, "make": make})  # fmt: skip
+                         payload={"title": item.title, "auto_approve": auto_approve, "origin": origin, "make": make,
+                                  **(extra_payload or {})})  # fmt: skip
         if review_script:
             enqueue_stage(db, job.id, DRAFT_SCRIPT, "llm", inputs=make)
         else:

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from mediafactory.db.models import SourceItem
 from mediafactory.pipeline.align import word_times
-from mediafactory.pipeline.backgrounds import pick_background, resolve
+from mediafactory.pipeline.backgrounds import pick_background, resolve, story_category
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
 from mediafactory.pipeline.music import MusicSettings
@@ -23,7 +23,8 @@ from mediafactory.pipeline.voice import VoiceSettings
 def make_short(
     session: Session, item_id: int, *, language: str, data_dir: Path, seconds: int = 50,
     background: Path | None = None, background_choice: str = "random", style: dict | None = None,
-    script: dict | None = None, voice: dict | None = None, music: dict | None = None, log=print,
+    script: dict | None = None, voice: dict | None = None, music: dict | None = None, category: str | None = None,
+    log=print,
 ) -> dict:  # fmt: skip
     caption_style = CaptionStyle(**(style or {}))
     item = session.get(SourceItem, item_id)
@@ -64,7 +65,7 @@ def make_short(
     if background is None and background_choice not in ("random", "none"):
         background = resolve(data_dir, background_choice)
     if background is None and background_choice != "none":
-        background = pick_background(data_dir)
+        background = pick_background(data_dir, category=category or story_category(session, item))
     log(f"[4/4] render 1080x1920 over {background.name if background else 'generated gradient'}")
     ms = MusicSettings(**(music or {}))
     if ms.track != "none":

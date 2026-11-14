@@ -11,7 +11,7 @@ const ST = {
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
-    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", allTopics: "All topics", allSources: "All sources", music: "Music", noMusic: "No music", randomMusic: "Random from my library", ambiences: "Ambiences (royalty-free)", myTracks: "My tracks", musicVol: "Music volume", ducking: "Lower the music while the narrator speaks", uploadMusic: "Upload track", musicHint: "Upload music you are allowed to use (mp3, wav, ogg, m4a, flac).", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", neutral: "neutral voice", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
+    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", noTags: "no topic", tagClip: "Topics of this clip", tagHelp: "When a video is made with a random background, clips tagged with the story's topic are used first.", clipTopics: "Topics (used for random backgrounds)", allTopics: "All topics", allSources: "All sources", music: "Music", noMusic: "No music", randomMusic: "Random from my library", ambiences: "Ambiences (royalty-free)", myTracks: "My tracks", musicVol: "Music volume", ducking: "Lower the music while the narrator speaks", uploadMusic: "Upload track", musicHint: "Upload music you are allowed to use (mp3, wav, ogg, m4a, flac).", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", neutral: "neutral voice", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
     noClips: "No clips yet. Upload gameplay or stock footage you are allowed to use.", sure: "Delete this clip?",
   },
   tr: {
@@ -23,7 +23,7 @@ const ST = {
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
-    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", allTopics: "Tüm konular", allSources: "Tüm kaynaklar", music: "Müzik", noMusic: "Müzik yok", randomMusic: "Kütüphanemden rastgele", ambiences: "Ambiyanslar (telifsiz)", myTracks: "Parçalarım", musicVol: "Müzik seviyesi", ducking: "Anlatıcı konuşurken müziği kıs", uploadMusic: "Parça yükle", musicHint: "Kullanma iznin olan müziği yükle (mp3, wav, ogg, m4a, flac).", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", neutral: "nötr ses", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
+    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", noTags: "konu yok", tagClip: "Bu klibin konuları", tagHelp: "Rastgele arka planla video üretilirken önce hikâyenin konusuyla etiketli klipler kullanılır.", clipTopics: "Konular (rastgele arka plan için)", allTopics: "Tüm konular", allSources: "Tüm kaynaklar", music: "Müzik", noMusic: "Müzik yok", randomMusic: "Kütüphanemden rastgele", ambiences: "Ambiyanslar (telifsiz)", myTracks: "Parçalarım", musicVol: "Müzik seviyesi", ducking: "Anlatıcı konuşurken müziği kıs", uploadMusic: "Parça yükle", musicHint: "Kullanma iznin olan müziği yükle (mp3, wav, ogg, m4a, flac).", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", neutral: "nötr ses", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
     noClips: "Henüz klip yok. Kullanma iznin olan oyun ya da stok görüntüsü yükle.", sure: "Bu klip silinsin mi?",
   },
 };
@@ -339,12 +339,21 @@ function drawBackgrounds() {
   box.innerHTML = `<div class="bg-grid">
       ${tile("random", `<div class="bg-icon">🎲</div><span>${st("random")}</span>`)}
       ${tile("none", `<div class="bg-icon grad"></div><span>${st("none")}</span>`)}
-      ${s.clips.map((c) => tile(c.name, `<img loading="lazy" src="/api/backgrounds/${encodeURIComponent(c.name)}/thumb"><span>${esc(c.name)}</span>`,
+      ${s.clips.map((c) => tile(c.name, `<img loading="lazy" src="/api/backgrounds/${encodeURIComponent(c.name)}/thumb"><span>${esc(c.name)}</span>
+        <span class="clip-tags">${(c.tags || []).map((x) => esc(topicLabel(x))).join(" · ") || `<i>${st("noTags")}</i>`}</span>
+        <button class="bg-tag" data-tagbg="${esc(c.name)}" title="${esc(st("tagClip"))}">🏷</button>`,
         `${c.licence}${c.source ? " · " + c.source : ""}`, true)).join("")}
     </div>${s.clips.length ? "" : `<p class="muted small">${st("noClips")}</p>`}`;
   box.querySelectorAll("[data-bg]").forEach((n) => n.addEventListener("click", (e) => {
-    if (e.target.closest("[data-delbg]")) return;
+    if (e.target.closest("[data-delbg]") || e.target.closest("[data-tagbg]")) return;
     s.background = n.dataset.bg; drawBackgrounds(); drawPreview();
+  }));
+  box.querySelectorAll("[data-tagbg]").forEach((n) => n.addEventListener("click", () => {
+    const clip = s.clips.find((c) => c.name === n.dataset.tagbg);
+    tagDialog(clip.tags || [], async (tags) => {
+      await api(`/api/backgrounds/${encodeURIComponent(clip.name)}/tags`, { method: "PUT", body: { tags } });
+      s.clips = (await api("/api/backgrounds")).items; drawBackgrounds();
+    }, clip.name);
   }));
   box.querySelectorAll("[data-delbg]").forEach((n) => n.addEventListener("click", async () => {
     if (!confirm(st("sure"))) return;
@@ -356,16 +365,32 @@ function drawBackgrounds() {
   }));
 }
 
+function tagChecks(selected) {
+  return `<div class="row">${Object.keys(TOPICS).filter((k) => k !== "other").map((k) => `<label class="row"><input type="checkbox" name="tag" value="${k}" ${selected.includes(k) ? "checked" : ""} style="width:auto"> ${esc(topicLabel(k))}</label>`).join("")}</div>`;
+}
+
+function tagDialog(selected, onSave, title) {
+  const m = modal(`<h1>🏷 ${esc(title || st("tagClip"))}</h1><p class="muted small">${st("tagHelp")}</p><form id="tagf">${tagChecks(selected)}
+    <div class="row" style="margin-top:14px"><button class="btn primary">${t("save")}</button></div></form>`);
+  m.querySelector("#tagf").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const tags = [...e.target.querySelectorAll("[name=tag]:checked")].map((x) => x.value);
+    try { await onSave(tags); m.remove(); toast(t("saved")); } catch (err) { toast(err.message, true); }
+  });
+}
+
 function uploadDialog() {
   const m = modal(`<h1>${st("upload")}</h1><form id="upf">
     <label>Video (mp4, mov, mkv, webm)</label><input type="file" name="file" accept="video/*" required>
     <label>${st("licence")}</label><input name="licence" placeholder="Mixkit Free License / Coverr / own recording">
     <label>${st("sourceUrl")}</label><input name="source" placeholder="https://mixkit.co/...">
+    <label>${st("clipTopics")}</label>${tagChecks([])}
     <div class="progress" hidden><div></div></div>
     <div class="row" style="margin-top:14px"><button class="btn primary">${st("upload")}</button></div></form>`);
   m.querySelector("#upf").addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target), bar = m.querySelector(".progress"), btn = m.querySelector("button.primary");
+    fd.delete("tag"); fd.set("tags", [...e.target.querySelectorAll("[name=tag]:checked")].map((x) => x.value).join(","));
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/backgrounds");
     xhr.setRequestHeader("X-MF-Client", "panel");

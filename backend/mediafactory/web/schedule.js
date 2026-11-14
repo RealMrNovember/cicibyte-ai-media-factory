@@ -4,7 +4,7 @@
 const SC = {
   en: {
     schedule: "Schedule", scheduleSub: "Produce new videos and publish approved ones automatically, at the times you choose.",
-    newSchedule: "New schedule", kindProduce: "Produce videos", kindPublish: "Publish to YouTube", kind: "Type",
+    newSchedule: "New schedule", kindProduce: "Produce videos", kindPublish: "Publish to YouTube", kindAuto: "Autopilot: make & publish", autoHelp: "Each run picks a random unused story (of the topic you choose), makes the video with your Studio style, voice and music, and — if it passes the quality check — publishes it to YouTube.", freq: "When", atTimes: "At set times", every: "Every", hours: "hours", activeFrom: "Active from", activeTo: "until", topic: "Topic", randomTopic: "Random topic", randomLang: "Random language", publishIt: "Publish to YouTube automatically", everyN: "every",  kind: "Type",
     times: "Times (e.g. 09:00, 18:30)", days: "Days", tz: "Time zone", count: "How many each time",
     perSlot: "Videos per time slot", autoApprove: "Approve automatically (skip my review)", useStudio: "Use my current Studio caption style, voice and music",
     source: "From source", anySource: "Any source", privacy: "Visibility", public: "Public", unlisted: "Unlisted", private: "Private",
@@ -19,7 +19,7 @@ const SC = {
   },
   tr: {
     schedule: "Takvim", scheduleSub: "Seçtiğin saatlerde otomatik video üret ve onaylı videoları YouTube'a gönder.",
-    newSchedule: "Yeni zamanlama", kindProduce: "Video üret", kindPublish: "YouTube'a gönder", kind: "Tür",
+    newSchedule: "Yeni zamanlama", kindProduce: "Video üret", kindPublish: "YouTube'a gönder", kindAuto: "Otopilot: üret ve yayınla", autoHelp: "Her çalışmada (seçtiğin konudan) kullanılmamış rastgele bir hikâye seçer, Stüdyo stilin, sesin ve müziğinle videoyu üretir ve kalite kontrolünden geçerse YouTube'da yayınlar.", freq: "Ne zaman", atTimes: "Belirli saatlerde", every: "Her", hours: "saatte bir", activeFrom: "Etkin saatler", activeTo: "ile", topic: "Konu", randomTopic: "Rastgele konu", randomLang: "Rastgele dil", publishIt: "YouTube'da otomatik yayınla", everyN: "her",  kind: "Tür",
     times: "Saatler (ör. 09:00, 18:30)", days: "Günler", tz: "Saat dilimi", count: "Her seferinde kaç tane",
     perSlot: "Her saatte kaç video", autoApprove: "Otomatik onayla (benim incelememi atla)", useStudio: "Stüdyo'daki mevcut altyazı stilimi, sesimi ve müziğimi kullan",
     source: "Kaynak", anySource: "Tüm kaynaklar", privacy: "Görünürlük", public: "Herkese açık", unlisted: "Liste dışı", private: "Gizli",
@@ -45,9 +45,11 @@ async function schedule(el) {
   const [list, sources] = await Promise.all([api("/api/schedules"), api("/api/sources")]);
   const days = sc("dayNames");
   const rows = list.items.map((s) => `<tr>
-      <td><b>${esc(s.name)}</b><div class="muted small">${s.kind === "produce" ? sc("kindProduce") : sc("kindPublish")} ·
-        ${s.kind === "produce" ? `${s.params.count}× · ${esc((s.params.languages || []).join("+"))}${s.params.auto_approve ? " · auto ✓" : ""}` : `${s.params.count}× · ${esc(sc(s.params.privacy))}`}</div></td>
-      <td class="small">${esc(s.times.join(", "))}<div class="muted">${s.weekdays.length === 7 ? "—" : s.weekdays.map((d) => days[d]).join(" ")} · ${esc(s.timezone)}</div></td>
+      <td><b>${esc(s.name)}</b><div class="muted small">${s.kind === "produce" ? sc("kindProduce") : s.kind === "publish" ? sc("kindPublish") : "🤖 " + sc("kindAuto")} ·
+        ${s.kind === "produce" ? `${s.params.count}× · ${esc((s.params.languages || []).join("+"))}${s.params.auto_approve ? " · auto ✓" : ""}`
+          : s.kind === "publish" ? `${s.params.count}× · ${esc(sc(s.params.privacy))}`
+          : `${esc(s.params.topic === "random" ? sc("randomTopic") : topicLabel(s.params.topic))} · ${esc(s.params.language === "random" ? sc("randomLang") : s.params.language)}${s.params.publish ? " · ▶ " + esc(sc(s.params.privacy)) : ""}`}</div></td>
+      <td class="small">${s.interval_min ? `${sc("everyN")} ${+(s.interval_min / 60).toFixed(2)} h${s.window ? " · " + esc(s.window.join("–")) : ""}` : esc(s.times.join(", "))}<div class="muted">${s.weekdays.length === 7 ? "—" : s.weekdays.map((d) => days[d]).join(" ")} · ${esc(s.timezone)}</div></td>
       <td class="small">${s.enabled ? when(s.next_run_at) : `<span class="muted">${sc("disabled")}</span>`}
         <div class="muted clip">${s.last_run_at ? when(s.last_run_at) + " · " + esc(s.last_result || "") : ""}</div></td>
       <td><div class="row"><button class="btn" data-run="${s.id}">${sc("runNow")}</button><button class="btn" data-edit="${s.id}">${sc("edit")}</button>
@@ -74,15 +76,35 @@ function scheduleDialog(s, sources) {
   const wd = (s && s.weekdays) || [0, 1, 2, 3, 4, 5, 6];
   const m = modal(`<h1>${s ? esc(s.name) : sc("newSchedule")}</h1><form id="schf">
     <div class="grid g2"><div><label>${t("name")}</label><input name="name" required value="${esc((s && s.name) || "")}" placeholder="${kind === "produce" ? "Günlük korku" : "Akşam yayını"}"></div>
-      <div><label>${sc("kind")}</label><select name="kind"><option value="produce" ${kind === "produce" ? "selected" : ""}>${sc("kindProduce")}</option><option value="publish" ${kind === "publish" ? "selected" : ""}>${sc("kindPublish")}</option></select></div></div>
-    <div class="grid g2"><div><label>${sc("times")}</label><input name="times" required value="${esc(((s && s.times) || ["09:00"]).join(", "))}"></div>
+      <div><label>${sc("kind")}</label><select name="kind"><option value="produce" ${kind === "produce" ? "selected" : ""}>${sc("kindProduce")}</option><option value="publish" ${kind === "publish" ? "selected" : ""}>${sc("kindPublish")}</option><option value="autopilot" ${kind === "autopilot" ? "selected" : ""}>🤖 ${sc("kindAuto")}</option></select></div></div>
+    <label>${sc("freq")}</label><div class="row">
+      <label class="row"><input type="radio" name="freq" value="times" ${s && s.interval_min ? "" : "checked"} style="width:auto"> ${sc("atTimes")}</label>
+      <label class="row"><input type="radio" name="freq" value="every" ${s && s.interval_min ? "checked" : ""} style="width:auto"> ${sc("every")}
+        <input name="hours" type="number" min="0.25" max="168" step="0.25" value="${s && s.interval_min ? s.interval_min / 60 : 2}" style="width:80px"> ${sc("hours")}</label></div>
+    <div class="grid g2"><div data-for="times"><label>${sc("times")}</label><input name="times" value="${esc(((s && s.times && s.times.length ? s.times : ["09:00"])).join(", "))}"></div>
+      <div data-for="every"><label>${sc("activeFrom")}</label><div class="row" style="flex-wrap:nowrap"><input name="wfrom" type="time" value="${esc((s && s.window && s.window[0]) || "09:00")}"> ${sc("activeTo")} <input name="wto" type="time" value="${esc((s && s.window && s.window[1]) || "23:00")}"></div></div>
       <div><label>${sc("tz")}</label><input name="tz" value="${esc((s && s.timezone) || myTz())}"></div></div>
     <label>${sc("days")}</label><div class="row">${days.map((d, i) => `<label class="row"><input type="checkbox" name="d${i}" ${wd.includes(i) ? "checked" : ""} style="width:auto"> ${d}</label>`).join("")}</div>
     <div id="kp"></div>
     <div class="row" style="margin-top:16px"><button class="btn primary">${t("save")}</button></div></form>`);
   const f = m.querySelector("#schf"), kp = m.querySelector("#kp");
+  const drawFreq = () => {
+    const every = f.freq.value === "every";
+    m.querySelectorAll("[data-for=times]").forEach((x) => { x.hidden = every; });
+    m.querySelectorAll("[data-for=every]").forEach((x) => { x.hidden = !every; });
+  };
+  m.querySelectorAll("[name=freq]").forEach((x) => x.addEventListener("change", drawFreq));
+  drawFreq();
   const drawKind = () => {
-    if (f.kind.value === "produce") {
+    if (f.kind.value === "autopilot") {
+      kp.innerHTML = `<p class="muted small">${sc("autoHelp")}</p>
+        <div class="grid g2"><div><label>${sc("topic")}</label><select name="topic"><option value="random">${sc("randomTopic")}</option>${Object.keys(TOPICS).filter((k) => k !== "other").map((k) => `<option value="${k}" ${p.topic === k ? "selected" : ""}>${esc(topicLabel(k))}</option>`).join("")}</select></div>
+          <div><label>${t("languages")}</label><select name="alang"><option value="random">${sc("randomLang")}</option><option value="en" ${p.language === "en" ? "selected" : ""}>English</option><option value="tr" ${p.language === "tr" ? "selected" : ""}>Türkçe</option></select></div>
+          <div><label>${t("seconds")}</label><input name="seconds" type="number" min="15" max="170" value="${p.seconds || 50}"></div>
+          <div><label>${sc("privacy")}</label><select name="privacy">${["public", "unlisted", "private"].map((v) => `<option value="${v}" ${(p.privacy || "public") === v ? "selected" : ""}>${sc(v)}</option>`).join("")}</select></div></div>
+        <label class="row" style="margin-top:12px"><input type="checkbox" name="publish" ${p.publish === false ? "" : "checked"} style="width:auto"> ${sc("publishIt")}</label>
+        <label class="row"><input type="checkbox" name="studio" checked style="width:auto"> ${sc("useStudio")}</label>`;
+    } else if (f.kind.value === "produce") {
       kp.innerHTML = `<div class="grid g2"><div><label>${sc("count")}</label><input name="count" type="number" min="1" max="20" value="${p.count || 1}"></div>
         <div><label>${t("seconds")}</label><input name="seconds" type="number" min="15" max="170" value="${p.seconds || 50}"></div></div>
         <label>${t("languages")}</label><div class="row"><label class="row"><input type="checkbox" name="en" ${(p.languages || ["en"]).includes("en") ? "checked" : ""} style="width:auto"> English</label>
@@ -102,7 +124,11 @@ function scheduleDialog(s, sources) {
     e.preventDefault();
     const kindV = f.kind.value;
     let params;
-    if (kindV === "produce") {
+    if (kindV === "autopilot") {
+      params = { topic: f.topic.value, language: f.alang.value, seconds: Number(f.seconds.value), privacy: f.privacy.value,
+        publish: f.publish.checked, background: "random",
+        style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
+    } else if (kindV === "produce") {
       params = { count: Number(f.count.value), seconds: Number(f.seconds.value), languages: ["en", "tr"].filter((l) => f[l].checked),
         auto_approve: f.auto.checked, source_id: f.source.value ? Number(f.source.value) : null, background: p.background || "random",
         style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
@@ -110,7 +136,10 @@ function scheduleDialog(s, sources) {
       params = { count: Number(f.count.value), privacy: f.privacy.value, language: f.language.value || null };
     }
     const body = { name: f.name.value, kind: kindV, enabled: s ? s.enabled : true, timezone: f.tz.value.trim() || "UTC",
-      times: f.times.value.split(/[,\s]+/).filter(Boolean), weekdays: [0, 1, 2, 3, 4, 5, 6].filter((i) => f["d" + i].checked), params };
+      times: f.freq.value === "times" ? f.times.value.split(/[,\s]+/).filter(Boolean) : [],
+      interval_min: f.freq.value === "every" ? Math.round(Number(f.hours.value) * 60) : null,
+      window: f.freq.value === "every" && f.wfrom.value && f.wto.value ? [f.wfrom.value, f.wto.value] : null,
+      weekdays: [0, 1, 2, 3, 4, 5, 6].filter((i) => f["d" + i].checked), params };
     try {
       await api(s ? `/api/schedules/${s.id}` : "/api/schedules", { method: s ? "PUT" : "POST", body });
       m.remove(); toast(t("saved")); render();

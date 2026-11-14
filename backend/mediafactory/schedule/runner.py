@@ -10,13 +10,18 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from mediafactory.db.models import ProductionJob, Schedule, SourceItem
-from mediafactory.schedule.timing import next_run
+from mediafactory.schedule.timing import next_interval, next_run
 
 log = logging.getLogger(__name__)
 
 
 def plan_next(schedule: Schedule, now: datetime) -> None:
-    schedule.next_run_at = next_run(schedule.times, schedule.weekdays, schedule.timezone, now) if schedule.enabled else None
+    if not schedule.enabled:
+        schedule.next_run_at = None
+    elif schedule.interval_min:
+        schedule.next_run_at = next_interval(schedule.interval_min, schedule.weekdays, schedule.window, schedule.timezone, now)
+    else:
+        schedule.next_run_at = next_run(schedule.times, schedule.weekdays, schedule.timezone, now)
 
 
 def run_produce(db: Session, schedule: Schedule) -> str:
@@ -58,7 +63,53 @@ def run_publish(db: Session, schedule: Schedule) -> str:
     return f"{sent} videos sent to YouTube" if sent else "no approved videos waiting"
 
 
-ACTIONS = {"produce": run_produce, "publish": run_publish}
+def pick_story(db: Session, *, topic: str = "random", language: str = "random", rng=None) -> SourceItem | None:
+    """A random unused story of the topic/language. topic "random" first picks a random topic that has stories."""
+    import random as _random
+
+    from mediafactory.api.routes.items import _source_topics
+
+    rng = rng or _random
+    q = select(SourceItem.id, SourceItem.source_id, SourceItem.source_type).where(
+        SourceItem.processing_status == "discovered", SourceItem.rights_status != "restricted",
+        func.length(SourceItem.normalized_text) >= 300,
+    )  # fmt: skip
+    if language == "en":
+        q = q.where((SourceItem.language == "en") | SourceItem.language.is_(None))
+    elif language == "tr":
+        q = q.where(SourceItem.language == "tr")
+    topics = _source_topics(db)
+    by_topic: dict[str, list[int]] = {}
+    for iid, sid, stype in db.execute(q):
+        cat = "manual" if stype == "manual" or sid is None else topics.get(sid, ("", "other"))[1]
+        by_topic.setdefault(cat, []).append(iid)
+    if topic != "random":
+        by_topic = {topic: by_topic.get(topic, [])}
+    by_topic = {k: v for k, v in by_topic.items() if v}
+    if not by_topic:
+        return None
+    chosen = rng.choice(sorted(by_topic))
+    return db.get(SourceItem, rng.choice(by_topic[chosen]))
+
+
+def run_autopilot(db: Session, schedule: Schedule) -> str:
+    from mediafactory.pipeline.production import start_production
+
+    p = schedule.params or {}
+    item = pick_story(db, topic=p.get("topic", "random"), language=p.get("language", "random"))
+    if item is None:
+        return "no unused story for this topic/language"
+    lang = item.language or "en" if p.get("language", "random") == "random" else p["language"]
+    jobs = start_production(
+        db, item, languages=[lang if lang in ("en", "tr") else "en"], seconds=int(p.get("seconds", 50)),
+        background=p.get("background", "random"), style=p.get("style"), voice=p.get("voice"), music=p.get("music"),
+        auto_approve=True, origin=f"autopilot:{schedule.id}",
+        extra_payload={"auto_publish": {"privacy": p.get("privacy", "public")}} if p.get("publish", True) else None,
+    )  # fmt: skip
+    return f"“{item.title[:60]}” → video #{jobs[0].id}{' (will be published)' if p.get('publish', True) else ''}"
+
+
+ACTIONS = {"produce": run_produce, "publish": run_publish, "autopilot": run_autopilot}
 
 
 def run_due(factory: Callable[[], Session], *, now: datetime | None = None, limit: int = 10) -> int:

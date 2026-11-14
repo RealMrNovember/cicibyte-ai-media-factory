@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from mediafactory.api.deps import client_ip, get_db, require_user
@@ -34,11 +35,13 @@ def list_clips(user: User = Depends(require_user)) -> dict:
 @router.post("", status_code=201)
 def upload_clip(
     request: Request, file: UploadFile = File(...), licence: str = Form("", max_length=500),
-    source: str = Form("", max_length=500), db: Session = Depends(get_db, scope="function"),
+    source: str = Form("", max_length=500), tags: str = Form("", max_length=300),
+    db: Session = Depends(get_db, scope="function"),
     user: User = Depends(require_user),
 ) -> dict:  # fmt: skip
     try:
-        clip = lib.add_clip(_data(), file.filename or "clip.mp4", file.file, licence=licence, source=source)
+        clip = lib.add_clip(_data(), file.filename or "clip.mp4", file.file, licence=licence, source=source,
+                            tags=[t for t in tags.split(",") if t])  # fmt: skip
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from None
     try:
@@ -73,3 +76,15 @@ def delete_clip(
     record_audit(db, actor_id=user.id, action="background.delete", target_type="background", target_id=name,
                  ip=client_ip(request))  # fmt: skip
     return {"ok": True}
+
+
+class TagsIn(BaseModel):
+    tags: list[str] = Field(default_factory=list, max_length=20)
+
+
+@router.put("/{name}/tags")
+def update_tags(name: str, body: TagsIn, user: User = Depends(require_user)) -> dict:
+    tags = lib.set_tags(_data(), name, body.tags)
+    if tags is None:
+        raise HTTPException(status_code=404, detail="clip not found")
+    return {"name": name, "tags": tags}
