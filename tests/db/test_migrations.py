@@ -11,6 +11,9 @@ TABLES = {
     "ai_task_routes",
     "production_jobs",
     "job_stage_runs",
+    "source_connectors",
+    "source_items",
+    "source_rights_records",
 }
 
 
