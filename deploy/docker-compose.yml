@@ -31,7 +31,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: cicibyte/mediafactory:${MF_VERSION:-0.1.0.dev0}
+    image: cicibyte/mediafactory:${MF_VERSION:-latest}
     restart: unless-stopped
     command: ["sh", "-c", "mf migrate && mf api --host 0.0.0.0 --port 8080"]
     environment: *app-env
@@ -44,7 +44,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: cicibyte/mediafactory:${MF_VERSION:-0.1.0.dev0}
+    image: cicibyte/mediafactory:${MF_VERSION:-latest}
     restart: unless-stopped
     command: ["mf", "worker"]
     stop_grace_period: 2m  # let a running stage finish before SIGKILL; lost stages are re-queued anyway
