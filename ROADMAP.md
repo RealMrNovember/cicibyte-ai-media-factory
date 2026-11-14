@@ -30,9 +30,10 @@
 | 6 | Windows uygulaması ve kurulum sihirbazı | ✅ · Mac/Linux paketleri ⬜ |
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor, GitHub'dan kendini güncelliyor |
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
+| 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ kod · 🟡 v0.3.0 yayınlanmadı |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 324 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 332 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -139,6 +140,18 @@
   - İçe aktarma isimle birleştiriyor, hiçbir şeyi silmiyor.
 - **Masaüstünden dosya indirme** (video, kapak, ayar dosyası) düzeltildi.
 
+### Plan 8: Canlı izleme ve masaüstü deneyimi
+- **Canlı sayfası:**
+  - Şu an üretilen işler: aşama (senaryo, ses, altyazı, render, kapak), ilerleme çubuğu, geçen süre ve 3 sn'de bir akan canlı log.
+  - Kuyruk, aktif zamanlamalar ve geri sayım, kaynak ve işçi durumu. Sol menüde ince bir canlı özet satırı var.
+- **Altyapı:** Çalışan aşamalar log'larını 3 sn'de bir yazıyor; işçi 15 sn'de bir "hayattayım" sinyali gönderiyor. `/api/activity` her şeyi tek yanıtta veriyor.
+- **Pencere başlığı:**
+  - Masaüstü uygulamasında Windows çerçevesi yerine kendi başlık çubuğumuz var. Ortada renkli, animasyonlu canlı durum kapsülü (üretimde akan degrade, nabız noktası, ilerleme çizgisi; tıklayınca Canlı sayfası).
+  - Küçült/büyüt/kapat düğmeleri, çift tıkla büyütme ve kenarlardan boyutlandırma var. Görev çubuğu yazısı da canlı özeti gösteriyor.
+  - Sunucudaki panel eskiyse uygulama normal Windows çerçevesiyle açılıyor.
+- **Windows bildirimleri:** Video hazır, YouTube'da yayınlandı/zamanlandı, üretim başarısız ve yeni sürüm olaylarında bildirim çıkıyor; Ayarlar → Sunucu'dan kapatılabiliyor.
+- **Kurulum:** Varsayılan yer `C:\Program Files\CiciByte\MediaFactory` (yönetici izni), masaüstü kısayolu varsayılan olarak açık. Kendini güncelleme UAC onayı istiyor.
+
 ### Dağıtım (DL380)
 - **CT 175 `mediafactory`:** Debian 13; PostgreSQL 17, ffmpeg, yazı tipleri; systemd servisleri `mf-api` ve `mf-worker`.
 - Tailscale'de `mediafactory` adıyla görünüyor; uygulama `http://mediafactory:8080` adresine bağlanıyor.
@@ -217,6 +230,8 @@
 ---
 
 ## Sıradaki adım
+
+0. **v0.3.0 sürümü:** Yeni başlık çubuğunu gerçek pencerede doğrulamak, kurulum dosyasını Program Files için derlemek ve GitHub'da yayınlamak. Geliştirme bilgisayarında RAM yetersiz kaldığı için (7,3 GB'ın 0,7 GB'ı boş) ertelendi.
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
 2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
