@@ -12,6 +12,7 @@ from mediafactory.audit.service import record_audit
 from mediafactory.core.config import get_settings
 from mediafactory.db.models import JobStageRun, ProductionJob, SourceItem, User
 from mediafactory.pipeline.handlers import MAKE_SHORT
+from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.queue.jobs import JobBusy, cancel_job, create_job, enqueue_stage, retry_failed
 
 router = APIRouter(prefix="/api", tags=["jobs"])
@@ -20,6 +21,8 @@ router = APIRouter(prefix="/api", tags=["jobs"])
 class MakeIn(BaseModel):
     languages: list[Literal["en", "tr"]] = Field(default_factory=lambda: ["en"], min_length=1, max_length=2)
     seconds: int = Field(default=50, ge=15, le=170)
+    background: str = Field(default="random", max_length=120, description='"random", "none" or a library clip name')
+    style: CaptionStyle = Field(default_factory=CaptionStyle)
 
 
 def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
@@ -61,12 +64,20 @@ def make_from_item(
     item = db.get(SourceItem, iid)
     if item is None:
         raise HTTPException(status_code=404, detail="item not found")
+    if body.background not in ("random", "none"):
+        from mediafactory.pipeline.backgrounds import resolve
+
+        if resolve(Path(get_settings().data_dir), body.background) is None:
+            raise HTTPException(status_code=422, detail="background clip not found")
     group = f"item{iid}-{len(body.languages)}l"
     jobs = []
     for lang in dict.fromkeys(body.languages):
         job = create_job(db, status="discovered", source_item_id=iid, language=lang, content_group=group,
                          payload={"title": item.title})  # fmt: skip
-        enqueue_stage(db, job.id, MAKE_SHORT, "render", inputs={"item_id": iid, "language": lang, "seconds": body.seconds})
+        enqueue_stage(db, job.id, MAKE_SHORT, "render", inputs={
+            "item_id": iid, "language": lang, "seconds": body.seconds, "background": body.background,
+            "style": body.style.model_dump(),
+        })  # fmt: skip
         jobs.append(job)
     item.processing_status = "queued"
     record_audit(db, actor_id=user.id, action="job.make", target_type="source_item", target_id=str(iid),

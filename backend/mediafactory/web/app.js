@@ -75,11 +75,11 @@ function pill(status) {
 function on(sel, ev, fn) { document.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn)); }
 
 // ---------- layout ----------
-const ROUTES = ["overview", "sources", "inbox", "production", "ready", "settings"];
+const ROUTES = ["overview", "studio", "sources", "inbox", "production", "ready", "settings"];
 function route() { const r = (location.hash || "#overview").slice(1).split("/")[0]; return ROUTES.includes(r) ? r : "overview"; }
 
 function shell(inner) {
-  const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${t(r)}</a>`).join("");
+  const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${r === "studio" ? st(r) : t(r)}</a>`).join("");
   return `<div class="shell">
     <aside class="side">
       <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(desktop.server_url) : ""}</small></div>
@@ -97,12 +97,13 @@ function shell(inner) {
 
 async function render() {
   clearInterval(pollTimer);
+  if (typeof previewTimer !== "undefined") clearInterval(previewTimer);
   if (desktop === null) { try { desktop = await (await fetch("/desktop/config")).json(); } catch { desktop = false; } }
   offline = false;
   try { me = await api("/api/auth/me"); } catch { me = null; }
   $app.innerHTML = shell(`<p class="muted">…</p>`);
   bindShell();
-  const page = { overview, sources, inbox, production, ready, settings }[route()];
+  const page = { overview, studio, sources, inbox, production, ready, settings }[route()];
   try { await page(document.getElementById("main")); } catch (err) {
     if (offline && route() !== "settings") { $app.innerHTML = shell(`<h1>${t(route())}</h1><p class="muted">${t("offline")}</p>`); bindShell(); }
     else toast(err.message, true);
@@ -181,7 +182,7 @@ async function inbox(el) {
     <p class="sub">${data.items.length} ${t("items").toLowerCase()}</p>
     <div class="card">${data.items.length ? `<table><tr><th></th><th>${t("rights")}</th><th>${t("status")}</th><th></th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>`;
   document.getElementById("q").addEventListener("change", (e) => { location.hash = "#inbox?q=" + encodeURIComponent(e.target.value); });
-  on("[data-make]", "click", (e) => makeModal(e.target.dataset.make));
+  on("[data-make]", "click", (e) => { studioState = null; location.hash = `#studio/${e.target.dataset.make}`; });
   on("[data-open]", "click", async (e) => {
     const d = await api(`/api/items/${e.target.dataset.open}`);
     modal(`<h1>${esc(d.item.title)}</h1><p class="muted small">${esc(d.item.canonical_url || "")}</p><pre>${esc(d.item.text)}</pre>`);
@@ -195,23 +196,6 @@ function modal(html) {
   m.addEventListener("click", (e) => { if (e.target === m || e.target.hasAttribute("data-close")) m.remove(); });
   document.body.appendChild(m);
   return m;
-}
-
-function makeModal(itemId) {
-  const m = modal(`<h1>${t("makeTitle")}</h1><form id="mk">
-    <label>${t("languages")}</label><div class="row"><label class="row"><input type="checkbox" name="en" checked style="width:auto"> English</label>
-    <label class="row"><input type="checkbox" name="tr" style="width:auto"> Türkçe</label></div>
-    <label>${t("seconds")}</label><input name="seconds" type="number" min="15" max="170" value="50">
-    <div class="row" style="margin-top:14px"><button class="btn primary">${t("start")}</button></div></form>`);
-  m.querySelector("#mk").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    const languages = ["en", "tr"].filter((l) => f.get(l));
-    try {
-      await api(`/api/items/${itemId}/make`, { method: "POST", body: { languages, seconds: Number(f.get("seconds")) } });
-      m.remove(); toast(t("makeStarted")); location.hash = "#production";
-    } catch (err) { toast(err.message, true); }
-  });
 }
 
 function jobsTable(items) {
