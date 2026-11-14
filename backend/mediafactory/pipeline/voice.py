@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field, field_validator
 
-from mediafactory.pipeline.tts import VOICE_CATALOG, default_voice
+from mediafactory.pipeline.tts import default_voice, lookup
 
 
 class VoiceSettings(BaseModel):
@@ -14,8 +14,8 @@ class VoiceSettings(BaseModel):
     @field_validator("en", "tr")
     @classmethod
     def _known(cls, v: str, info) -> str:
-        voice = VOICE_CATALOG.get(v)
-        if voice is None or voice["language"] != info.field_name:
+        voice = lookup(v)
+        if voice is None or voice["language"] not in (info.field_name, "any"):
             raise ValueError(f"unknown {info.field_name} voice {v!r}")
         return v
 

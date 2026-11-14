@@ -3,9 +3,12 @@ speed (Piper length scale) and pitch (ffmpeg, duration kept)."""
 
 import json
 import os
+import queue
 import shutil
 import subprocess
 import sys
+import threading
+import time
 import wave
 from pathlib import Path
 
@@ -75,10 +78,19 @@ def default_voice(language: str) -> str:
     return DEFAULT_VOICE.get(language, DEFAULT_VOICE["en"])
 
 
+def lookup(voice_id: str | None) -> dict | None:
+    """A catalog voice or one of your cloned voices (language "any")."""
+    from mediafactory.pipeline import clones
+
+    if voice_id in VOICE_CATALOG:
+        return VOICE_CATALOG[voice_id]
+    return clones.get_clone(clones.data_dir(), voice_id) if clones.CLONE_ID.match(voice_id or "") else None
+
+
 def voice_for(language: str, voice_id: str | None) -> str:
     """The chosen voice if it speaks this language and its engine is installed, else the language's default."""
-    v = VOICE_CATALOG.get(voice_id or "")
-    if v and v["language"] == language and available(v):
+    v = lookup(voice_id)
+    if v and v["language"] in (language, "any") and available(v):
         return v["id"]
     return default_voice(language)
 
@@ -152,16 +164,116 @@ def synthesize_voice(
 ) -> float:  # fmt: skip
     """Speak `text` with the chosen catalog voice (any engine); returns the audio length in seconds."""
     vid = voice_for(language, voice_id)
-    voice = VOICE_CATALOG[vid]
+    voice = lookup(vid) or VOICE_CATALOG[default_voice(language)]
     if voice["engine"] == "chatterbox":
-        req = {"text": text, "language": language, "out": str(out_wav), "exaggeration": 0.55,
-               "threads": os.cpu_count() or 4}  # fmt: skip
-        proc = subprocess.run([chatterbox_python() or sys.executable, str(WORKER)], input=json.dumps(req),
-                              capture_output=True, text=True, timeout=timeout)  # fmt: skip
-        lines = [ln for ln in proc.stdout.strip().splitlines() if ln.startswith("{")]
-        result = json.loads(lines[-1]) if lines else {"ok": False, "error": proc.stderr[-400:]}
-        if not result.get("ok"):
-            raise RuntimeError(f"Chatterbox failed: {result.get('error')}")
+        from mediafactory.pipeline import clones
+
+        req = {"text": text, "language": language, "out": str(out_wav), "exaggeration": 0.55}
+        ref = clones.clone_path(clones.data_dir(), vid)
+        if ref is not None:
+            req["reference"] = str(ref)
+        chatterbox_request(req, timeout=timeout)
         change_speed(out_wav, speed)
         return wav_seconds(out_wav)
     return synthesize(text, ensure_voice(language, models_dir, vid), out_wav, length_scale=1.0 / speed)
+
+
+class _ChatterboxServer:
+    """One long-lived Chatterbox process per app process: the 3 GB model loads once, not once per video.
+    It answers one JSON line per request, and is stopped after IDLE_S without work to give the memory back."""
+
+    IDLE_S = 600
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.proc: subprocess.Popen | None = None
+        self.lines: queue.Queue = queue.Queue()
+        self.stderr: list[str] = []
+        self.last_used = 0.0
+
+    def _start(self) -> None:
+        self.lines, self.stderr = queue.Queue(), []
+        self.proc = subprocess.Popen(
+            [chatterbox_python() or sys.executable, str(WORKER), "--serve"], stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", bufsize=1,
+        )  # fmt: skip
+        proc, lines, err = self.proc, self.lines, self.stderr
+
+        def pump_out() -> None:
+            for ln in proc.stdout:
+                lines.put(ln)
+            lines.put(None)  # process ended
+
+        def pump_err() -> None:
+            for ln in proc.stderr:
+                err.append(ln)
+                del err[:-40]
+
+        for fn in (pump_out, pump_err):
+            threading.Thread(target=fn, daemon=True).start()
+        threading.Thread(target=self._reaper, args=(proc,), daemon=True).start()
+
+    def _reaper(self, proc: subprocess.Popen) -> None:
+        while proc.poll() is None:
+            time.sleep(15)
+            with self.lock:
+                if self.proc is proc and time.monotonic() - self.last_used > self.IDLE_S:
+                    self._stop()
+                    return
+
+    def _stop(self) -> None:
+        proc, self.proc = self.proc, None
+        if proc is None:
+            return
+        try:
+            proc.stdin.close()  # the server exits at end of input
+            proc.wait(timeout=10)
+        except Exception:  # noqa: BLE001
+            proc.kill()
+
+    def request(self, req: dict, timeout: float) -> dict:
+        with self.lock:
+            if self.proc is None or self.proc.poll() is not None:
+                self._start()
+            self.last_used = time.monotonic()
+            deadline = time.monotonic() + timeout
+            try:
+                self.proc.stdin.write(json.dumps({**req, "threads": os.cpu_count() or 4}) + "\n")
+                self.proc.stdin.flush()
+                while True:
+                    ln = self.lines.get(timeout=max(0.1, deadline - time.monotonic()))
+                    if ln is None:
+                        raise RuntimeError(("".join(self.stderr) or "the Chatterbox process exited")[-400:])
+                    if ln.startswith("{"):
+                        result = json.loads(ln)
+                        break
+            except queue.Empty:
+                self.proc.kill()
+                self.proc = None
+                raise RuntimeError(f"Chatterbox took longer than {timeout:.0f}s") from None
+            except (OSError, RuntimeError) as exc:
+                if self.proc is not None:
+                    self.proc.wait(timeout=5)
+                self.proc = None
+                raise RuntimeError(f"Chatterbox failed: {exc}") from None
+            finally:
+                self.last_used = time.monotonic()
+        if not result.get("ok"):
+            raise RuntimeError(f"Chatterbox failed: {result.get('error')}")
+        return result
+
+    def shutdown(self) -> None:
+        with self.lock:
+            self._stop()
+
+
+_SERVER = _ChatterboxServer()
+
+
+def chatterbox_request(req: dict, *, timeout: float = 1800) -> dict:
+    """Synthesise one request with the shared Chatterbox server (started on first use)."""
+    return _SERVER.request(req, timeout)
+
+
+def chatterbox_shutdown() -> None:
+    _SERVER.shutdown()

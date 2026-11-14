@@ -31,9 +31,10 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor, GitHub'dan kendini güncelliyor |
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
 | 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ v0.3.0 |
+| 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 332 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 344 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -152,6 +153,12 @@
 - **Windows bildirimleri:** Video hazır, YouTube'da yayınlandı/zamanlandı, üretim başarısız ve yeni sürüm olaylarında bildirim çıkıyor; Ayarlar → Sunucu'dan kapatılabiliyor.
 - **Kurulum:** Varsayılan yer `C:\Program Files\CiciByte\MediaFactory` (yönetici izni), masaüstü kısayolu varsayılan olarak açık. Kendini güncelleme UAC onayı istiyor.
 
+### Plan 9: Ses klonlama ve hızlı Chatterbox
+- **Kendi sesin:** Stüdyo → Ses → "Ses klonla" ile tek kişinin 5–30 sn'lik net konuşmasını yüklüyorsun. Örnek 24 kHz mono WAV'a çevrilip `DATA_DIR/media/voices` içinde saklanıyor.
+- **İzin onayı:** Sesin sahibi olduğunu ya da izin aldığını onaylamadan yükleme kabul edilmiyor; onay denetim kaydına yazılıyor.
+- **Dil:** Klon hem Türkçe hem İngilizce listede "Kendi seslerim" grubunda çıkıyor; önizleme ve silme düğmesi var. Chatterbox kurulu değilse klonlar gizleniyor ve Piper'a dönülüyor.
+- **Hız:** Chatterbox modeli (3 GB) artık her videoda yeniden yüklenmiyor. İşçide kalıcı bir süreç olarak bellekte duruyor, 10 dk iş gelmezse belleği bırakıyor. Klon sesin koşullandırması bir kez hesaplanıp önbellekte tutuluyor.
+
 ### Dağıtım (DL380)
 - **CT 175 `mediafactory`:** Debian 13; PostgreSQL 17, ffmpeg, yazı tipleri; systemd servisleri `mf-api` ve `mf-worker`.
 - Tailscale'de `mediafactory` adıyla görünüyor; uygulama `http://mediafactory:8080` adresine bağlanıyor.
@@ -232,8 +239,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
-3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+2. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 

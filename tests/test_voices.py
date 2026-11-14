@@ -85,23 +85,22 @@ def test_chatterbox_engine_runs_worker_and_applies_speed(tmp_path, monkeypatch):
     fake = tmp_path / "fake_worker_python.py"
     fake.write_text(
         "import json, sys, wave\n"
-        "req = json.loads(sys.stdin.read())\n"
-        "w = wave.open(req['out'], 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)\n"
-        "w.writeframes(bytes(2) * 48000); w.close()\n"
-        "print(json.dumps({'ok': True, 'seconds': 2.0}))\n",
+        "for line in sys.stdin:\n"
+        "    req = json.loads(line)\n"
+        "    w = wave.open(req['out'], 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)\n"
+        "    w.writeframes(bytes(2) * 48000); w.close()\n"
+        "    print(json.dumps({'ok': True, 'seconds': 2.0}), flush=True)\n",
         encoding="utf-8",
     )
-    launcher = tmp_path / ("py.cmd" if sys.platform == "win32" else "py.sh")
-    if sys.platform == "win32":
-        launcher.write_text(f'@"{sys.executable}" "{fake}"\n', encoding="utf-8")
-    else:
-        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{fake}"\n', encoding="utf-8")
-        launcher.chmod(0o755)
-    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", str(launcher))
-    monkeypatch.setattr(tts, "WORKER", fake)  # the launcher ignores it; keeps the call shape real
+    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", sys.executable)
+    monkeypatch.setattr(tts, "WORKER", fake)
+    tts.chatterbox_shutdown()
     assert tts.voice_for("tr", "tr-chatterbox") == "tr-chatterbox"
     out = tmp_path / "v.wav"
-    secs = tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", out, models_dir=tmp_path, speed=1.25)
+    try:
+        secs = tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", out, models_dir=tmp_path, speed=1.25)
+    finally:
+        tts.chatterbox_shutdown()
     assert abs(secs - 1.6) < 0.1  # 2 s sped up 1.25x
 
 
@@ -112,8 +111,12 @@ def test_chatterbox_failure_is_reported(tmp_path, monkeypatch):
     bad.write_text("import json; print(json.dumps({'ok': False, 'error': 'model download failed'}))\n", encoding="utf-8")
     monkeypatch.setenv("MF_CHATTERBOX_PYTHON", sys.executable)
     monkeypatch.setattr(tts, "WORKER", bad)
-    with pytest.raises(RuntimeError, match="model download failed"):
-        tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", tmp_path / "x.wav", models_dir=tmp_path)
+    tts.chatterbox_shutdown()
+    try:
+        with pytest.raises(RuntimeError, match="model download failed"):
+            tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", tmp_path / "x.wav", models_dir=tmp_path)
+    finally:
+        tts.chatterbox_shutdown()
 
 
 def test_turkish_default_is_chatterbox_when_installed(tmp_path, monkeypatch):

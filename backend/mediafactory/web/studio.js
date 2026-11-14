@@ -11,7 +11,10 @@ const ST = {
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
-    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", noTags: "no topic", tagClip: "Topics of this clip", tagHelp: "When a video is made with a random background, clips tagged with the story's topic are used first.", clipTopics: "Topics (used for random backgrounds)", allTopics: "All topics", allSources: "All sources", music: "Music", noMusic: "No music", randomMusic: "Random from my library", ambiences: "Ambiences (royalty-free)", myTracks: "My tracks", musicVol: "Music volume", ducking: "Lower the music while the narrator speaks", uploadMusic: "Upload track", musicHint: "Upload music you are allowed to use (mp3, wav, ogg, m4a, flac).", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", neutral: "neutral voice", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
+    previewHint: "Click the preview to place the captions.", myVoices: "My voices (clone)", addClone: "Clone a voice", cloneName: "Name", cloneNamePh: "e.g. My voice",
+    cloneHint: "Upload 5–30 seconds of clear speech by one person, without music or background noise. The clone speaks both English and Turkish.",
+    cloneConsent: "This is my voice, or I have the speaker's permission to clone it.", cloneAdded: "Voice added — choose it in the lists above", deleteClone: "Delete this voice",
+    cloneNeedsConsent: "Tick the permission box first", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", noTags: "no topic", tagClip: "Topics of this clip", tagHelp: "When a video is made with a random background, clips tagged with the story's topic are used first.", clipTopics: "Topics (used for random backgrounds)", allTopics: "All topics", allSources: "All sources", music: "Music", noMusic: "No music", randomMusic: "Random from my library", ambiences: "Ambiences (royalty-free)", myTracks: "My tracks", musicVol: "Music volume", ducking: "Lower the music while the narrator speaks", uploadMusic: "Upload track", musicHint: "Upload music you are allowed to use (mp3, wav, ogg, m4a, flac).", voice: "Voice", voiceEn: "English voice", voiceTr: "Turkish voice", speed: "Speed", pitch: "Pitch (deeper ← → higher)", listen: "Listen", preparing: "Preparing (first time downloads the voice)…", male: "male", female: "female", neutral: "neutral voice", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
     noClips: "No clips yet. Upload gameplay or stock footage you are allowed to use.", sure: "Delete this clip?",
   },
   tr: {
@@ -23,7 +26,10 @@ const ST = {
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
-    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", noTags: "konu yok", tagClip: "Bu klibin konuları", tagHelp: "Rastgele arka planla video üretilirken önce hikâyenin konusuyla etiketli klipler kullanılır.", clipTopics: "Konular (rastgele arka plan için)", allTopics: "Tüm konular", allSources: "Tüm kaynaklar", music: "Müzik", noMusic: "Müzik yok", randomMusic: "Kütüphanemden rastgele", ambiences: "Ambiyanslar (telifsiz)", myTracks: "Parçalarım", musicVol: "Müzik seviyesi", ducking: "Anlatıcı konuşurken müziği kıs", uploadMusic: "Parça yükle", musicHint: "Kullanma iznin olan müziği yükle (mp3, wav, ogg, m4a, flac).", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", neutral: "nötr ses", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
+    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", myVoices: "Kendi seslerim (klon)", addClone: "Ses klonla", cloneName: "Ad", cloneNamePh: "ör. Benim sesim",
+    cloneHint: "Tek kişinin 5–30 saniyelik net konuşmasını yükle; müzik ya da arka plan gürültüsü olmasın. Klon hem Türkçe hem İngilizce konuşur.",
+    cloneConsent: "Bu ses benim ya da sahibinden klonlamak için izin aldım.", cloneAdded: "Ses eklendi — yukarıdaki listelerden seçebilirsin", deleteClone: "Bu sesi sil",
+    cloneNeedsConsent: "Önce izin kutusunu işaretle", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", noTags: "konu yok", tagClip: "Bu klibin konuları", tagHelp: "Rastgele arka planla video üretilirken önce hikâyenin konusuyla etiketli klipler kullanılır.", clipTopics: "Konular (rastgele arka plan için)", allTopics: "Tüm konular", allSources: "Tüm kaynaklar", music: "Müzik", noMusic: "Müzik yok", randomMusic: "Kütüphanemden rastgele", ambiences: "Ambiyanslar (telifsiz)", myTracks: "Parçalarım", musicVol: "Müzik seviyesi", ducking: "Anlatıcı konuşurken müziği kıs", uploadMusic: "Parça yükle", musicHint: "Kullanma iznin olan müziği yükle (mp3, wav, ogg, m4a, flac).", voice: "Ses", voiceEn: "İngilizce ses", voiceTr: "Türkçe ses", speed: "Hız", pitch: "Ton (kalın ← → ince)", listen: "Dinle", preparing: "Hazırlanıyor (ilk seferde ses indirilir)…", male: "erkek", female: "kadın", neutral: "nötr ses", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
     noClips: "Henüz klip yok. Kullanma iznin olan oyun ya da stok görüntüsü yükle.", sure: "Bu klip silinsin mi?",
   },
 };
@@ -67,7 +73,7 @@ async function drawVoice() {
   if (!s.voiceList) {
     try {
       const r = await api("/api/voices");
-      s.voiceList = r.voices;
+      s.voiceList = r.voices; s.voiceCloning = !!r.cloning;
       // One-time move to the server's current default Turkish voice (e.g. Chatterbox when installed).
       let rev = null; try { rev = localStorage.getItem("mf_voice_rev"); } catch { /* private mode */ }
       if (rev !== "2" && r.defaults && r.defaults.tr) {
@@ -81,16 +87,32 @@ async function drawVoice() {
   const v = s.voice;
   const opts = (language) => {
     const groups = {};
-    s.voiceList.filter((x) => x.language === language).forEach((x) => { (groups[x.accent] = groups[x.accent] || []).push(x); });
+    s.voiceList.filter((x) => x.language === language || x.language === "any").forEach((x) => {
+      const g = x.language === "any" ? st("myVoices") : x.accent; (groups[g] = groups[g] || []).push(x);
+    });
     return Object.entries(groups).map(([acc, list]) => `<optgroup label="${esc(acc)}">${list.map((x) =>
-      `<option value="${x.id}" ${v[language] === x.id ? "selected" : ""}>${esc(x.label)} · ${st(x.gender)}${x.quality === "high" ? " · HD" : ""}</option>`).join("")}</optgroup>`).join("");
+      `<option value="${x.id}" ${v[language] === x.id ? "selected" : ""}>${esc(x.label)}${x.language === "any" ? "" : ` · ${st(x.gender)}`}${x.quality === "high" ? " · HD" : ""}</option>`).join("")}</optgroup>`).join("");
   };
+  const chosenClones = [...new Set([v.en, v.tr].filter((id) => /^clone-/.test(id || "")))];
+  const cloneRow = s.voiceCloning ? `<div class="row" style="margin-top:10px">
+      <button class="btn" id="cloneAdd">🎙️ ${st("addClone")}</button>
+      ${chosenClones.map((id) => `<button class="btn" data-clonedel="${id}">🗑 ${st("deleteClone")}: ${esc((s.voiceList.find((x) => x.id === id) || {}).label || id)}</button>`).join("")}
+    </div>` : "";
   box.innerHTML = `<div class="grid g2">
       <div><label>${st("voiceEn")}</label><div class="row" style="flex-wrap:nowrap"><select data-vk="en">${opts("en")}</select><button class="btn" data-listen="en">▶</button></div></div>
       <div><label>${st("voiceTr")}</label><div class="row" style="flex-wrap:nowrap"><select data-vk="tr">${opts("tr")}</select><button class="btn" data-listen="tr">▶</button></div></div>
       <div><label>${st("speed")} <b class="val">${v.speed.toFixed(2)}×</b></label><input type="range" data-vk="speed" min="0.8" max="1.3" step="0.05" value="${v.speed}"></div>
       <div><label>${st("pitch")} <b class="val">${v.pitch > 0 ? "+" : ""}${v.pitch}</b></label><input type="range" data-vk="pitch" min="-4" max="4" step="1" value="${v.pitch}"></div>
-    </div>`;
+    </div>${cloneRow}`;
+  const add = box.querySelector("#cloneAdd");
+  add && add.addEventListener("click", cloneDialog);
+  box.querySelectorAll("[data-clonedel]").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm(st("sure"))) return;
+    try {
+      await api(`/api/voices/clones/${b.dataset.clonedel}`, { method: "DELETE" });
+      s.voiceList = null; drawVoice();
+    } catch (err) { toast(err.message, true); }
+  }));
   box.querySelectorAll("[data-vk]").forEach((n) => n.addEventListener("input", () => {
     const k = n.dataset.vk;
     v[k] = n.type === "range" ? Number(n.value) : n.value;
@@ -103,7 +125,7 @@ async function drawVoice() {
     b.disabled = true; b.textContent = "…"; toast(st("preparing"));
     try {
       const res = await fetch("/api/voices/preview", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
-        body: JSON.stringify({ voice: v[lang2], speed: v.speed, pitch: v.pitch }) });
+        body: JSON.stringify({ voice: v[lang2], speed: v.speed, pitch: v.pitch, language: lang2 }) });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
       const url = URL.createObjectURL(await res.blob());
       if (s.audio) s.audio.pause();
@@ -159,6 +181,34 @@ async function drawMusic(refresh = false) {
     if (!confirm(st("sure"))) return;
     try { await api(`/api/music/${encodeURIComponent(m.track)}`, { method: "DELETE" }); m.track = "none"; saveMusic(m); drawMusic(true); }
     catch (err) { toast(err.message, true); }
+  });
+}
+
+function cloneDialog() {
+  const md = modal(`<h1>🎙️ ${st("addClone")}</h1><form id="cvf">
+    <p class="muted" style="margin-top:0">${st("cloneHint")}</p>
+    <label>${st("cloneName")}</label><input name="label" maxlength="60" placeholder="${esc(st("cloneNamePh"))}">
+    <label>Audio (wav, mp3, m4a, ogg, flac, webm)</label><input type="file" name="file" accept="audio/*" required>
+    <label class="row" style="gap:8px;align-items:flex-start;margin-top:12px;font-weight:400"><input type="checkbox" name="consent" value="true" style="width:auto;margin-top:3px"> ${st("cloneConsent")}</label>
+    <div class="progress" hidden><div></div></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary">${st("addClone")}</button></div></form>`);
+  md.querySelector("#cvf").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target), bar = md.querySelector(".progress"), btn = md.querySelector("button.primary");
+    if (!fd.get("consent")) return toast(st("cloneNeedsConsent"), true);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/voices/clones");
+    xhr.setRequestHeader("X-MF-Client", "panel");
+    bar.hidden = false; btn.disabled = true; btn.textContent = st("uploading");
+    xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.firstElementChild.style.width = `${(ev.loaded / ev.total) * 100}%`; };
+    xhr.onload = () => {
+      let d = null; try { d = JSON.parse(xhr.responseText); } catch { /* not json */ }
+      if (xhr.status !== 201) { btn.disabled = false; btn.textContent = st("addClone"); return toast((d && d.detail) || xhr.statusText, true); }
+      md.remove(); toast(st("cloneAdded"));
+      studioState.voiceList = null; drawVoice();
+    };
+    xhr.onerror = () => { btn.disabled = false; btn.textContent = st("addClone"); toast(t("offline"), true); };
+    xhr.send(fd);
   });
 }
 

@@ -1,16 +1,21 @@
-"""Voice catalog and short previews for the Studio voice picker."""
+"""Voice catalog, your cloned voices and short previews for the Studio voice picker."""
 
 import hashlib
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
-from mediafactory.api.deps import require_user
+from mediafactory.api.deps import client_ip, get_db, require_user
+from mediafactory.audit.service import record_audit
 from mediafactory.core.config import get_settings
 from mediafactory.db.models import User
-from mediafactory.pipeline.tts import VOICE_CATALOG, available, default_voice, shift_pitch, synthesize_voice
+from mediafactory.pipeline import clones
+from mediafactory.pipeline.tts import (
+    VOICE_CATALOG, available, chatterbox_python, default_voice, lookup, shift_pitch, synthesize_voice,
+)  # fmt: skip
 
 router = APIRouter(prefix="/api/voices", tags=["voices"])
 
@@ -25,30 +30,69 @@ def list_voices(user: User = Depends(require_user)) -> dict:
     data = Path(get_settings().data_dir) / "models" / "piper"
     voices = [{k: v for k, v in voice.items() if k != "path"} | {"downloaded": (data / f"{voice['id']}.onnx").exists()}
               for voice in VOICE_CATALOG.values() if available(voice)]  # fmt: skip
-    return {"voices": voices, "defaults": {lang: default_voice(lang) for lang in ("en", "tr")}}
+    cloning = chatterbox_python() is not None
+    if cloning:
+        voices += [{k: v for k, v in c.items() if k != "path"} | {"downloaded": True} for c in clones.list_clones(clones.data_dir())]
+    return {"voices": voices, "defaults": {lang: default_voice(lang) for lang in ("en", "tr")}, "cloning": cloning,
+            "clone_limits": {"min_s": clones.MIN_S, "max_s": clones.MAX_S}}  # fmt: skip
+
+
+@router.post("/clones", status_code=201)
+def add_clone(
+    request: Request, file: UploadFile = File(...), label: str = Form("", max_length=60), consent: bool = Form(False),
+    db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    if chatterbox_python() is None:
+        raise HTTPException(status_code=409, detail="voice cloning needs Chatterbox installed on the server")
+    try:
+        voice = clones.add_clone(clones.data_dir(), file.filename or "", file.file, label=label, consent=consent)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    record_audit(db, actor_id=user.id, action="voice.clone.add", target_type="voice", target_id=voice["id"],
+                 details={"label": voice["label"], "consent": True}, ip=client_ip(request))  # fmt: skip
+    return voice
+
+
+@router.get("/clones/{vid}/audio")
+def clone_audio(vid: str, user: User = Depends(require_user)):
+    path = clones.clone_path(clones.data_dir(), vid)
+    if path is None:
+        raise HTTPException(status_code=404, detail="voice not found")
+    return FileResponse(path, media_type="audio/wav")
+
+
+@router.delete("/clones/{vid}")
+def delete_clone(
+    vid: str, request: Request, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)
+) -> dict:
+    if not clones.remove_clone(clones.data_dir(), vid):
+        raise HTTPException(status_code=404, detail="voice not found")
+    record_audit(db, actor_id=user.id, action="voice.clone.delete", target_type="voice", target_id=vid, ip=client_ip(request))
+    return {"ok": True}
 
 
 class PreviewIn(BaseModel):
     voice: str = Field(max_length=80)
     speed: float = Field(default=1.0, ge=0.8, le=1.3)
     pitch: int = Field(default=0, ge=-4, le=4)
+    language: str = Field(default="", pattern=r"^(en|tr)?$", description="for cloned voices, which sample to speak")
 
 
 @router.post("/preview")
 def preview(body: PreviewIn, user: User = Depends(require_user)):
     """A short sample in this voice (downloads the voice the first time; cached afterwards)."""
-    voice = VOICE_CATALOG.get(body.voice)
+    voice = lookup(body.voice)
     if voice is None or not available(voice):
         raise HTTPException(status_code=404, detail="unknown voice")
+    language = voice["language"] if voice["language"] != "any" else (body.language or "en")
     data = Path(get_settings().data_dir)
-    key = hashlib.sha256(f"{body.voice}|{body.speed:.2f}|{body.pitch}".encode()).hexdigest()[:20]
+    key = hashlib.sha256(f"{body.voice}|{language}|{body.speed:.2f}|{body.pitch}".encode()).hexdigest()[:20]
     out = data / "voice_previews" / f"{key}.wav"
     if not out.exists():
         out.parent.mkdir(parents=True, exist_ok=True)
         try:
             tmp = out.with_suffix(".tmp.wav")
-            synthesize_voice(body.voice, voice["language"], SAMPLE[voice["language"]], tmp, models_dir=data / "models",
-                             speed=body.speed)  # fmt: skip
+            synthesize_voice(body.voice, language, SAMPLE[language], tmp, models_dir=data / "models", speed=body.speed)
             shift_pitch(tmp, body.pitch)
             tmp.replace(out)
         except Exception as exc:
