@@ -44,6 +44,8 @@ class Config:
         except (OSError, ValueError):
             self.data = {}
         self.lock = threading.Lock()
+        self.update: dict | None = None  # filled by the background release check
+        self.home = home
 
     @property
     def server_url(self) -> str:
@@ -104,7 +106,26 @@ def make_handler(cfg: Config):
                     return self._json(400, {"detail": "invalid address"})
                 cfg.set_server(url)
             url = cfg.server_url
-            return self._json(200, {"server_url": url, "reachable": reachable(url)})
+            from mediafactory import __version__
+
+            return self._json(200, {"server_url": url, "reachable": reachable(url), "app_version": __version__,
+                                    "update": cfg.update})  # fmt: skip
+
+        def _desktop_update(self):
+            """Download the newer installer (checksum-verified), start it and quit; it reopens the app."""
+            from mediafactory import desktop_update
+
+            if not self.headers.get("X-MF-Client"):
+                return self._json(403, {"detail": "missing X-MF-Client header"})
+            if not cfg.update:
+                return self._json(409, {"detail": "no update available"})
+            try:
+                path = desktop_update.download(cfg.update, cfg.home / "updates")
+                desktop_update.launch_installer(path)
+            except Exception as exc:
+                return self._json(502, {"detail": f"update failed: {exc}"})
+            self._json(200, {"ok": True, "version": cfg.update["version"]})
+            threading.Timer(1.5, lambda: os._exit(0)).start()  # let the installer replace our files
 
         def _proxy(self):
             target = urllib.parse.urlsplit(cfg.server_url)
@@ -170,6 +191,8 @@ def make_handler(cfg: Config):
         def _route(self):
             if self.path.startswith("/desktop/config"):
                 return self._desktop_config()
+            if self.path.startswith("/desktop/update") and self.command == "POST":
+                return self._desktop_update()
             if self.path.startswith("/api/"):
                 return self._proxy()
             if self.command in ("GET", "HEAD"):
@@ -198,6 +221,13 @@ def main() -> None:
     import webview
 
     cfg = Config(app_home())
+
+    def _check_updates():
+        from mediafactory import desktop_update
+
+        cfg.update = desktop_update.check()
+
+    threading.Thread(target=_check_updates, name="update-check", daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(cfg))
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, name="local-panel", daemon=True).start()
