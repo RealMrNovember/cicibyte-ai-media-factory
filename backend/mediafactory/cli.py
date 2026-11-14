@@ -10,6 +10,27 @@ def main() -> None:
     """CiciByte AI Media Factory command line."""
 
 
+@app.command("api")
+def api(
+    host: str = typer.Option(None, help="Bind address (default: MF_BIND_HOST)"),
+    port: int = typer.Option(None, help="Bind port (default: MF_BIND_PORT)"),
+) -> None:
+    """Serve the REST API and panel."""
+    import uvicorn
+
+    from mediafactory.api.app import create_app
+    from mediafactory.core.config import get_settings
+
+    settings = get_settings()
+    uvicorn.run(
+        create_app(settings),
+        host=host or settings.bind_host,
+        port=port or settings.bind_port,
+        proxy_headers=True,
+        forwarded_allow_ips="127.0.0.1",
+    )
+
+
 @app.command("worker")
 def worker() -> None:
     """Run the background worker that processes queued production stages."""
