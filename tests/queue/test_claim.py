@@ -47,6 +47,26 @@ def test_class_limit_respected(factory):
         assert claim_next(s, worker_id="b", limits=LIMITS) is None
 
 
+def test_claim_uses_application_clock_not_db_clock(factory, monkeypatch):
+    """run_after is written with the app clock; comparing it to the DB's now() breaks under clock skew."""
+    from datetime import timedelta
+
+    from mediafactory.db.base import utcnow
+    from mediafactory.db.models import JobStageRun
+    from mediafactory.queue import claim as claim_mod
+
+    (rid,) = _seed(factory, 1)
+    future = utcnow() + timedelta(hours=1)  # ahead of the DB clock
+    with factory() as s:
+        s.get(JobStageRun, rid).run_after = future
+        s.commit()
+    monkeypatch.setattr(claim_mod, "utcnow", lambda: future + timedelta(seconds=1))
+    with factory() as s:
+        run = claim_next(s, worker_id="a", limits=LIMITS)
+        s.commit()
+    assert run is not None and run.id == rid
+
+
 def test_future_run_after_not_claimed(factory):
     from datetime import timedelta
 

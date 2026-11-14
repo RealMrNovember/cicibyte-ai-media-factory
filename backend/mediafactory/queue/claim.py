@@ -48,7 +48,7 @@ def claim_next(session: Session, *, worker_id: str, limits: dict[str, int]) -> J
         select(JobStageRun)
         .where(
             JobStageRun.state.in_(("queued", "retry_wait")),
-            JobStageRun.run_after <= func.now(),
+            JobStageRun.run_after <= utcnow(),  # app clock: run_after is written with it too
             JobStageRun.job_class.in_(open_classes),
         )
         .order_by(JobStageRun.run_after, JobStageRun.id)
