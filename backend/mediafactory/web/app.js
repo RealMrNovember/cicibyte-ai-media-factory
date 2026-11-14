@@ -101,6 +101,7 @@ async function render() {
   clearInterval(pollTimer);
   if (!me) {
     try { me = await api("/api/auth/me"); } catch { me = null; }
+    if (!me) { try { me = (await api("/api/auth/auto", { method: "POST" })).user; } catch { me = null; } }
   }
   if (!me) return renderLogin();
   $app.innerHTML = shell(`<p class="muted">…</p>`);

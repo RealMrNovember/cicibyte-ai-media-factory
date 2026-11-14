@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     session_ttl_hours: int = 72
     # Peers whose X-Forwarded-For / X-Forwarded-Proto headers are trusted (IPs or CIDRs, or "*").
     trusted_proxies: list[str] = Field(default_factory=lambda: ["127.0.0.1"])
+    # Clients from these networks are signed in as the first admin without a password (e.g. your Tailscale
+    # network "100.64.0.0/10" for the desktop app). Empty = off.
+    autologin_networks: list[str] = Field(default_factory=list)
     # Host names source fetching may reach even though they resolve to private addresses.
     fetch_allowlist: list[str] = Field(default_factory=list)
 
