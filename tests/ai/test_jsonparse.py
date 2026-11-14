@@ -19,3 +19,7 @@ def test_top_level_list():
 def test_no_json_raises():
     with pytest.raises(ValueError):
         extract_json("no json here")
+
+
+def test_raw_newlines_inside_strings_accepted():
+    assert extract_json('{"narration": "line one\nline two"}') == {"narration": "line one\nline two"}

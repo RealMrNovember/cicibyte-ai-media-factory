@@ -29,6 +29,28 @@ def migrate(revision: str = typer.Argument("head", help="Target revision")) -> N
     typer.echo(f"database migrated to {revision}")
 
 
+@app.command("make")
+def make(
+    item: int = typer.Option(..., help="Source item id"),
+    lang: str = typer.Option("en", help="Narration language (en, tr)"),
+    seconds: int = typer.Option(50, help="Target length in seconds"),
+    background: str = typer.Option(None, help="Optional background video clip"),
+) -> None:
+    """Produce a 9:16 Short from one source item (script -> voice -> captions -> video)."""
+    from pathlib import Path
+
+    from mediafactory.core.config import get_settings
+    from mediafactory.db.session import session_scope
+    from mediafactory.pipeline.make import make_short
+
+    with session_scope() as session:
+        result = make_short(
+            session, item, language=lang, seconds=seconds, data_dir=Path(get_settings().data_dir),
+            background=Path(background) if background else None, log=typer.echo,
+        )  # fmt: skip
+    typer.echo(result["video"])
+
+
 @app.command("api")
 def api(
     host: str = typer.Option(None, help="Bind address (default: MF_BIND_HOST)"),

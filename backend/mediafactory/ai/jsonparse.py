@@ -10,10 +10,11 @@ _TRAILING_COMMA = re.compile(r",\s*([}\]])")
 
 
 def _loads(text: str) -> Any:
+    # strict=False: models often put raw newlines inside JSON strings
     try:
-        return json.loads(text)
+        return json.loads(text, strict=False)
     except json.JSONDecodeError:
-        return json.loads(_TRAILING_COMMA.sub(r"\1", text))
+        return json.loads(_TRAILING_COMMA.sub(r"\1", text), strict=False)
 
 
 def extract_json(text: str) -> dict | list:
