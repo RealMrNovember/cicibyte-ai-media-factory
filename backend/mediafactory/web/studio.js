@@ -64,7 +64,20 @@ async function drawVoice() {
   if (!box) return;
   const s = studioState;
   s.voice = s.voice || loadVoice();
-  if (!s.voiceList) { try { s.voiceList = (await api("/api/voices")).voices; } catch { s.voiceList = []; } }
+  if (!s.voiceList) {
+    try {
+      const r = await api("/api/voices");
+      s.voiceList = r.voices;
+      // One-time move to the server's current default Turkish voice (e.g. Chatterbox when installed).
+      let rev = null; try { rev = localStorage.getItem("mf_voice_rev"); } catch { /* private mode */ }
+      if (rev !== "2" && r.defaults && r.defaults.tr) {
+        s.voice.tr = r.defaults.tr; saveVoice(s.voice);
+        try { localStorage.setItem("mf_voice_rev", "2"); } catch { /* private mode */ }
+      }
+      if (!s.voiceList.some((x) => x.id === s.voice.tr) && r.defaults) s.voice.tr = r.defaults.tr;
+      if (!s.voiceList.some((x) => x.id === s.voice.en) && r.defaults) s.voice.en = r.defaults.en;
+    } catch { s.voiceList = []; }
+  }
   const v = s.voice;
   const opts = (language) => {
     const groups = {};

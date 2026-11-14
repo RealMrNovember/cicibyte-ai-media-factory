@@ -62,16 +62,25 @@ def chatterbox_python() -> str | None:
 
 def available(voice: dict) -> bool:
     return voice["engine"] != "chatterbox" or chatterbox_python() is not None
-DEFAULT_VOICE = {"en": "en_US-ryan-high", "tr": "tr_TR-dfki-medium"}
+DEFAULT_VOICE = {"en": "en_US-ryan-high", "tr": "tr_TR-dfki-medium"}  # Piper voices: always available
+PREFERRED_VOICE = {"tr": "tr-chatterbox"}  # used as the default when its engine is installed
 VOICES = {lang: VOICE_CATALOG[vid]["path"] for lang, vid in DEFAULT_VOICE.items()}  # backwards compatibility
 
 
+def default_voice(language: str) -> str:
+    """Chatterbox for Turkish where it is installed, otherwise the language's Piper voice."""
+    preferred = VOICE_CATALOG.get(PREFERRED_VOICE.get(language, ""))
+    if preferred and available(preferred):
+        return preferred["id"]
+    return DEFAULT_VOICE.get(language, DEFAULT_VOICE["en"])
+
+
 def voice_for(language: str, voice_id: str | None) -> str:
-    """The chosen voice if it speaks this language, else the language's default."""
+    """The chosen voice if it speaks this language and its engine is installed, else the language's default."""
     v = VOICE_CATALOG.get(voice_id or "")
     if v and v["language"] == language and available(v):
         return v["id"]
-    return DEFAULT_VOICE.get(language, DEFAULT_VOICE["en"])
+    return default_voice(language)
 
 
 def ensure_voice(language: str, models_dir: Path, voice_id: str | None = None) -> Path:

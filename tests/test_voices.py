@@ -114,3 +114,27 @@ def test_chatterbox_failure_is_reported(tmp_path, monkeypatch):
     monkeypatch.setattr(tts, "WORKER", bad)
     with pytest.raises(RuntimeError, match="model download failed"):
         tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", tmp_path / "x.wav", models_dir=tmp_path)
+
+
+def test_turkish_default_is_chatterbox_when_installed(tmp_path, monkeypatch):
+    import sys
+
+    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", sys.executable)  # any existing path counts as "installed"
+    assert tts.default_voice("tr") == "tr-chatterbox" and tts.default_voice("en") == "en_US-ryan-high"
+    assert VoiceSettings().tr == "tr-chatterbox"
+    assert tts.voice_for("tr", None) == "tr-chatterbox"
+
+
+def test_turkish_default_falls_back_to_piper(monkeypatch):
+    monkeypatch.delenv("MF_CHATTERBOX_PYTHON", raising=False)
+    assert tts.default_voice("tr") == "tr_TR-dfki-medium"
+    assert VoiceSettings().tr == "tr_TR-dfki-medium"
+    # a saved Chatterbox choice still renders (with Piper) where Chatterbox is not installed
+    assert tts.voice_for("tr", "tr-chatterbox") == "tr_TR-dfki-medium"
+
+
+def test_voices_api_reports_effective_defaults(client, monkeypatch):
+    import sys
+
+    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", sys.executable)
+    assert client.get("/api/voices").json()["defaults"]["tr"] == "tr-chatterbox"

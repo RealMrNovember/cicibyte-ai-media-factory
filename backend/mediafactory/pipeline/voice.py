@@ -2,12 +2,12 @@
 
 from pydantic import BaseModel, Field, field_validator
 
-from mediafactory.pipeline.tts import DEFAULT_VOICE, VOICE_CATALOG
+from mediafactory.pipeline.tts import VOICE_CATALOG, default_voice
 
 
 class VoiceSettings(BaseModel):
-    en: str = DEFAULT_VOICE["en"]
-    tr: str = DEFAULT_VOICE["tr"]
+    en: str = Field(default_factory=lambda: default_voice("en"))
+    tr: str = Field(default_factory=lambda: default_voice("tr"))
     speed: float = Field(default=1.0, ge=0.8, le=1.3)
     pitch: int = Field(default=0, ge=-4, le=4, description="semitones")
 

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from mediafactory.api.deps import require_user
 from mediafactory.core.config import get_settings
 from mediafactory.db.models import User
-from mediafactory.pipeline.tts import DEFAULT_VOICE, VOICE_CATALOG, available, shift_pitch, synthesize_voice
+from mediafactory.pipeline.tts import VOICE_CATALOG, available, default_voice, shift_pitch, synthesize_voice
 
 router = APIRouter(prefix="/api/voices", tags=["voices"])
 
@@ -25,7 +25,7 @@ def list_voices(user: User = Depends(require_user)) -> dict:
     data = Path(get_settings().data_dir) / "models" / "piper"
     voices = [{k: v for k, v in voice.items() if k != "path"} | {"downloaded": (data / f"{voice['id']}.onnx").exists()}
               for voice in VOICE_CATALOG.values() if available(voice)]  # fmt: skip
-    return {"voices": voices, "defaults": DEFAULT_VOICE}
+    return {"voices": voices, "defaults": {lang: default_voice(lang) for lang in ("en", "tr")}}
 
 
 class PreviewIn(BaseModel):
