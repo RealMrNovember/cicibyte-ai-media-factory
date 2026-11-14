@@ -33,10 +33,25 @@ bash deploy/install.sh you@example.com
 Requires Docker + Compose v2. The panel is bound to `127.0.0.1:8080`; see
 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Tailscale/reverse-proxy access, updates and backups.
 
+## Sources
+
+Add, edit, pause and remove sources from the panel or the API:
+
+| Adapter | What it collects |
+|---|---|
+| `reddit_rss` | A subreddit's public feed (sort, time range, minimum length, NSFW filter); no credentials needed |
+| `reddit` | The official Reddit API (adds minimum score); register an app and add it under Settings → Source credentials |
+| `rss` | Any RSS/Atom feed |
+| `web` | A single web page (respects robots.txt) |
+| manual | Paste text, a URL or upload `.txt`, `.md`, `.pdf`, `.docx` (up to 10 MB) |
+
+Items are deduplicated, keep their provenance and start with rights status `unknown`.
+See [docs/SOURCE_RIGHTS.md](docs/SOURCE_RIGHTS.md).
+
 ## Status
 
 Under active development (v0.1): the foundation (auth, AI provider routing, job queue, Docker install)
-is in place; sources, the production pipeline, the panel and YouTube publishing are next.
+and source collection are in place; the production pipeline, the panel and YouTube publishing are next.
 
 ## Development
 

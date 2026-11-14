@@ -54,6 +54,20 @@ media.example.com {
 
 Restrict access (VPN/IP allow-list) and add `media.example.com` to `MF_ALLOWED_HOSTS`.
 
+## Source collection
+
+The worker collects enabled sources on their own schedule (default every 60 minutes; failing sources back
+off up to 24 hours). Source fetching refuses private/internal addresses; to allow a specific internal host,
+add it to `.env`:
+
+```
+MF_FETCH_ALLOWLIST=["wiki.lan"]
+```
+
+For the official Reddit API, create a *script* app at https://www.reddit.com/prefs/apps and enter its client
+id and secret in Settings → Source credentials (admin only; stored encrypted). Without it, use the
+`reddit_rss` adapter.
+
 ## Update / Güncelleme
 
 ```bash
