@@ -8,6 +8,9 @@ x-app-env: &app-env
   MF_DATA_DIR: /data
   MF_ALLOWED_HOSTS: ${MF_ALLOWED_HOSTS:-["localhost","127.0.0.1"]}
   MF_SESSION_TTL_HOURS: ${MF_SESSION_TTL_HOURS:-72}
+  # The panel port is published on 127.0.0.1 only, so the peers reaching the container are the Docker
+  # gateway or a local reverse proxy; their X-Forwarded-For / -Proto headers are trusted.
+  MF_TRUSTED_PROXIES: ${MF_TRUSTED_PROXIES:-["127.0.0.1","172.16.0.0/12","10.0.0.0/8","192.168.0.0/16"]}
 
 services:
   db:
@@ -44,6 +47,7 @@ services:
     image: cicibyte/mediafactory:${MF_VERSION:-0.1.0.dev0}
     restart: unless-stopped
     command: ["mf", "worker"]
+    stop_grace_period: 2m  # let a running stage finish before SIGKILL; lost stages are re-queued anyway
     environment: *app-env
     volumes:
       - mf_data:/data
