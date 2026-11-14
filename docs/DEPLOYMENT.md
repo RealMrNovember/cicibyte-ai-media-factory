@@ -101,6 +101,16 @@ For the official Reddit API, create a *script* app at https://www.reddit.com/pre
 id and secret in Settings → Reddit (stored encrypted). Without it, use the
 `reddit_rss` adapter.
 
+## Script Doctor
+
+Each new script is graded 1–10 by the same `script` AI route. Scripts under 7 (or far from the target
+length) are rewritten once with the reviewer's notes, and the better version is kept. The score shows in
+the job details. This costs up to three extra AI calls per script; to turn it off, add to `.env`:
+
+```
+MF_SCRIPT_DOCTOR=false
+```
+
 ## Update / Güncelleme
 
 ```bash

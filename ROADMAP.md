@@ -34,7 +34,7 @@
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 344 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 354 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -181,11 +181,12 @@
 ### Üretim kalitesi (Plan 3'ün devamı)
 - [x] faster-whisper ile gerçek kelime hizalaması.
 - [x] Senaryo düzenleme ekranı (üretimden önce ve sonra).
-- [ ] Script Doctor öz-değerlendirme döngüsü (AI'ın kendi senaryosunu puanlayıp iyileştirmesi).
+- [x] Script Doctor: AI her senaryoyu 1–10 puanlıyor; 7'nin altındaysa (ya da uzunluk hedeften çok saparsa) notlarla bir kez yeniden yazıp iyi olanı tutuyor. Puan iş detayında görünüyor; `MF_SCRIPT_DOCTOR=false` ile kapatılır.
 - [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
 - [x] Ses seçimi, hız ve ton ayarı (Stüdyo ve Takvim).
 - [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
-- [ ] Chatterbox'ı hızlandırma (GPU ya da kalıcı model süreci), kendi sesinle klonlama (referans ses yükleme), telaffuz sözlüğü.
+- [x] Chatterbox'ı hızlandırma (kalıcı model süreci) ve kendi sesinle klonlama (referans ses yükleme).
+- [ ] Telaffuz sözlüğü; Chatterbox için GPU.
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [x] Kapak görseli ve kalite kontrolü.
@@ -214,7 +215,7 @@
 | DL380 erişimi (DHCP watchdog, Tailscale) | ✅ | — |
 | 9router sunucuda (CT 171), Funnel kapalı, combo'lar kuruldu | ✅ | — |
 | Üretim sunucusu CT 175 `mediafactory` | ✅ | — |
-| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ⬜ indirildi, **test edilmedi** | Ben |
+| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | 🟡 ilk deneme CCSE yükü yüzünden geçersiz (CT 120'nin 8 çekirdeğini paylaşıyorlar); test CCSE'nin boş olduğu gece saatlerine kuruldu | Ben |
 | Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
 | Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
 | Oyun arka planı klipleri (kendi kaydın / Coverr / Mixkit) | ⬜ | Sen + ben |
@@ -239,7 +240,8 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
+3. Özgünlük kontrolü (kaynakla n-gram örtüşmesi).
 
 ---
 

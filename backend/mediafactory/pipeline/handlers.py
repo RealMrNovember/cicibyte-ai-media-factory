@@ -22,6 +22,10 @@ def draft_script_stage(ctx: StageContext) -> StageOutcome:
     ctx.log(f"writing the script ({inputs.get('language', 'en')}) for review: {item.title[:70]}")
     script = generate_script(ctx.session, item, language=inputs.get("language", "en"), seconds=int(inputs.get("seconds", 50)))
     ctx.job.payload = {**(ctx.job.payload or {}), "script": script, "title": script.get("title") or item.title}
+    if script.get("doctor"):
+        from mediafactory.pipeline.doctor import summary
+
+        ctx.log(f"Script Doctor: {summary(script['doctor'])}")
     ctx.log(f"-> '{script['title']}' ({len(script['narration'].split())} words); waiting for your review")
     return StageOutcome(next_status="script_draft", outputs={"title": script["title"]})
 

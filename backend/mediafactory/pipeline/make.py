@@ -9,13 +9,14 @@ from sqlalchemy.orm import Session
 from mediafactory.db.models import SourceItem
 from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve, story_category
-from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
+from mediafactory.pipeline.doctor import summary as doctor_summary
 from mediafactory.pipeline.music import MusicSettings
 from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
-from mediafactory.pipeline.thumbnail import make_thumbnail
 from mediafactory.pipeline.script import generate_script
+from mediafactory.pipeline.style import CaptionStyle
+from mediafactory.pipeline.thumbnail import make_thumbnail
 from mediafactory.pipeline.tts import shift_pitch, synthesize_voice, voice_for, wav_seconds
 from mediafactory.pipeline.voice import VoiceSettings
 
@@ -42,6 +43,8 @@ def make_short(
         script = generate_script(session, item, language=language, seconds=seconds)
     (out / "script.json").write_text(json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8")
     log(f"      -> '{script['title']}' via {script['model']} ({len(script['narration'].split())} words)")
+    if script.get("doctor"):
+        log(f"      Script Doctor: {doctor_summary(script['doctor'])}")
 
     vs = VoiceSettings(**(voice or {}))
     voice_id = voice_for(language, getattr(vs, language, None))

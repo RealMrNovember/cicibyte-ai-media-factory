@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from mediafactory.ai.jsonparse import extract_json
 from mediafactory.ai.router import run_task
+from mediafactory.core.config import get_settings
 from mediafactory.db.models import SourceItem
 
 WORDS_PER_SECOND = 2.5  # ~150 wpm narration
@@ -48,12 +49,28 @@ def build_messages(item: SourceItem, language: str, seconds: int) -> list[dict]:
     ]
 
 
-def generate_script(session: Session, item: SourceItem, *, language: str = "en", seconds: int = 50) -> dict:
-    result = run_task(session, "script", build_messages(item, language, seconds), json_schema=SCHEMA, max_tokens=3000)
+def write_script(session: Session, messages: list[dict], fallback_title: str) -> dict:
+    result = run_task(session, "script", messages, json_schema=SCHEMA, max_tokens=3000)
     data = extract_json(result.text)
     if not isinstance(data, dict) or not str(data.get("narration", "")).strip():
         raise ValueError(f"script model returned no narration: {json.dumps(data)[:200]}")
     data["tags"] = [str(t).strip().lstrip("#") for t in data.get("tags") or [] if str(t).strip()][:10]
-    data["title"] = str(data.get("title") or item.title)[:100]
+    data["title"] = str(data.get("title") or fallback_title)[:100]
     data["model"], data["provider_id"] = result.model, result.provider_id
     return data
+
+
+def generate_script(
+    session: Session, item: SourceItem, *, language: str = "en", seconds: int = 50, doctor: bool | None = None
+) -> dict:
+    """Write the script; with the Script Doctor on (the default), grade it and rewrite it once if it is weak."""
+    from mediafactory.pipeline import doctor as script_doctor
+
+    messages = build_messages(item, language, seconds)
+    data = write_script(session, messages, item.title)
+    if doctor is None:
+        doctor = get_settings().script_doctor
+    if not doctor:
+        return data
+    return script_doctor.treat(session, messages, data, language=language, seconds=seconds,
+                               write=lambda msgs: write_script(session, msgs, item.title))  # fmt: skip

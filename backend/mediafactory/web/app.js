@@ -14,6 +14,7 @@ const I18N = {
     routes: "Task routes", baseUrl: "Base URL", apiKey: "API key", test: "Test", model: "Model",
     reddit: "Reddit API credentials", clientId: "Client id", clientSecret: "Client secret", enabled: "Enabled",
     subreddit: "Subreddit", url: "Feed / page URL", interval: "Every (minutes)", delete: "Delete",
+    doctorFrom: "rewritten from", doctorNotes: "Notes",
     script: "Script", stages: "Stages", support: "Support", poweredBy: "Powered by",
     makeStarted: "Production started", saved: "Saved", sourceAdded: "Source added",
     readyHint: "Rendered videos waiting for your approval.",
@@ -30,6 +31,7 @@ const I18N = {
     routes: "Görev rotaları", baseUrl: "Taban adres", apiKey: "API anahtarı", test: "Test et", model: "Model",
     reddit: "Reddit API kimlik bilgileri", clientId: "Client id", clientSecret: "Client secret", enabled: "Etkin",
     subreddit: "Subreddit", url: "Besleme / sayfa adresi", interval: "Sıklık (dakika)", delete: "Sil",
+    doctorFrom: "ilk taslak", doctorNotes: "Notlar",
     script: "Senaryo", stages: "Aşamalar", support: "Destek ol", poweredBy: "Powered by",
     makeStarted: "Üretim başladı", saved: "Kaydedildi", sourceAdded: "Kaynak eklendi",
     readyHint: "Render edilmiş, onayını bekleyen videolar.",
@@ -359,6 +361,12 @@ function jobsTable(items) {
       ${["discovered", "retry_wait"].includes(j.status) ? `<button class="btn danger" data-cancel="${j.id}">${t("cancel")}</button>` : ""}</div></td></tr>`).join("");
   return `<div class="card"><table><tr><th></th><th>${t("status")}</th><th></th><th></th></tr>${rows}</table></div>`;
 }
+function doctorLine(d) {
+  if (!d || d.score == null) return "";
+  const first = d.revised ? ` · ${t("doctorFrom")} ${d.first_score}/10` : "";
+  const notes = (d.problems || []).length ? `<br>${t("doctorNotes")}: ${d.problems.map(esc).join(" · ")}` : "";
+  return `<p class="muted small">🩺 Script Doctor: <b>${d.score}/10</b>${first}${notes}</p>`;
+}
 function bindJobs(el) {
   on("[data-job]", "click", async (e) => {
     const j = await api(`/api/jobs/${e.target.dataset.job}`);
@@ -366,7 +374,7 @@ function bindJobs(el) {
       ${s.error ? `<pre>${esc(s.error)}</pre>` : ""}${s.log ? `<pre>${esc(s.log)}</pre>` : ""}</div>`).join("");
     modal(`<h1>#${j.id} ${esc(j.title || "")}</h1>${pill(j.status)}
       ${j.has_video ? `<video controls src="/api/jobs/${j.id}/video" style="width:100%;max-height:60vh;margin-top:12px;background:#000;border-radius:10px"></video>` : ""}
-      ${j.script ? `<h3>${t("script")}</h3><pre>${esc(j.script.narration)}</pre>` : ""}<h3>${t("stages")}</h3>${stages}`);
+      ${j.script ? `<h3>${t("script")}</h3>${doctorLine(j.script.doctor)}<pre>${esc(j.script.narration)}</pre>` : ""}<h3>${t("stages")}</h3>${stages}`);
   });
   on("[data-edit-script]", "click", (e) => scriptEditor(e.target.dataset.editScript));
   on("[data-retry]", "click", async (e) => { try { await api(`/api/jobs/${e.target.dataset.retry}/retry`, { method: "POST" }); render(); } catch (err) { toast(err.message, true); } });

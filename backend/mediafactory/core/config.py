@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     trusted_proxies: list[str] = Field(default_factory=lambda: ["127.0.0.1"])
     # Host names source fetching may reach even though they resolve to private addresses.
     fetch_allowlist: list[str] = Field(default_factory=list)
+    # Script Doctor: the AI grades each new script and rewrites weak ones once (up to 3 extra AI calls).
+    script_doctor: bool = True
 
     @field_validator("secret_key")
     @classmethod
