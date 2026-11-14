@@ -220,6 +220,7 @@ class JsApi:
 def main() -> None:
     import webview
 
+    webview.settings["ALLOW_DOWNLOADS"] = True  # video, cover and settings downloads from the panel
     cfg = Config(app_home())
 
     def _check_updates():

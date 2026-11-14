@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", appUpdate: "A new version of the app is available:", appUpdateNow: "Update now", appUpdating: "Downloading…", appRestarting: "Installing — the app will reopen in a moment", updates: "Updates", updHelp: "The server checks GitHub every 30 minutes and installs new versions by itself. It waits while a video is being made and goes back automatically if a new version does not start.", updAuto: "Automatic", updVersion: "Running", updLatest: "Latest on GitHub", updState: "Status", updChecked: "Last check", updLast: "last update", updLog: "Update log", updNow: "Check & update now", updPending: "Update requested…", updRequested: "Update requested — the panel reloads when the server is back", updMissing: "Automatic updates are not installed on this server yet. Run once on the server:", upd_up_to_date: "Up to date", upd_available: "Update available", upd_updating: "Updating…", upd_updated: "Updated", upd_deferred: "Waiting for running jobs", upd_rolled_back: "Rolled back", upd_failed: "Failed", upd_error: "Can't reach GitHub", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", backup: "Backup & move", backupHelp: "Export all settings — AI providers and keys, task routes, sources, schedules, YouTube and Reddit — to a file, and import it on another computer or server. Import adds and updates; it never deletes. Keys are only included if you set a password (they are encrypted with it). Videos, clips and music are not included.", expPassword: "Password for the keys (optional)", expPasswordPh: "leave empty to export without keys", export: "Export settings", impFile: "Settings file", impPassword: "Password (if the file has keys)", import: "Import", exportedWithKeys: "Exported with encrypted keys", exportedNoKeys: "Exported without keys", imported: "Imported", schedulesN: "schedules", appUpdate: "A new version of the app is available:", appUpdateNow: "Update now", appUpdating: "Downloading…", appRestarting: "Installing — the app will reopen in a moment", updates: "Updates", updHelp: "The server checks GitHub every 30 minutes and installs new versions by itself. It waits while a video is being made and goes back automatically if a new version does not start.", updAuto: "Automatic", updVersion: "Running", updLatest: "Latest on GitHub", updState: "Status", updChecked: "Last check", updLast: "last update", updLog: "Update log", updNow: "Check & update now", updPending: "Update requested…", updRequested: "Update requested — the panel reloads when the server is back", updMissing: "Automatic updates are not installed on this server yet. Run once on the server:", upd_up_to_date: "Up to date", upd_available: "Update available", upd_updating: "Updating…", upd_updated: "Updated", upd_deferred: "Waiting for running jobs", upd_rolled_back: "Rolled back", upd_failed: "Failed", upd_error: "Can't reach GitHub", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", appUpdate: "Uygulamanın yeni sürümü hazır:", appUpdateNow: "Şimdi güncelle", appUpdating: "İndiriliyor…", appRestarting: "Kuruluyor — uygulama birazdan yeniden açılacak", updates: "Güncellemeler", updHelp: "Sunucu 30 dakikada bir GitHub'ı kontrol eder ve yeni sürümleri kendisi kurar. Video üretilirken bekler; yeni sürüm açılmazsa otomatik olarak eskisine döner.", updAuto: "Otomatik", updVersion: "Çalışan sürüm", updLatest: "GitHub'daki son sürüm", updState: "Durum", updChecked: "Son kontrol", updLast: "son güncelleme", updLog: "Güncelleme kaydı", updNow: "Şimdi kontrol et ve güncelle", updPending: "Güncelleme istendi…", updRequested: "Güncelleme istendi — sunucu geri gelince panel yenilenecek", updMissing: "Bu sunucuda otomatik güncelleme henüz kurulu değil. Sunucuda bir kez çalıştır:", upd_up_to_date: "Güncel", upd_available: "Yeni sürüm var", upd_updating: "Güncelleniyor…", upd_updated: "Güncellendi", upd_deferred: "Çalışan işler bekleniyor", upd_rolled_back: "Geri alındı", upd_failed: "Başarısız", upd_error: "GitHub'a ulaşılamıyor", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", backup: "Yedekle ve taşı", backupHelp: "Bütün ayarları — AI sağlayıcıları ve anahtarları, görev rotaları, kaynaklar, takvimler, YouTube ve Reddit — bir dosyaya aktar, başka bir bilgisayarda ya da sunucuda içe al. İçe aktarma ekler ve günceller, hiçbir şeyi silmez. Anahtarlar yalnızca parola verirsen dahil edilir ve o parolayla şifrelenir. Videolar, klipler ve müzikler dahil değildir.", expPassword: "Anahtarlar için parola (isteğe bağlı)", expPasswordPh: "boş bırakırsan anahtarsız aktarılır", export: "Ayarları dışa aktar", impFile: "Ayar dosyası", impPassword: "Parola (dosyada anahtar varsa)", import: "İçe aktar", exportedWithKeys: "Şifreli anahtarlarla dışa aktarıldı", exportedNoKeys: "Anahtarsız dışa aktarıldı", imported: "İçe aktarıldı", schedulesN: "takvim", appUpdate: "Uygulamanın yeni sürümü hazır:", appUpdateNow: "Şimdi güncelle", appUpdating: "İndiriliyor…", appRestarting: "Kuruluyor — uygulama birazdan yeniden açılacak", updates: "Güncellemeler", updHelp: "Sunucu 30 dakikada bir GitHub'ı kontrol eder ve yeni sürümleri kendisi kurar. Video üretilirken bekler; yeni sürüm açılmazsa otomatik olarak eskisine döner.", updAuto: "Otomatik", updVersion: "Çalışan sürüm", updLatest: "GitHub'daki son sürüm", updState: "Durum", updChecked: "Son kontrol", updLast: "son güncelleme", updLog: "Güncelleme kaydı", updNow: "Şimdi kontrol et ve güncelle", updPending: "Güncelleme istendi…", updRequested: "Güncelleme istendi — sunucu geri gelince panel yenilenecek", updMissing: "Bu sunucuda otomatik güncelleme henüz kurulu değil. Sunucuda bir kez çalıştır:", upd_up_to_date: "Güncel", upd_available: "Yeni sürüm var", upd_updating: "Güncelleniyor…", upd_updated: "Güncellendi", upd_deferred: "Çalışan işler bekleniyor", upd_rolled_back: "Geri alındı", upd_failed: "Başarısız", upd_error: "GitHub'a ulaşılamıyor", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -388,6 +388,43 @@ function bindUpdatesCard() {
   on("[data-ext]", "click", (ev) => { ev.preventDefault(); openExternal(ev.currentTarget.dataset.ext); });
 }
 
+function backupCard() {
+  return `<div class="card" style="margin-bottom:16px"><h3>${t("backup")}</h3><p class="muted small">${t("backupHelp")}</p>
+    <div class="grid g2">
+      <form id="expf"><label>${t("expPassword")}</label><input name="password" type="password" minlength="6" autocomplete="new-password" placeholder="${esc(t("expPasswordPh"))}">
+        <div class="row" style="margin-top:10px"><button class="btn primary">⬇ ${t("export")}</button></div></form>
+      <form id="impf"><label>${t("impFile")}</label><input type="file" name="file" accept=".json,application/json" required>
+        <label>${t("impPassword")}</label><input name="password" type="password" autocomplete="off">
+        <div class="row" style="margin-top:10px"><button class="btn">⬆ ${t("import")}</button></div></form>
+    </div></div>`;
+}
+
+function bindBackupCard() {
+  const ef = document.getElementById("expf"), inf = document.getElementById("impf");
+  if (!ef) return;
+  ef.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pw = ef.password.value;
+    const r = await fetch("/api/settings/export", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
+      body: JSON.stringify({ password: pw || null }) });
+    if (!r.ok) return toast((await r.json().catch(() => ({}))).detail || r.statusText, true);
+    const name = (r.headers.get("Content-Disposition") || "").match(/filename="([^"]+)"/);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await r.blob()); a.download = name ? name[1] : "mediafactory-settings.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    toast(pw ? t("exportedWithKeys") : t("exportedNoKeys"));
+  });
+  inf.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(inf);
+    try {
+      const r = await api("/api/settings/import", { method: "POST", body: fd });
+      toast(`${t("imported")}: ${r.providers} AI · ${r.routes} ${t("routes").toLowerCase()} · ${r.sources} ${t("sources").toLowerCase()} · ${r.schedules} ${t("schedulesN")} · ${r.channels} YouTube`);
+      render();
+    } catch (err) { toast(err.message, true); }
+  });
+}
+
 async function settings(el) {
   let prov, routes, creds;
   try {
@@ -400,7 +437,7 @@ async function settings(el) {
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
   const [yt, upd] = await Promise.all([youtubeCard(), updatesCard()]);
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${upd}${yt}
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${upd}${yt}${backupCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -422,6 +459,7 @@ async function settings(el) {
   bindServerCard();
   bindYoutubeCard();
   bindUpdatesCard();
+  bindBackupCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });
   document.getElementById("prov").addEventListener("submit", async (e) => {
     e.preventDefault(); const f = new FormData(e.target);
