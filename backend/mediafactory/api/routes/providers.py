@@ -68,13 +68,13 @@ def _flush(db: Session) -> None:
 
 
 @router.get("")
-def list_providers(db: Session = Depends(get_db), user: User = Depends(require_admin)) -> dict:
+def list_providers(db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)) -> dict:
     return {"items": [out(p) for p in db.scalars(select(AIProvider).order_by(AIProvider.id)).all()]}
 
 
 @router.post("", status_code=201)
 def create_provider(
-    body: ProviderIn, request: Request, db: Session = Depends(get_db), user: User = Depends(require_admin)
+    body: ProviderIn, request: Request, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)
 ) -> dict:
     p = AIProvider(
         name=body.name,
@@ -97,7 +97,7 @@ def create_provider(
 
 @router.patch("/{pid}")
 def update_provider(
-    pid: int, body: ProviderPatch, request: Request, db: Session = Depends(get_db), user: User = Depends(require_admin)
+    pid: int, body: ProviderPatch, request: Request, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)
 ) -> dict:
     p = _get(db, pid)
     changes = body.model_dump(exclude_unset=True)
@@ -116,7 +116,7 @@ def update_provider(
 
 @router.delete("/{pid}", status_code=204)
 def delete_provider(
-    pid: int, request: Request, db: Session = Depends(get_db), user: User = Depends(require_admin)
+    pid: int, request: Request, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)
 ) -> Response:
     p = _get(db, pid)
     db.delete(p)
@@ -128,7 +128,7 @@ def delete_provider(
 
 
 @router.post("/{pid}/test")
-def test_provider(pid: int, db: Session = Depends(get_db), user: User = Depends(require_admin)) -> dict:
+def test_provider(pid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)) -> dict:
     p = _get(db, pid)
     try:
         return {"ok": True, "models": list_models(p)}

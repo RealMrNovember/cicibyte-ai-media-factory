@@ -45,6 +45,7 @@ class JobStageRun(Base):
     run_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     inputs: Mapped[dict] = mapped_column(JSONB, default=dict)
     outputs: Mapped[dict] = mapped_column(JSONB, default=dict)
     log: Mapped[str] = mapped_column(Text, default="")

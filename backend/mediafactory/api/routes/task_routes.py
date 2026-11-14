@@ -27,13 +27,13 @@ def out(r: AITaskRoute) -> dict:
 
 
 @router.get("")
-def list_routes(db: Session = Depends(get_db), user: User = Depends(require_admin)) -> dict:
+def list_routes(db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)) -> dict:
     return {"items": [out(r) for r in db.scalars(select(AITaskRoute).order_by(AITaskRoute.task)).all()]}
 
 
 @router.put("/{task}")
 def put_route(
-    task: str, body: RouteIn, request: Request, db: Session = Depends(get_db), user: User = Depends(require_admin)
+    task: str, body: RouteIn, request: Request, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)
 ) -> dict:
     if task not in TASKS:
         raise HTTPException(status_code=404, detail=f"unknown task; expected one of {', '.join(TASKS)}")

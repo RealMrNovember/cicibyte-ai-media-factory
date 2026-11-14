@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from mediafactory.core.crypto import decrypt
+from mediafactory.core.crypto import SecretDecryptError, decrypt
 from mediafactory.core.redact import redact
 from mediafactory.db.models import AIProvider
 
@@ -31,7 +31,12 @@ class ProviderError(Exception):
 def _headers(provider: AIProvider) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
     if provider.api_key_enc:
-        headers["Authorization"] = f"Bearer {decrypt(provider.api_key_enc)}"
+        try:
+            headers["Authorization"] = f"Bearer {decrypt(provider.api_key_enc)}"
+        except SecretDecryptError:
+            raise ProviderError(
+                f"API key of provider '{provider.name}' cannot be decrypted; re-enter it", retryable=False
+            ) from None
     return headers
 
 
@@ -75,9 +80,14 @@ def _read_stream(response: httpx.Response) -> tuple[str, str]:
             chunk = json.loads(data)
         except json.JSONDecodeError:
             continue
+        if not isinstance(chunk, dict):
+            continue
         model = chunk.get("model") or model
         for choice in chunk.get("choices") or []:
-            parts.append((choice.get("delta") or {}).get("content") or "")
+            delta = choice.get("delta") if isinstance(choice, dict) else None
+            content = delta.get("content") if isinstance(delta, dict) else None
+            if isinstance(content, str):
+                parts.append(content)
     return "".join(parts), model
 
 
@@ -97,7 +107,9 @@ def _send(client: httpx.Client, url: str, provider: AIProvider, payload: dict, m
             try:
                 data = json.loads(raw)
                 text = data["choices"][0]["message"].get("content") or ""
-            except (json.JSONDecodeError, KeyError, IndexError, TypeError):
+                if not isinstance(text, str):
+                    raise TypeError("content is not a string")
+            except (json.JSONDecodeError, KeyError, IndexError, TypeError, AttributeError):
                 raise ProviderError(f"unparseable provider response: {raw[:200]}", retryable=True) from None
             used_model, usage = data.get("model") or model, data.get("usage") or {}
     if not text.strip():
@@ -129,8 +141,8 @@ def chat(
                     raise
     except httpx.TimeoutException as exc:
         raise ProviderError(f"timeout after {provider.timeout_s}s: {exc}", retryable=True) from None
-    except httpx.TransportError as exc:
-        raise ProviderError(f"connection error: {exc}", retryable=True) from None
+    except httpx.HTTPError as exc:  # transport, decoding and protocol errors
+        raise ProviderError(f"{type(exc).__name__}: {exc}", retryable=True) from None
     raise ProviderError("no response format accepted", retryable=False)
 
 

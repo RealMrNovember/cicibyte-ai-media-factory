@@ -22,6 +22,11 @@ class RateLimited(Exception):
     pass
 
 
+def end_all_sessions(user: User) -> None:
+    """Invalidate every session cookie issued to this user (logout, password reset)."""
+    user.session_epoch = (user.session_epoch or 0) + 1
+
+
 def reset_rate_limits() -> None:
     with _lock:
         _failures.clear()

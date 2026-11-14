@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     bind_port: int = 8080
     allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1"])
     session_ttl_hours: int = 72
+    # Peers whose X-Forwarded-For / X-Forwarded-Proto headers are trusted (IPs or CIDRs, or "*").
+    trusted_proxies: list[str] = Field(default_factory=lambda: ["127.0.0.1"])
 
     @field_validator("secret_key")
     @classmethod

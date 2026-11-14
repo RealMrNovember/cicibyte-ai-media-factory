@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from mediafactory import __version__
 from mediafactory.api.routes import audit, auth, providers, task_routes
@@ -30,6 +31,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+    # Outermost: rewrite client address and scheme from trusted reverse proxies (Caddy, tailscale serve, Docker).
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.trusted_proxies)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):

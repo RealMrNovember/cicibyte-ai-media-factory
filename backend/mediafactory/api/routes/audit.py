@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api", tags=["audit"])
 def list_audit(
     limit: int = Query(50, ge=1, le=500),
     before_id: int | None = None,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db, scope="function"),
     user: User = Depends(require_admin),
 ) -> dict:
     q = select(AuditLog).order_by(AuditLog.id.desc()).limit(limit)

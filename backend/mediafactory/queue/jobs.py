@@ -6,6 +6,11 @@ from mediafactory.db.models import JobStageRun, ProductionJob
 from mediafactory.db.models.jobs import JOB_CLASSES
 
 CANCELLED_ERROR = "cancelled by user"
+ACTIVE_STATES = ("queued", "retry_wait", "running")
+
+
+class JobBusy(Exception):
+    """The job still has a queued or running stage; it cannot be retried yet."""
 
 
 def create_job(session: Session, *, status: str = "discovered", **fields) -> ProductionJob:
@@ -31,6 +36,11 @@ def enqueue_stage(
 
 def retry_failed(session: Session, job_id: int) -> JobStageRun | None:
     """Re-queue only the last failed or cancelled stage; earlier successful stages are not re-run."""
+    active = session.scalar(
+        select(JobStageRun.id).where(JobStageRun.job_id == job_id, JobStageRun.state.in_(ACTIVE_STATES)).limit(1)
+    )
+    if active is not None:
+        raise JobBusy(f"job {job_id} still has an active stage")
     run = session.scalar(
         select(JobStageRun)
         .where(JobStageRun.job_id == job_id, JobStageRun.state.in_(("failed", "cancelled")))
@@ -48,7 +58,7 @@ def retry_failed(session: Session, job_id: int) -> JobStageRun | None:
 def cancel_job(session: Session, job_id: int) -> None:
     session.execute(
         update(JobStageRun)
-        .where(JobStageRun.job_id == job_id, JobStageRun.state.in_(("queued", "retry_wait", "running")))
+        .where(JobStageRun.job_id == job_id, JobStageRun.state.in_(ACTIVE_STATES))
         .values(state="cancelled", finished_at=utcnow(), error=CANCELLED_ERROR)
     )
     job = session.get(ProductionJob, job_id)

@@ -45,8 +45,7 @@ def api(
         create_app(settings),
         host=host or settings.bind_host,
         port=port or settings.bind_port,
-        proxy_headers=True,
-        forwarded_allow_ips="127.0.0.1",
+        proxy_headers=False,  # handled in create_app() with MF_TRUSTED_PROXIES
     )
 
 
@@ -93,9 +92,12 @@ def create_admin(
             session.add(user)
             action = "created"
         else:
+            from mediafactory.auth.service import end_all_sessions
+
             user.password_hash = hash_password(password)
             user.role = "admin"
             user.is_active = True
+            end_all_sessions(user)
             action = "password reset"
     typer.echo(f"admin {action}: {email}")
     typer.echo(f"password: {password}")
