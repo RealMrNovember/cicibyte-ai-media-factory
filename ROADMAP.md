@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 265 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 282 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -69,7 +69,9 @@
   - Gerçek denemede İngilizcede 86 kelimenin 85'i, Türkçede 87 kelimenin 76'sı birebir eşleşti. Whisper çalışmazsa tahmini zamanlamaya düşülüyor.
   - Model `MF_WHISPER_MODEL` (varsayılan `small`), CPU'da int8; 40 sn'lik ses için birkaç saniye.
   - Çıktılar: ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
-- **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan.
+- **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan. Ses −14 LUFS'e normalize ediliyor ve sınırlayıcıyla kırpılması önleniyor.
+- **Kapak görseli:** Arka plan klibinden en canlı ve altyazısız kare seçiliyor; üzerine Stüdyo yazı tipi ve vurgu rengiyle büyük başlık yazılıyor. Uzun başlıkta yazı küçülüyor. YouTube'a yüklerken kapak da gönderiliyor (kanal doğrulanmamışsa YouTube reddedebilir; yükleme yine tamamlanır).
+- **Kalite kontrolü:** Her videoda çözünürlük, süre, ses varlığı, ses yüksekliği (LUFS), tepe seviyesi, uzun sessizlik, siyah ekran ve altyazı kontrol ediliyor. Hazır Videolar'da ✓/⚠ rozeti ve ayrıntı penceresi var. QC'den geçmeyen video, otomatik onaylı takvimde bile incelemeye düşüyor.
 - **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
 - **Hazır Videolar:** Onayla / Reddet / İndir / Düzenle ve yeniden üret. İki dil seçilince aynı içerik için iki ayrı video.
 - **Senaryo düzenleme:**
@@ -130,7 +132,7 @@
 - [ ] Daha doğal sesler: Kokoro (İngilizce), XTTS / F5-TTS gibi Türkçe destekli modeller; telaffuz sözlüğü.
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
-- [ ] Kapak görseli (thumbnail) ve kalite kontrolü (ses seviyesi, süre, siyah kare).
+- [x] Kapak görseli ve kalite kontrolü.
 - [ ] Arka plan müziği ve ses efektleri; 16:9 format (v0.2).
 - [ ] Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
 
@@ -180,7 +182,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Kapak görseli (thumbnail) ve kalite kontrolü.
+2. Daha doğal sesler (özellikle Türkçe) ve arka plan müziği.
 3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---

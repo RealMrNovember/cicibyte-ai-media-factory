@@ -40,6 +40,8 @@ def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
         "duration_s": result.get("duration_s"),
         "has_video": bool(result.get("video")),
         "youtube": (job.payload or {}).get("youtube"),
+        "qc": result.get("qc"),
+        "has_thumbnail": bool(result.get("thumbnail")),
         "created_at": job.created_at.isoformat() if job.created_at else None,
         "updated_at": job.updated_at.isoformat() if job.updated_at else None,
     }
@@ -214,12 +216,22 @@ def video_file(jid: int, db: Session = Depends(get_db, scope="function"), user: 
     return FileResponse(_video_path(db, jid), media_type="video/mp4", filename=f"short-{jid}.mp4")
 
 
+@router.get("/jobs/{jid}/thumbnail")
+def video_thumbnail(jid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)):
+    thumb = _video_path(db, jid).with_name("thumbnail.jpg")
+    if not thumb.exists():
+        raise HTTPException(status_code=404, detail="no cover image for this video")
+    return FileResponse(thumb, media_type="image/jpeg", filename=f"cover-{jid}.jpg")
+
+
 @router.get("/jobs/{jid}/poster")
 def video_poster(jid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)):
-    """A still from the finished video (cached next to it) for catalog cards."""
+    """The cover image if there is one, else a still from the video (cached next to it)."""
     import subprocess
 
     path = _video_path(db, jid)
+    if path.with_name("thumbnail.jpg").exists():
+        return FileResponse(path.with_name("thumbnail.jpg"), media_type="image/jpeg")
     poster = path.with_name("poster.jpg")
     if not poster.exists():
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", "4", "-i", str(path),

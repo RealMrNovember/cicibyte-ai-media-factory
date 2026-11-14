@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -235,6 +235,12 @@ function modal(html) {
   return m;
 }
 
+function qcBadge(j) {
+  if (!j.qc) return "";
+  const bad = j.qc.checks.filter((c) => !c.ok).length;
+  return `<a href="#" class="pill ${bad ? "warn" : "ok"}" data-qc="${j.id}" onclick="event.preventDefault()">${bad ? `⚠ QC · ${bad}` : "✓ QC"}</a>`;
+}
+
 function jobsTable(items) {
   if (!items.length) return `<div class="card"><p class="muted">${t("noData")}</p></div>`;
   const rows = items.map((j) => `<tr>
@@ -277,8 +283,8 @@ async function ready(el) {
   const published = pub.flatMap((r) => r.items);
   const card = (j, actions) => `<div class="card video-card"><video controls preload="none" poster="/api/jobs/${j.id}/poster" src="/api/jobs/${j.id}/video"></video>
       <h3>${esc(j.title || "")}</h3><div class="muted small">#${j.id} · ${esc(j.language)} · ${j.duration_s ?? "?"}s</div>
-      <div style="margin-top:6px">${ytBadge(j)}</div>
-      <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a></div></div>`;
+      <div class="row" style="margin-top:6px;gap:6px">${qcBadge(j)}${ytBadge(j)}</div>
+      <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a>${j.has_thumbnail ? `<a class="btn" href="/api/jobs/${j.id}/thumbnail" download>${t("cover")}</a>` : ""}</div></div>`;
   const ytBtn = (j) => `<button class="btn primary" data-pub="${j.id}">▶ ${sc("sendYt")}</button>`;
   el.innerHTML = `<h1>${t("ready")}</h1><p class="sub">${t("readyHint")}</p>
     <div class="grid videos">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button><button class="btn" data-edit-script="${j.id}">✎ ${st("editRerender")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
@@ -289,6 +295,11 @@ async function ready(el) {
     catch (err) { toast(err.message, true); }
   });
   on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub));
+  on("[data-qc]", "click", (e) => {
+    const j = [...data.items, ...approved.items, ...published].find((x) => String(x.id) === e.currentTarget.dataset.qc);
+    if (!j || !j.qc) return;
+    modal(`<h1>${t("qcTitle")} · #${j.id}</h1><table>${j.qc.checks.map((c) => `<tr><td>${c.ok ? "✓" : "⚠"}</td><td><b>${esc(t("qc_" + c.name))}</b></td><td class="muted">${esc(c.value)}</td></tr>`).join("")}</table>`);
+  });
   on("[data-edit-script]", "click", (e) => scriptEditor(e.target.dataset.editScript));
   on("[data-ext]", "click", (e) => { e.preventDefault(); openExternal(e.target.dataset.ext); });
   if (published.some((j) => j.status === "uploading")) {

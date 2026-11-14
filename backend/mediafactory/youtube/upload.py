@@ -10,6 +10,7 @@ import httpx
 from mediafactory.youtube.oauth import YouTubeError
 
 UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos"
+THUMBNAIL_URL = "https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
 CATEGORY_ENTERTAINMENT = "24"
 
 
@@ -47,3 +48,12 @@ def upload_video(token: str, video: Path, metadata: dict, *, http: httpx.Client 
     if r.status_code not in (200, 201):
         raise YouTubeError(f"YouTube upload failed: {r.text[:400]}")
     return r.json()["id"]
+
+
+def set_thumbnail(token: str, video_id: str, image: Path, *, http: httpx.Client | None = None) -> str | None:
+    """Upload the cover image. Returns an error text instead of raising (custom thumbnails need a verified
+    channel; a refused cover must not fail the upload)."""
+    client = http or httpx.Client(timeout=120)
+    r = client.post(THUMBNAIL_URL, params={"videoId": video_id}, content=image.read_bytes(),
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "image/jpeg"})  # fmt: skip
+    return None if r.status_code == 200 else f"HTTP {r.status_code}: {r.text[:200]}"

@@ -11,7 +11,9 @@ from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
+from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
+from mediafactory.pipeline.thumbnail import make_thumbnail
 from mediafactory.pipeline.script import generate_script
 from mediafactory.pipeline.tts import ensure_voice, shift_pitch, synthesize, voice_for, wav_seconds
 from mediafactory.pipeline.voice import VoiceSettings
@@ -64,8 +66,20 @@ def make_short(
         background = pick_background(data_dir)
     log(f"[4/4] render 1080x1920 over {background.name if background else 'generated gradient'}")
     video = render_short(out, audio="voice.wav", captions_ass="captions.ass", duration=duration, background=background)
+
+    log("[+] cover image and quality check")
+    thumb = None
+    try:
+        thumb = make_thumbnail(out, background=background, title=script["title"], style=caption_style,
+                               duration=duration, language=language)  # fmt: skip
+    except Exception as exc:  # a missing cover must not lose the video
+        log(f"      cover image failed: {exc}")
+    qc = check_video(video, captions=len(cues))
+    failed = [f"{c['name']} ({c['value']})" for c in qc["checks"] if not c["ok"]]
+    log("      QC passed" if qc["passed"] else f"      QC issues: {', '.join(failed)}")
     result = {
         "item_id": item_id, "language": language, "title": script["title"], "video": str(video),
+        "thumbnail": str(thumb) if thumb else None, "qc": qc,
         "duration_s": round(duration, 1), "elapsed_s": round(time.monotonic() - started, 1), "folder": str(out),
     }  # fmt: skip
     (out / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

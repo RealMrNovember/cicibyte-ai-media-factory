@@ -151,3 +151,25 @@ def test_connect_channel_flow(client, db):
     assert client.get("/api/youtube").json()["channels"][0]["title"] == "Night Tales"
     again = client.get("/api/youtube/callback", params={"state": q["state"][0], "code": "c"})
     assert again.status_code == 400  # a sign-in link works once
+
+
+@respx.mock
+def test_upload_stage_sets_cover_image_and_survives_refusal(db, tmp_path):
+    from mediafactory.youtube.upload import THUMBNAIL_URL
+
+    chan = _connect(db)
+    job = _ready_job(db, tmp_path, status="uploading")
+    (tmp_path / "v" / "thumbnail.jpg").write_bytes(b"\xff\xd8jpeg")
+    job.payload = {**job.payload, "result": {**job.payload["result"], "thumbnail": str(tmp_path / "v" / "thumbnail.jpg")}}
+    run = JobStageRun(job_id=job.id, stage="upload_youtube", job_class="io", inputs={"privacy": "public", "channel_db_id": chan.id})
+    db.add(run)
+    db.flush()
+    respx.post(oauth.TOKEN_URL).mock(return_value=httpx.Response(200, json={"access_token": "at"}))
+    respx.post(UPLOAD_URL).mock(return_value=httpx.Response(200, headers={"Location": "https://upload.example/s2"}))
+    respx.put("https://upload.example/s2").mock(return_value=httpx.Response(200, json={"id": "vid9"}))
+    cover = respx.post(THUMBNAIL_URL).mock(return_value=httpx.Response(403, json={"error": "not verified"}))
+    logs = []
+    outcome = upload_stage(StageContext(db, job, run, logs.append, lambda: False))
+    assert outcome.next_status == "published" and cover.called
+    assert cover.calls[0].request.url.params["videoId"] == "vid9"
+    assert any("not accepted" in line for line in logs)

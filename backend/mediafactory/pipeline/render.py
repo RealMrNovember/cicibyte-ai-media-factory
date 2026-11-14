@@ -36,6 +36,8 @@ def render_short(
         ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
         *bg_in, "-i", audio,
         "-filter_complex", graph, "-map", "[v]", "-map", "1:a",
+        # -14 LUFS like YouTube; the limiter keeps true peaks under ~-1.5 dBTP even after AAC encoding.
+        "-af", "loudnorm=I=-14:TP=-2:LRA=11,alimiter=limit=0.75:level=false", "-ar", "48000",
         "-t", str(total), "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", output,
     ]  # fmt: skip

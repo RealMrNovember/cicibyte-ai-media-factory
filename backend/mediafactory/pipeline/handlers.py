@@ -45,7 +45,9 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
     )
     ctx.job.payload = {**(ctx.job.payload or {}), "result": result}
     # Rendered: waits in the Ready catalog for approval, unless a schedule asked for automatic approval.
-    status = "approved" if (ctx.job.payload or {}).get("auto_approve") else "needs_review"
+    # A video that fails the quality check always waits for a person, even when auto-approve is on.
+    qc_ok = (result.get("qc") or {}).get("passed", True)
+    status = "approved" if (ctx.job.payload or {}).get("auto_approve") and qc_ok else "needs_review"
     return StageOutcome(next_status=status, outputs=result)
 
 

@@ -13,7 +13,7 @@ from mediafactory.queue.jobs import enqueue_stage
 from mediafactory.queue.registry import StageContext, StageOutcome, stage_handler
 from mediafactory.youtube import oauth
 from mediafactory.youtube.oauth import YouTubeError
-from mediafactory.youtube.upload import build_metadata, upload_video
+from mediafactory.youtube.upload import build_metadata, set_thumbnail, upload_video
 
 UPLOAD_STAGE = "upload_youtube"
 PRIVACY = ("public", "unlisted", "private")
@@ -68,6 +68,10 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
     meta = build_metadata(script, language=job.language or "en", privacy=inputs.get("privacy", "public"), publish_at=publish_at)
     vid = upload_video(token, video, meta)
     url = f"https://youtube.com/shorts/{vid}"
+    thumb = Path(result.get("thumbnail") or "")
+    if thumb.is_file():
+        problem = set_thumbnail(token, vid, thumb)
+        ctx.log("cover image set" if problem is None else f"cover image not accepted by YouTube ({problem})")
     job.payload = {**(job.payload or {}), "youtube": {
         "state": "scheduled" if publish_at else "published", "id": vid, "url": url, "channel": channel.title,
         "privacy": meta["status"]["privacyStatus"], "publish_at": inputs.get("publish_at"),
