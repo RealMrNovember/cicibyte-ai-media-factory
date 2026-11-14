@@ -10,6 +10,26 @@ def main() -> None:
     """CiciByte AI Media Factory command line."""
 
 
+@app.command("worker")
+def worker() -> None:
+    """Run the background worker that processes queued production stages."""
+    import logging
+    import signal
+
+    from mediafactory.db.session import SessionLocal
+    from mediafactory.queue.worker import run_worker
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    stopping = {"flag": False}
+
+    def _stop(*_):
+        stopping["flag"] = True
+
+    signal.signal(signal.SIGTERM, _stop)
+    signal.signal(signal.SIGINT, _stop)
+    run_worker(SessionLocal, should_stop=lambda: stopping["flag"])
+
+
 @app.command("create-admin")
 def create_admin(
     email: str = typer.Option(..., help="Admin e-mail address"),
