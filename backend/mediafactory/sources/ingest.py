@@ -70,8 +70,10 @@ def store_items(
             result.updated += 1
             continue
 
-        if _find(session, digest=digest) is not None:
+        twin = _find(session, digest=digest)
+        if twin is not None:
             result.duplicates += 1
+            result.item_ids.append(twin.id)
             continue
 
         item = SourceItem(

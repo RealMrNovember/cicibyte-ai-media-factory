@@ -178,6 +178,7 @@ class SafeFetcher:
         return self._fetch(url, headers, raise_for_status=True, method="POST", data=data)
 
     def robots_allowed(self, url: str) -> bool:
+        self._check_url(url)  # a blocked address is reported as such, not as a robots.txt refusal
         parts = urlsplit(url)
         origin = f"{parts.scheme}://{parts.netloc}"
         if origin not in self._robots:

@@ -137,3 +137,8 @@ def test_non_http_scheme_rejected():
     for url in ("file:///etc/passwd", "ftp://example.com/x", "gopher://example.com"):
         with pytest.raises(FetchError):
             fetcher(ok_handler).get(url)
+
+
+def test_robots_check_reports_blocked_address():
+    with pytest.raises(BlockedAddress):
+        fetcher(ok_handler).robots_allowed("http://127.0.0.1/admin")

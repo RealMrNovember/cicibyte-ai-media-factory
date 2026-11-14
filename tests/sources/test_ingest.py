@@ -74,3 +74,9 @@ def test_item_without_url_dedups_by_hash(db):
     store_items(db, None, [raw(url=None)], source_type="manual")
     r = store_items(db, None, [raw(url=None)], source_type="manual")
     assert r.duplicates == 1 and count(db) == 1
+
+
+def test_duplicate_returns_existing_item_id(db):
+    first = store_items(db, None, [raw(url=None)], source_type="manual")
+    second = store_items(db, None, [raw(url=None)], source_type="manual")
+    assert second.item_ids == first.item_ids
