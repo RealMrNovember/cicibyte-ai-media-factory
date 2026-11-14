@@ -64,8 +64,22 @@ def worker() -> None:
     def _stop(*_):
         stopping["flag"] = True
 
-    signal.signal(signal.SIGTERM, _stop)
-    signal.signal(signal.SIGINT, _stop)
+    import threading
+
+    from mediafactory.core.config import get_settings
+    from mediafactory.core.net import SafeFetcher
+    from mediafactory.sources.poller import SourcePoller
+
+    poller_stop = threading.Event()
+
+    def _stop_all(*_):
+        _stop()
+        poller_stop.set()
+
+    signal.signal(signal.SIGTERM, _stop_all)
+    signal.signal(signal.SIGINT, _stop_all)
+    fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist)
+    SourcePoller(SessionLocal, fetcher=fetcher, stop_event=poller_stop).start()
     run_worker(SessionLocal, should_stop=lambda: stopping["flag"])
 
 

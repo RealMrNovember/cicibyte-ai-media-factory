@@ -21,9 +21,13 @@ class IngestResult:
     duplicates: int = 0
     skipped: int = 0
     item_ids: list[int] | None = None
+    error: str | None = None
 
     def as_dict(self) -> dict:
-        return {"new": self.new, "updated": self.updated, "duplicates": self.duplicates, "skipped": self.skipped}
+        return {
+            "new": self.new, "updated": self.updated, "duplicates": self.duplicates, "skipped": self.skipped,
+            "error": self.error,
+        }  # fmt: skip
 
 
 def _find(session: Session, *, url: str | None = None, digest: str | None = None) -> SourceItem | None:
