@@ -4,6 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from mediafactory.api.db_utils import save_unique
@@ -153,7 +154,12 @@ def run_now(
     user: User = Depends(require_user),
     fetcher: SafeFetcher = Depends(get_fetcher),
 ) -> dict:
-    c = _get(db, sid)
+    _get(db, sid)
+    try:  # lock the row for the run; if the poller (or another run) holds it, do not wait
+        with db.begin_nested():
+            c = db.scalar(select(SourceConnector).where(SourceConnector.id == sid).with_for_update(nowait=True))
+    except OperationalError:
+        raise HTTPException(status_code=409, detail="this source is already being collected; try again shortly") from None
     if not c.enabled:
         raise HTTPException(status_code=409, detail="source is disabled; enable it first")
     if c.last_run_at is not None and utcnow() - c.last_run_at < RUN_NOW_MIN_GAP:

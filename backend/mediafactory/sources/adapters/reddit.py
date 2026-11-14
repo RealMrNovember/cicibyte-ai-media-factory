@@ -105,7 +105,11 @@ class RedditApiAdapter:
                 continue
             if d.get("over_18") and not params["include_nsfw"]:
                 continue
-            if int(d.get("score") or 0) < params["min_score"]:
+            try:
+                score = int(d.get("score") or 0)
+            except (TypeError, ValueError):
+                continue  # malformed entry: skip it, keep the rest
+            if score < params["min_score"]:
                 continue
             text = normalize_text(d.get("selftext") or "")
             if len(text) < params["min_chars"]:

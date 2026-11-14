@@ -48,6 +48,9 @@ Never use `tailscale funnel` for the panel — that publishes it to the internet
 
 ```
 media.example.com {
+    request_body {
+        max_size 12MB
+    }
     reverse_proxy 127.0.0.1:8080
 }
 ```

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from mediafactory.core.net import FetchError, SafeFetcher
 from mediafactory.sources.feeds import FeedError
@@ -66,6 +66,23 @@ def translate_errors() -> Iterator[None]:
         raise AdapterError(str(exc), retryable=exc.retryable) from None
     except FeedError as exc:
         raise AdapterError(str(exc), retryable=False) from None
+
+
+def resolve_link(base_url: str, link: str | None) -> str | None:
+    """Absolute http(s) URL for a feed link (relative links resolved against the feed), else None."""
+    if not link:
+        return None
+    absolute = urljoin(base_url, link.strip())
+    parts = urlsplit(absolute)
+    if parts.scheme not in ("http", "https") or not parts.hostname or len(absolute) > 2000:
+        return None
+    return absolute
+
+
+def require_entries(entries: list) -> list:
+    if not entries:
+        raise AdapterError("feed returned no entries", retryable=True)
+    return entries
 
 
 # --- validation helpers ----------------------------------------------------------------------------------

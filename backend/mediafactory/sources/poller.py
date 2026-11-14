@@ -20,13 +20,17 @@ from mediafactory.sources.ingest import IngestResult, store_items
 log = logging.getLogger(__name__)
 
 MAX_BACKOFF = timedelta(hours=24)
+MAX_BACKOFF_EXPONENT = 20
+ERROR_SLEEP_S = 30
 OUTAGE_SLEEP_S = 5
 
 
 def schedule_next(connector: SourceConnector, *, failed: bool) -> None:
     interval = timedelta(minutes=connector.poll_interval_min or 60)
     if failed:
-        interval = min(interval * (2 ** max(1, connector.consecutive_failures)), MAX_BACKOFF)
+        exponent = min(max(1, connector.consecutive_failures or 0), MAX_BACKOFF_EXPONENT)  # no overflow
+        backoff = min(interval.total_seconds() * 2**exponent, MAX_BACKOFF.total_seconds())
+        interval = max(interval, timedelta(seconds=backoff))  # never sooner than a healthy run
     connector.next_run_at = utcnow() + interval
 
 
@@ -44,8 +48,14 @@ def run_source(session: Session, connector: SourceConnector, *, fetcher: SafeFet
         params = adapter.validate(connector.params or {})
         ctx = FetchContext(fetcher=fetcher, credentials=credentials_for(session, connector.adapter))
         items = adapter.fetch(params, ctx)
+    except OperationalError:
+        raise
     except (AdapterError, ValueError) as exc:
         _record_failure(connector, str(exc))
+        return IngestResult(item_ids=[], error=connector.last_error)
+    except Exception as exc:  # unexpected adapter bug: record it, never 500 or crash the poller
+        log.exception("source %s adapter crashed", connector.id)
+        _record_failure(connector, f"{type(exc).__name__}: {exc}")
         return IngestResult(item_ids=[], error=connector.last_error)
     result = store_items(session, connector, items, source_type=connector.adapter)
     connector.last_run_at = connector.last_success_at = utcnow()
@@ -80,7 +90,12 @@ def poll_due(factory: Callable[[], Session], *, fetcher: SafeFetcher, limit: int
     for cid in ids:
         try:
             with factory() as s:
-                connector = s.get(SourceConnector, cid)
+                # hold the row while running; skip it if "run now" is running it right now
+                connector = s.scalar(
+                    select(SourceConnector).where(SourceConnector.id == cid).with_for_update(skip_locked=True)
+                )
+                if connector is None:
+                    continue
                 result = run_source(s, connector, fetcher=fetcher)
                 s.commit()
             log.info("source %s: %s", cid, result.as_dict())
@@ -103,6 +118,7 @@ class SourcePoller(threading.Thread):
     ):  # fmt: skip
         super().__init__(name="source-poller", daemon=True)
         self.factory, self.fetcher, self.stop_event, self.interval_s = factory, fetcher, stop_event, interval_s
+        self.error_sleep_s = ERROR_SLEEP_S
 
     def run(self) -> None:
         log.info("source poller started (every %ss)", self.interval_s)
@@ -112,5 +128,9 @@ class SourcePoller(threading.Thread):
             except OperationalError as exc:
                 log.warning("database unavailable for source polling (%s)", type(exc).__name__)
                 self.stop_event.wait(OUTAGE_SLEEP_S)
+                continue
+            except Exception:  # a bug must never kill collection for every source
+                log.exception("source poller iteration failed; retrying in %ss", self.error_sleep_s)
+                self.stop_event.wait(self.error_sleep_s)
                 continue
             self.stop_event.wait(self.interval_s)

@@ -51,8 +51,11 @@ def test_same_text_different_url_is_duplicate(db):
 
 
 def test_changed_text_marks_updated_and_bumps_revision(db):
-    store_items(db, None, [raw()], source_type="rss")
-    r = store_items(db, None, [raw(text=LONG + " An ending was added.")], source_type="rss")
+    c = SourceConnector(name="feed", adapter="rss", params={})
+    db.add(c)
+    db.flush()
+    store_items(db, c, [raw()], source_type="rss")
+    r = store_items(db, c, [raw(text=LONG + " An ending was added.")], source_type="rss")
     assert r.updated == 1
     item = db.scalar(select(SourceItem))
     assert item.revision == 2 and item.processing_status == "updated" and "ending" in item.normalized_text

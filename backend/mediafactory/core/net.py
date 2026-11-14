@@ -21,6 +21,9 @@ from mediafactory import __version__
 
 USER_AGENT = f"CiciByteMediaFactory/{__version__} (+https://cicibyte.com)"
 REDIRECT_CODES = {301, 302, 303, 307, 308}
+ROBOTS_TTL_S = 24 * 3600
+ROBOTS_ERROR_TTL_S = 5 * 60
+ROBOTS_CACHE_MAX = 1000
 
 
 class FetchError(Exception):
@@ -92,7 +95,7 @@ class SafeFetcher:
 
             throttle = MemoryHostThrottle(default_interval_s=min_interval_s, sleep=sleep, clock=clock)
         self.throttle = throttle
-        self._robots: dict[str, RobotFileParser | None] = {}
+        self._robots: dict[str, tuple[RobotFileParser | None, float]] = {}
         self._lock = threading.Lock()
         self._client = httpx.Client(timeout=httpx.Timeout(timeout_s), follow_redirects=False, transport=transport)
 
@@ -183,18 +186,23 @@ class SafeFetcher:
         self._check_url(url)  # a blocked address is reported as such, not as a robots.txt refusal
         parts = urlsplit(url)
         origin = f"{parts.scheme}://{parts.netloc}"
-        if origin not in self._robots:
+        cached = self._robots.get(origin)
+        if cached is None or cached[1] <= self._clock():
             parser: RobotFileParser | None = RobotFileParser()
+            ttl = ROBOTS_TTL_S
             try:
                 r = self._fetch(origin + "/robots.txt", None, raise_for_status=False)
                 if r.status >= 500:
-                    parser = None  # server trouble: be conservative
+                    parser, ttl = None, ROBOTS_ERROR_TTL_S  # server trouble: be conservative, retry soon
                 elif r.status >= 400:
                     parser.parse([])  # no robots.txt: everything allowed
                 else:
                     parser.parse(r.text.splitlines())
             except FetchError:
-                parser = None
-            self._robots[origin] = parser
-        parser = self._robots[origin]
+                parser, ttl = None, ROBOTS_ERROR_TTL_S
+            if len(self._robots) > ROBOTS_CACHE_MAX:
+                self._robots.clear()
+            cached = (parser, self._clock() + ttl)
+            self._robots[origin] = cached
+        parser = cached[0]
         return bool(parser and parser.can_fetch(self.user_agent, url))

@@ -10,6 +10,8 @@ from mediafactory.sources.adapters.base import (
     choice,
     int_in,
     register,
+    require_entries,
+    resolve_link,
     translate_errors,
 )  # fmt: skip
 from mediafactory.sources.feeds import parse_feed
@@ -53,7 +55,7 @@ class RedditRssAdapter:
     def fetch(self, params: dict, ctx: FetchContext) -> list[RawItem]:
         url = f"https://www.reddit.com/r/{params['subreddit']}/{params['sort']}/.rss?t={params['time']}"
         with translate_errors():
-            entries = parse_feed(ctx.fetcher.get(url).content)
+            entries = require_entries(parse_feed(ctx.fetcher.get(url).content))
         items = []
         for e in entries[: params["max_items"]]:
             title = strip_html(e.title)
@@ -65,7 +67,7 @@ class RedditRssAdapter:
             items.append(
                 RawItem(
                     external_id=e.id,
-                    url=e.link,
+                    url=resolve_link(url, e.link),
                     title=title,
                     text=text,
                     author=clean_author(e.author),

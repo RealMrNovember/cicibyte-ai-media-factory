@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from mediafactory.db.base import utcnow
@@ -12,6 +13,8 @@ from mediafactory.sources.text import content_hash, normalize_text, strip_html
 from mediafactory.sources.urls import canonical_url
 
 MIN_CHARS = 50
+REVIEWED_STATUSES = ("rejected", "archived", "queued", "used")
+RIGHTS_KEPT_ON_CHANGE = ("unknown", "user_owned", "restricted")
 
 
 @dataclass
@@ -62,15 +65,13 @@ def store_items(
             if existing.content_hash == digest:
                 result.duplicates += 1
                 continue
+            same_source = connector is not None and existing.source_id == connector.id
             twin = _find(session, digest=digest)
-            if twin is not None and twin.id != existing.id:
-                result.duplicates += 1  # new text equals another stored item: nothing new to keep
+            if not same_source or (twin is not None and twin.id != existing.id):
+                # Only the source that created an item may update it; anything else is a duplicate.
+                result.duplicates += 1
                 continue
-            existing.raw_text, existing.normalized_text, existing.content_hash = raw.text, text, digest
-            existing.title = strip_html(raw.title)[:500] or existing.title
-            existing.revision += 1
-            existing.processing_status = "updated"
-            existing.meta = {**(existing.meta or {}), "updated_at": utcnow().isoformat()}
+            _apply_update(session, existing, raw, text, digest)
             result.updated += 1
             continue
 
@@ -99,10 +100,37 @@ def store_items(
             processing_status="discovered",
             meta=dict(raw.meta or {}),
         )
-        session.add(item)
-        session.flush()
+        try:
+            with session.begin_nested():  # another process may insert the same URL/text concurrently
+                session.add(item)
+                session.flush()
+        except IntegrityError:
+            result.duplicates += 1
+            winner = _find(session, url=url) if url else _find(session, digest=digest)
+            if winner is not None:
+                result.item_ids.append(winner.id)
+            continue
         session.add(SourceRightsRecord(item_id=item.id, from_status=None, to_status=rights, note="ingest", actor_id=actor_id))
         result.new += 1
         result.item_ids.append(item.id)
     session.flush()
     return result
+
+
+def _apply_update(session: Session, item: SourceItem, raw: RawItem, text: str, digest: str) -> None:
+    item.raw_text, item.normalized_text, item.content_hash = raw.text, text, digest
+    item.title = strip_html(raw.title)[:500] or item.title
+    item.revision += 1
+    meta = {**(item.meta or {}), "updated_at": utcnow().isoformat()}
+    if item.processing_status in REVIEWED_STATUSES:
+        meta["changed_after_review"] = True  # keep the user's/pipeline's decision, flag the change
+    else:
+        item.processing_status = "updated"
+    item.meta = meta
+    if item.rights_status not in RIGHTS_KEPT_ON_CHANGE:
+        # A grant covered the old text, not this one.
+        session.add(SourceRightsRecord(
+            item_id=item.id, from_status=item.rights_status, to_status="unknown",
+            note="source text changed; rights must be checked again",
+        ))  # fmt: skip
+        item.rights_status = "unknown"

@@ -7,9 +7,9 @@ import re
 import unicodedata
 from html.parser import HTMLParser
 
-_TAG = re.compile(r"<[^>]+>")
+_TAG = re.compile(r"<[^<>]*>")  # [^<>] keeps it linear on hostile input
 _SPACE = re.compile(r"\s+")
-_REDDIT_SIGNATURE = re.compile(r"\s*submitted by\s+/u/\S+.*$", re.IGNORECASE | re.DOTALL)
+_REDDIT_SIGNATURE = re.compile(r"\s*submitted by\s+/u/\S+(?:\s*\[link\])?(?:\s*\[comments\])?\s*$", re.IGNORECASE)
 
 
 def strip_html(text: str) -> str:

@@ -6,6 +6,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from mediafactory import __version__
+from mediafactory.api.body_limit import MaxBodySizeMiddleware
 from mediafactory.api.routes import audit, auth, items, providers, source_credentials, sources, task_routes
 from mediafactory.core.config import Settings, get_settings
 
@@ -33,6 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
     # Outermost: rewrite client address and scheme from trusted reverse proxies (Caddy, tailscale serve, Docker).
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=settings.trusted_proxies)
+    app.add_middleware(MaxBodySizeMiddleware)  # outermost: refuse huge bodies before parsing or auth
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):

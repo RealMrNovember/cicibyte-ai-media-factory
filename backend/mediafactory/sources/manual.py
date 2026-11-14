@@ -11,6 +11,10 @@ from mediafactory.sources.feeds import FeedError, parse_feed
 from mediafactory.sources.text import normalize_text, strip_html
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_TEXT_CHARS = 500_000  # same cap as JSON intake
+MAX_PDF_PAGES = 500
+MAX_DOCX_UNPACKED_BYTES = 50 * 1024 * 1024  # zip-bomb guard
+MAX_ZIP_ENTRIES = 2000
 ALLOWED_EXTENSIONS = (".txt", ".md", ".pdf", ".docx")
 REDDIT_POST = re.compile(
     r"^https?://(?:www\.|old\.|new\.|np\.|m\.)?reddit\.com/r/([A-Za-z0-9_]+)/comments/([A-Za-z0-9]+)", re.IGNORECASE
@@ -28,37 +32,52 @@ def extract_file_text(filename: str, data: bytes) -> str:
     if not name.endswith(ALLOWED_EXTENSIONS):
         raise ManualInputError(f"unsupported file type; use one of {', '.join(ALLOWED_EXTENSIONS)}")
     if name.endswith((".txt", ".md")):
-        return data.decode("utf-8", errors="replace")
-    if name.endswith(".pdf"):
-        return _pdf_text(data)
-    return _docx_text(data)
+        text = data.decode("utf-8", errors="replace")
+    elif name.endswith(".pdf"):
+        text = _pdf_text(data)
+    else:
+        text = _docx_text(data)
+    return text[:MAX_TEXT_CHARS]
 
 
 def _pdf_text(data: bytes) -> str:
     from pypdf import PdfReader
-    from pypdf.errors import PdfReadError
 
     try:
         reader = PdfReader(io.BytesIO(data))
-        if reader.is_encrypted:
+        if reader.is_encrypted and not reader.decrypt(""):  # owner-password-only PDFs open with ""
             raise ManualInputError("the PDF is encrypted; remove the password and upload it again")
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        parts, size = [], 0
+        for page in reader.pages[:MAX_PDF_PAGES]:
+            chunk = page.extract_text() or ""
+            parts.append(chunk)
+            size += len(chunk)
+            if size >= MAX_TEXT_CHARS:
+                break
+        text = "\n".join(parts)
     except ManualInputError:
         raise
-    except (PdfReadError, ValueError, KeyError, TypeError, OSError) as exc:
+    except Exception as exc:  # pypdf raises many types on malformed files; none of them may become a 500
         raise ManualInputError(f"the PDF could not be read ({type(exc).__name__})") from None
+    if not text.strip():
+        raise ManualInputError("the PDF has no extractable text (is it a scanned image?)")
+    return text
 
 
 def _docx_text(data: bytes) -> str:
     from docx import Document
 
     try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            entries = archive.infolist()
+            if len(entries) > MAX_ZIP_ENTRIES or sum(e.file_size for e in entries) > MAX_DOCX_UNPACKED_BYTES:
+                raise ManualInputError("the DOCX file is too large when unpacked")
         doc = Document(io.BytesIO(data))
-    except (zipfile.BadZipFile, KeyError, ValueError, OSError) as exc:
+        return "\n".join(p.text for p in doc.paragraphs)
+    except ManualInputError:
+        raise
+    except Exception as exc:  # BadZipFile, python-docx package errors, XML errors, ...
         raise ManualInputError(f"the DOCX file could not be read ({type(exc).__name__})") from None
-    except Exception as exc:  # python-docx raises its own PackageNotFoundError subclasses
-        raise ManualInputError(f"the DOCX file could not be read ({type(exc).__name__})") from None
-    return "\n".join(p.text for p in doc.paragraphs)
 
 
 def fetch_url_item(url: str, fetcher: SafeFetcher) -> RawItem:
