@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CiciByte AI Media Factory</title>
+<meta name="description" content="Self-hosted, free and open-source (MIT) AI YouTube media factory. Your sources, your AI, your server. Early preview, in active development.">
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:title" content="CiciByte AI Media Factory">
+<meta property="og:description" content="Self-hosted, open-source AI YouTube media factory. Your sources, your AI, your approval.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mediafactory.cicibyte.com/">
+<meta property="og:image" content="https://mediafactory.cicibyte.com/assets/cicibyte-logo.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#top" aria-label="CiciByte AI Media Factory">
+      <img src="assets/cicibyte-logo.png" alt="CiciByte" width="120" height="34">
+      <span class="brand-sub">Media Factory</span>
+    </a>
+    <nav class="nav">
+      <a href="#features"><span lang="en">Features</span><span lang="tr">Özellikler</span></a>
+      <a href="#how"><span lang="en">How it works</span><span lang="tr">Nasıl çalışır</span></a>
+      <a href="#install"><span lang="en">Install</span><span lang="tr">Kurulum</span></a>
+      <a href="#status"><span lang="en">Status</span><span lang="tr">Durum</span></a>
+    </nav>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-set-lang="tr" aria-pressed="false">TR</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">
+        <span class="pill"><span lang="en">Early preview · v0.1 in development</span><span lang="tr">Erken önizleme · v0.1 geliştiriliyor</span></span>
+      </p>
+      <h1>CiciByte AI Media&nbsp;Factory</h1>
+      <p class="lead">
+        <span lang="en">A self-hosted, open-source AI YouTube media factory. Collect stories from sources you manage, turn them into original scripts with the AI you connect, and publish Shorts only after you approve.</span>
+        <span lang="tr">Kendi sunucuna kurulan, açık kaynak AI YouTube içerik fabrikası. Yönettiğin kaynaklardan içerik toplar, bağladığın yapay zekâ ile özgün senaryoya çevirir; Shorts'ları yalnızca senin onayınla yayınlar.</span>
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/RealMrNovember/cicibyte-ai-media-factory" target="_blank" rel="noopener">
+          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="btn" href="#install"><span lang="en">Install</span><span lang="tr">Kurulum</span></a>
+        <a class="btn btn-ghost" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">
+          <span lang="en">Buy me a coffee</span><span lang="tr">Bana bir kahve ısmarla</span>
+        </a>
+      </div>
+      <ul class="facts">
+        <li><span lang="en">Free &amp; MIT licensed</span><span lang="tr">Ücretsiz, MIT lisanslı</span></li>
+        <li><span lang="en">Runs on your server</span><span lang="tr">Kendi sunucunda çalışır</span></li>
+        <li><span lang="en">English &amp; Turkish</span><span lang="tr">İngilizce ve Türkçe</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <div class="wrap">
+      <h2><span lang="en">What it does</span><span lang="tr">Ne yapar</span></h2>
+      <p class="section-lead">
+        <span lang="en">One pipeline from source to Short. Parts marked “Planned” are on the roadmap and not yet shipped.</span>
+        <span lang="tr">Kaynaktan Shorts'a tek bir hat. “Planlandı” etiketli parçalar yol haritasında; henüz yayınlanmadı.</span>
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Your sources, fully managed</span><span lang="tr">Kaynakların tamamen senin elinde</span></h3>
+          <p><span lang="en">Reddit, RSS/Atom feeds, web pages and your own files (.txt, .md, .pdf, .docx). Add, edit, pause or remove them at any time. Items are deduplicated by URL and content hash.</span><span lang="tr">Reddit, RSS/Atom beslemeleri, web sayfaları ve kendi dosyaların (.txt, .md, .pdf, .docx). İstediğin an ekle, düzenle, duraklat ya da kaldır. Öğeler URL ve içerik hash'iyle tekilleştirilir.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Bring your own AI</span><span lang="tr">Kendi yapay zekânı bağla</span></h3>
+          <p><span lang="en">Ollama, llama.cpp, any OpenAI-compatible endpoint or router, or cloud APIs. Each task gets an ordered provider list with fallback and retries. Local-first; no paid API required.</span><span lang="tr">Ollama, llama.cpp, OpenAI uyumlu her uç nokta ya da router, veya bulut API'leri. Her görev için sıralı sağlayıcı listesi, yedekleme ve yeniden deneme. Önce yerel; ücretli API şart değil.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag tag-ok"><span lang="en">Available</span><span lang="tr">Hazır</span></span>
+          <h3><span lang="en">Source- and rights-aware</span><span lang="tr">Kaynak ve hak bilinci</span></h3>
+          <p><span lang="en">Every item keeps its source, hash and rights status (default “unknown”) with a full rights history. The fetcher respects robots.txt and per-site rate limits.</span><span lang="tr">Her öğe kaynağını, hash'ini ve hak durumunu (varsayılan “unknown”) hak geçmişiyle birlikte saklar. Çekici robots.txt'e ve site başına istek sınırlarına uyar.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
+          <h3><span lang="en">Original scripts, not copies</span><span lang="tr">Kopya değil, özgün senaryo</span></h3>
+          <p><span lang="en">Sources are inspiration. The AI writes a new script with hook, build-up, climax and call to action, plus title, description and tags. An originality check flags text that overlaps the source.</span><span lang="tr">Kaynaklar ilham içindir. Yapay zekâ kanca, gelişme, doruk ve çağrı içeren yeni bir senaryo; başlık, açıklama ve etiketler yazar. Özgünlük kontrolü kaynakla örtüşen metni işaretler.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
+          <h3><span lang="en">Voice, captions &amp; 9:16 video, locally</span><span lang="tr">Ses, altyazı ve 9:16 video, yerelde</span></h3>
+          <p><span lang="en">Local text-to-speech, word-level captions (SRT/VTT) and vertical Shorts rendered with ffmpeg on your own hardware, CPU included, with a thumbnail and quality checks.</span><span lang="tr">Yerel seslendirme, kelime düzeyinde altyazı (SRT/VTT) ve ffmpeg ile kendi donanımında, CPU'da bile üretilen dikey Shorts; kapak görseli ve kalite kontrolleriyle.</span></p>
+        </article>
+        <article class="card">
+          <span class="tag"><span lang="en">Planned</span><span lang="tr">Planlandı</span></span>
+          <h3><span lang="en">Approve, then publish</span><span lang="tr">Önce onay, sonra yayın</span></h3>
+          <p><span lang="en">Publish to multiple YouTube channels, each with its own concepts and languages. Uploads are private by default and nothing goes out without your approval.</span><span lang="tr">Her biri kendi konseptleri ve dilleriyle birden fazla YouTube kanalına yayın. Yüklemeler varsayılan olarak gizlidir; onayın olmadan hiçbir şey yayınlanmaz.</span></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="section section-alt">
+    <div class="wrap">
+      <h2><span lang="en">How it works</span><span lang="tr">Nasıl çalışır</span></h2>
+      <ol class="flow">
+        <li><span class="num">01</span><strong><span lang="en">Sources</span><span lang="tr">Kaynaklar</span></strong><small><span lang="en">Reddit, RSS, web, files</span><span lang="tr">Reddit, RSS, web, dosya</span></small></li>
+        <li><span class="num">02</span><strong><span lang="en">AI script</span><span lang="tr">AI senaryo</span></strong><small><span lang="en">Original, with your model</span><span lang="tr">Özgün, senin modelinle</span></small></li>
+        <li><span class="num">03</span><strong><span lang="en">Voice &amp; captions</span><span lang="tr">Ses ve altyazı</span></strong><small><span lang="en">Local TTS, word timing</span><span lang="tr">Yerel TTS, kelime zamanlaması</span></small></li>
+        <li><span class="num">04</span><strong><span lang="en">Video</span><span lang="tr">Video</span></strong><small><span lang="en">9:16 Shorts render</span><span lang="tr">9:16 Shorts üretimi</span></small></li>
+        <li><span class="num">05</span><strong><span lang="en">Approve</span><span lang="tr">Onay</span></strong><small><span lang="en">You review every video</span><span lang="tr">Her videoyu sen incelersin</span></small></li>
+        <li><span class="num">06</span><strong>YouTube</strong><small><span lang="en">Private by default</span><span lang="tr">Varsayılan olarak gizli</span></small></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="install" class="section">
+    <div class="wrap narrow">
+      <h2><span lang="en">Install</span><span lang="tr">Kurulum</span></h2>
+      <p class="section-lead">
+        <span lang="en">Requires Docker and Docker Compose v2. The installer generates a random secret key and an admin password on first run. Replace the e-mail with your admin address.</span>
+        <span lang="tr">Docker ve Docker Compose v2 gerekir. Kurulum ilk çalıştırmada rastgele bir gizli anahtar ve yönetici parolası üretir. E-postayı kendi yönetici adresinle değiştir.</span>
+      </p>
+      <div class="code">
+        <button type="button" class="copy" data-copy-target="install-cmd">
+          <span class="copy-label"><span lang="en">Copy</span><span lang="tr">Kopyala</span></span>
+          <span class="copied-label"><span lang="en">Copied</span><span lang="tr">Kopyalandı</span></span>
+        </button>
+<pre id="install-cmd"><code>git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
+cd cicibyte-ai-media-factory
+bash deploy/install.sh you@example.com</code></pre>
+      </div>
+      <p class="note">
+        <span lang="en">The panel binds to <code>127.0.0.1:8080</code>. See <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a> for Tailscale or reverse-proxy access, updates and backups.</span>
+        <span lang="tr">Panel <code>127.0.0.1:8080</code> adresine bağlanır. Tailscale veya reverse proxy erişimi, güncelleme ve yedekleme için <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a> belgesine bak.</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap narrow private">
+      <h2><span lang="en">Self-hosted &amp; private</span><span lang="tr">Kendi sunucunda, gizli</span></h2>
+      <p>
+        <span lang="en">Your sources, scripts, keys and videos stay on your machine. API keys and tokens are stored encrypted and masked in logs. There is no CiciByte cloud, no account and no telemetry to sign up for: you run it, you own it.</span>
+        <span lang="tr">Kaynakların, senaryoların, anahtarların ve videoların kendi makinende kalır. API anahtarları ve token'lar şifreli saklanır, loglarda maskelenir. Kayıt olunacak bir CiciByte bulutu ya da hesabı yok: sen çalıştırırsın, senindir.</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="status" class="section">
+    <div class="wrap narrow">
+      <h2><span lang="en">Roadmap &amp; status</span><span lang="tr">Yol haritası ve durum</span></h2>
+      <p class="section-lead">
+        <span lang="en">Under active development toward v0.1: an original English (and optionally Turkish) Short, inspired by a source story, uploaded privately to a YouTube channel after your approval.</span>
+        <span lang="tr">v0.1 hedefine doğru aktif geliştirmede: bir kaynak hikâyeden ilham alan özgün bir İngilizce (istenirse Türkçe) Shorts'un, onayınla bir YouTube kanalına gizli olarak yüklenmesi.</span>
+      </p>
+      <ul class="roadmap">
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Foundation</span><span lang="tr">Temel</span></strong><small><span lang="en">Docker install, auth, AI provider routing, job queue, backups</span><span lang="tr">Docker kurulumu, giriş, AI yönlendirme, iş kuyruğu, yedekleme</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="done"><span class="dot"></span><div><strong><span lang="en">Sources &amp; ingestion</span><span lang="tr">Kaynaklar ve alım</span></strong><small><span lang="en">Reddit, RSS, web, files; dedup, rights tracking, scheduler</span><span lang="tr">Reddit, RSS, web, dosya; tekilleştirme, hak takibi, zamanlayıcı</span></small></div><em><span lang="en">Done</span><span lang="tr">Tamam</span></em></li>
+        <li class="next"><span class="dot"></span><div><strong><span lang="en">Production pipeline &amp; media</span><span lang="tr">Üretim hattı ve medya</span></strong><small><span lang="en">Script, originality check, voice, captions, render, thumbnail</span><span lang="tr">Senaryo, özgünlük kontrolü, ses, altyazı, render, kapak</span></small></div><em><span lang="en">Next</span><span lang="tr">Sıradaki</span></em></li>
+        <li><span class="dot"></span><div><strong><span lang="en">Admin panel</span><span lang="tr">Yönetim paneli</span></strong><small><span lang="en">Web panel in English and Turkish, mobile-friendly</span><span lang="tr">İngilizce ve Türkçe web paneli, mobil uyumlu</span></small></div><em><span lang="en">Planned</span><span lang="tr">Planlandı</span></em></li>
+        <li><span class="dot"></span><div><strong><span lang="en">YouTube publisher</span><span lang="tr">YouTube yayıncı</span></strong><small><span lang="en">Per-channel OAuth, private uploads, quotas, daily limits</span><span lang="tr">Kanal başına OAuth, gizli yükleme, kota, günlük sınır</span></small></div><em><span lang="en">Planned</span><span lang="tr">Planlandı</span></em></li>
+      </ul>
+      <p class="note">
+        <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/ROADMAP.md" target="_blank" rel="noopener"><span lang="en">Full roadmap on GitHub</span><span lang="tr">Yol haritasının tamamı GitHub'da</span> &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section-alt support">
+    <div class="wrap narrow">
+      <h2><span lang="en">Support the project</span><span lang="tr">Projeye destek ol</span></h2>
+      <p>
+        <span lang="en">The Media Factory is free and always will be. If it helps you, a coffee keeps the work going.</span>
+        <span lang="tr">Media Factory ücretsiz ve hep öyle kalacak. İşine yararsa bir kahve, çalışmanın sürmesine yardım eder.</span>
+      </p>
+      <a class="btn btn-primary" href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener"><span lang="en">Buy me a coffee</span><span lang="tr">Bana bir kahve ısmarla</span></a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <a href="https://cicibyte.com" target="_blank" rel="noopener" aria-label="CiciByte Technology">
+        <img src="assets/cicibyte-logo.png" alt="CiciByte" width="150" height="42" loading="lazy">
+      </a>
+      <p class="powered">Powered by <a href="https://cicibyte.com" target="_blank" rel="noopener">CiciByte Technology</a></p>
+      <p class="tagline">From Idea to Future. Your Corporate Digital Brain.</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/RealMrNovember/cicibyte-ai-media-factory/blob/main/LICENSE" target="_blank" rel="noopener"><span lang="en">MIT License</span><span lang="tr">MIT Lisansı</span></a>
+      <a href="https://buymeacoffee.com/mikeross" target="_blank" rel="noopener">Buy me a coffee</a>
+      <a href="https://www.instagram.com/cicibyte.corporation/" target="_blank" rel="noopener">Instagram @cicibyte.corporation</a>
+    </div>
+  </div>
+  <div class="wrap legal">
+    <p>&copy; <span id="year">2026</span> CiciByte Technology, Inc. · <span lang="en">Released under the MIT License.</span><span lang="tr">MIT Lisansı ile yayınlanmıştır.</span></p>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
