@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -143,6 +143,8 @@ async function sources(el) {
       <td><div class="row"><button class="btn" data-run="${s.id}">${t("runNow")}</button>
       <button class="btn danger" data-del="${s.id}">${t("delete")}</button></div></td></tr>`).join("");
   el.innerHTML = `<h1>${t("sources")}</h1><p class="sub">Reddit · RSS · Web</p>
+    <div class="card" style="margin-bottom:16px" id="catalog"></div>
+    <h3 style="margin:22px 0 10px">${t("mySources")}</h3>
     <div class="card" style="margin-bottom:16px"><form id="add" class="grid g4" style="align-items:end">
       <div><label>${t("name")}</label><input name="name" required placeholder="nosleep"></div>
       <div><label>${t("adapter")}</label><select name="adapter"><option value="reddit_rss">Reddit (RSS)</option><option value="reddit">Reddit (API)</option><option value="rss">RSS / Atom</option><option value="web">Web page</option></select></div>
@@ -150,6 +152,7 @@ async function sources(el) {
       <div><label>${t("interval")}</label><input name="interval" type="number" min="10" value="60"></div>
       <div><button class="btn primary">${t("add")}</button></div></form></div>
     <div class="card">${data.items.length ? `<table><tr><th>${t("name")}</th><th>${t("status")}</th><th>${t("lastRun")}</th><th>${t("error")}</th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>`;
+  drawCatalog(document.getElementById("catalog"));
   document.getElementById("add").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -171,21 +174,51 @@ async function sources(el) {
   });
 }
 
+let catFilter = { lang: "", cat: "" };
+async function drawCatalog(box) {
+  const c = await api("/api/sources/catalog");
+  const cats = c.categories;
+  const shown = c.items.filter((i) => (!catFilter.lang || i.language === catFilter.lang) && (!catFilter.cat || i.category === catFilter.cat));
+  const missing = shown.filter((i) => !i.source_id);
+  const chip = (attr, v, label, on) => `<button class="btn small-btn ${on ? "primary" : ""}" ${attr}="${v}">${label}</button>`;
+  box.innerHTML = `<div class="row"><h3 style="margin:0">${t("catalog")}</h3><span class="spacer"></span>
+      <button class="btn primary" id="addShown" ${missing.length ? "" : "disabled"}>＋ ${t("addShown")} (${missing.length})</button></div>
+    <p class="muted small">${t("catalogHelp")}</p>
+    <div class="row" style="margin:6px 0">${chip("data-clang", "", t("allLangs"), !catFilter.lang)}${chip("data-clang", "en", "English", catFilter.lang === "en")}${chip("data-clang", "tr", "Türkçe", catFilter.lang === "tr")}</div>
+    <div class="row" style="margin:6px 0 14px">${chip("data-ccat", "", t("allTypes"), !catFilter.cat)}${Object.entries(cats).map(([k, v]) => chip("data-ccat", k, esc(v[lang] || v.en), catFilter.cat === k)).join("")}</div>
+    <div class="cat-grid">${shown.map((i) => `<div class="cat-item">
+        <div class="row"><b>${esc(i.name)}</b><span class="spacer"></span><span class="pill">${i.language.toUpperCase()}</span></div>
+        <div class="muted small">${esc((cats[i.category] || {})[lang] || i.category)} · ${i.adapter === "reddit_rss" ? "Reddit" : "RSS"}</div>
+        <p class="small" style="margin:6px 0 10px">${esc(i.about[lang] || i.about.en)}</p>
+        ${i.source_id ? `<span class="pill ok">✓ ${t("added")}</span>` : `<button class="btn small-btn" data-cadd="${i.key}">＋ ${t("add")}</button>`}
+      </div>`).join("")}</div>`;
+  const add = async (keys) => {
+    try { const r = await api("/api/sources/catalog/add", { method: "POST", body: { keys } }); toast(`+${r.added.length} ${t("sourcesAdded")}`); render(); }
+    catch (err) { toast(err.message, true); }
+  };
+  box.querySelectorAll("[data-clang]").forEach((b) => b.addEventListener("click", () => { catFilter.lang = b.dataset.clang; drawCatalog(box); }));
+  box.querySelectorAll("[data-ccat]").forEach((b) => b.addEventListener("click", () => { catFilter.cat = b.dataset.ccat; drawCatalog(box); }));
+  box.querySelectorAll("[data-cadd]").forEach((b) => b.addEventListener("click", () => add([b.dataset.cadd])));
+  box.querySelector("#addShown").addEventListener("click", () => add(missing.map((i) => i.key)));
+}
+
 async function inbox(el) {
-  const q = new URLSearchParams(location.hash.split("?")[1] || "").get("q") || "";
-  const data = await api(`/api/items?limit=100${q ? "&q=" + encodeURIComponent(q) : ""}`);
+  const hp = new URLSearchParams(location.hash.split("?")[1] || "");
+  const q = hp.get("q") || "", il = hp.get("lang") || "";
+  const data = await api(`/api/items?limit=150${q ? "&q=" + encodeURIComponent(q) : ""}${il ? "&language=" + il : ""}`);
   const rows = data.items.map((i) => `<tr>
-      <td><b class="clip">${esc(i.title)}</b><div class="muted small clip">${esc(i.text)}</div></td>
+      <td><span class="pill">${(i.language || "en").toUpperCase()}</span> <b class="clip">${esc(i.title)}</b><div class="muted small clip">${esc(i.text)}</div></td>
       <td><span class="pill">${esc(i.rights_status)}</span></td>
       <td>${pill(i.processing_status)}</td>
       <td class="small muted">${i.chars} ${t("chars")}<br>${when(i.fetched_at)}</td>
       <td><div class="row"><button class="btn primary" data-make="${i.id}">${t("make")}</button><button class="btn" data-open="${i.id}">${t("open")}</button></div></td></tr>`).join("");
   el.innerHTML = `<div class="row"><h1>${t("inbox")}</h1><span class="spacer"></span><input id="q" style="max-width:260px" placeholder="${t("search")}" value="${esc(q)}"><button class="btn" id="aiStory">✨ ${st("aiStory")}</button><button class="btn primary" id="addStory">＋ ${st("addStory")}</button></div>
-    <p class="sub">${data.items.length} ${t("items").toLowerCase()}</p>
+    <div class="row" style="margin:4px 0 14px">${[["", t("allLangs")], ["en", "English"], ["tr", "Türkçe"]].map(([v, l]) => `<a class="btn small-btn ${il === v ? "primary" : ""}" href="#inbox?lang=${v}${q ? "&q=" + encodeURIComponent(q) : ""}">${l}</a>`).join("")}
+      <span class="muted small" style="margin-left:8px">${data.items.length} ${t("items").toLowerCase()}</span></div>
     <div class="card">${data.items.length ? `<table><tr><th></th><th>${t("rights")}</th><th>${t("status")}</th><th></th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>`;
   document.getElementById("addStory").addEventListener("click", () => addStoryDialog(() => render()));
   document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(() => render()));
-  document.getElementById("q").addEventListener("change", (e) => { location.hash = "#inbox?q=" + encodeURIComponent(e.target.value); });
+  document.getElementById("q").addEventListener("change", (e) => { location.hash = "#inbox?q=" + encodeURIComponent(e.target.value) + (il ? "&lang=" + il : ""); });
   on("[data-make]", "click", (e) => { studioState = null; location.hash = `#studio/${e.target.dataset.make}`; });
   on("[data-open]", "click", async (e) => {
     const d = await api(`/api/items/${e.target.dataset.open}`);

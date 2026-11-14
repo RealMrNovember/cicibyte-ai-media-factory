@@ -11,6 +11,7 @@ from defusedxml.ElementTree import fromstring
 ATOM = "{http://www.w3.org/2005/Atom}"
 CONTENT_NS = "{http://purl.org/rss/1.0/modules/content/}"
 DC = "{http://purl.org/dc/elements/1.1/}"
+RSS1 = "{http://purl.org/rss/1.0/}"
 
 
 class FeedError(Exception):
@@ -48,19 +49,21 @@ def _date(value: str) -> datetime | None:
     return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
-def _rss_items(root: Element) -> list[FeedEntry]:
+def _rss_items(root: Element, ns: str = "") -> list[FeedEntry]:
+    """RSS 2.0 (no namespace) or RSS 1.0/RDF (elements in the RSS1 namespace)."""
     out = []
-    for item in root.iter("item"):
-        link = _text(item, "link") or None
+    for item in root.iter(f"{ns}item"):
+        link = _text(item, f"{ns}link") or None
         out.append(
             FeedEntry(
-                id=_text(item, "guid") or link or _text(item, "title"),
+                id=_text(item, "guid") or item.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about") or link
+                or _text(item, f"{ns}title"),
                 link=link,
-                title=_text(item, "title"),
+                title=_text(item, f"{ns}title"),
                 author=_text(item, "author") or _text(item, f"{DC}creator") or None,
                 published_at=_date(_text(item, "pubDate") or _text(item, f"{DC}date")),
                 content_html=_text(item, f"{CONTENT_NS}encoded"),
-                summary_html=_text(item, "description"),
+                summary_html=_text(item, f"{ns}description"),
             )
         )
     return out
@@ -94,8 +97,10 @@ def parse_feed(content: bytes) -> list[FeedEntry]:
     except (DefusedXmlException, ParseError, ValueError) as exc:
         raise FeedError(f"invalid or unsafe feed XML: {type(exc).__name__}") from None
     tag = root.tag
-    if tag == "rss" or tag.endswith("RDF"):
+    if tag == "rss":
         return _rss_items(root)
+    if tag.endswith("RDF"):
+        return _rss_items(root, RSS1) or _rss_items(root)
     if tag == f"{ATOM}feed":
         return _atom_entries(root)
     raise FeedError(f"not an RSS/Atom feed (root element <{tag}>)")

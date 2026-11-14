@@ -104,3 +104,18 @@ def test_429_retryable():
     with pytest.raises(AdapterError) as e:
         run({"subreddit": "nosleep"}, handler_factory([], listing_status=429))
     assert e.value.retryable
+
+
+def test_reddit_rss_source_uses_official_api_when_keys_are_set(db):
+    from mediafactory.db.models import SourceConnector
+    from mediafactory.sources.credentials import set_reddit_credentials
+    from mediafactory.sources.poller import run_source
+
+    set_reddit_credentials(db, "cid", "csecret")
+    c = SourceConnector(name="r/nosleep", adapter="reddit_rss", params={"subreddit": "nosleep", "sort": "top", "time": "week"})
+    db.add(c)
+    db.flush()
+    calls = []
+    result = run_source(db, c, fetcher=make_fetcher(handler_factory(calls, listing=[post("z1", "Via the API")])))
+    assert result.error is None and result.new == 1
+    assert calls[0] == "token" and "oauth.reddit.com" in calls[1]

@@ -96,3 +96,8 @@ input[type=color] { padding: 2px; height: 38px; cursor: pointer; }
 .progress div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } .studio-preview { position: static; max-width: 320px; margin: 0 auto; } }
 .grid.videos { grid-template-columns: repeat(auto-fill, minmax(230px, 290px)); }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.cat-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--bg); display: flex; flex-direction: column; }
+.cat-item p { flex: 1; color: var(--muted); }
+a.btn { display: inline-block; color: var(--text); }
+a.btn.primary { color: var(--accent-ink); }

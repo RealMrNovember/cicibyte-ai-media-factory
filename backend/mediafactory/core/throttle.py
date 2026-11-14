@@ -18,7 +18,7 @@ from mediafactory.db.base import utcnow
 
 DEFAULT_INTERVAL_S = 2.0
 # Hosts known to rate-limit anonymous clients aggressively.
-HOST_INTERVALS_S = {"www.reddit.com": 5.0, "reddit.com": 5.0, "old.reddit.com": 5.0, "oauth.reddit.com": 2.0}
+HOST_INTERVALS_S = {"www.reddit.com": 10.0, "reddit.com": 10.0, "old.reddit.com": 10.0, "oauth.reddit.com": 2.0}
 DEFAULT_RETRY_AFTER_S = 60
 MAX_RETRY_AFTER_S = 3600
 

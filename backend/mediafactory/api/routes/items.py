@@ -68,12 +68,17 @@ def list_items(
     rights: str | None = None,
     source_id: int | None = None,
     q: str | None = Query(default=None, max_length=200),
+    language: str | None = Query(default=None, max_length=8),
     limit: int = Query(50, ge=1, le=200),
     before_id: int | None = None,
     db: Session = Depends(get_db, scope="function"),
     user: User = Depends(require_user),
 ) -> dict:
     query = select(SourceItem).order_by(SourceItem.id.desc()).limit(limit)
+    if language == "en":  # older items without a language were English sources
+        query = query.where(or_(SourceItem.language == "en", SourceItem.language.is_(None)))
+    elif language:
+        query = query.where(SourceItem.language == language)
     if status:
         query = query.where(SourceItem.processing_status == status)
     if rights:

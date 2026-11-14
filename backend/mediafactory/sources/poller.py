@@ -44,9 +44,15 @@ def _record_failure(connector: SourceConnector, message: str) -> None:
 def run_source(session: Session, connector: SourceConnector, *, fetcher: SafeFetcher) -> IngestResult:
     """Fetch and store one source now. Errors are recorded on the connector and returned, never raised."""
     try:
-        adapter = get_adapter(connector.adapter)
+        name = connector.adapter
+        creds = credentials_for(session, name)
+        if name == "reddit_rss":  # Reddit often blocks keyless RSS; use the official API when an app is set up
+            api_creds = credentials_for(session, "reddit")
+            if api_creds:
+                name, creds = "reddit", api_creds
+        adapter = get_adapter(name)
         params = adapter.validate(connector.params or {})
-        ctx = FetchContext(fetcher=fetcher, credentials=credentials_for(session, connector.adapter))
+        ctx = FetchContext(fetcher=fetcher, credentials=creds)
         items = adapter.fetch(params, ctx)
     except OperationalError:
         raise

@@ -115,7 +115,9 @@ function drawStory() {
     <p class="muted small clip3" style="margin:10px 0 0">${esc(cur.text)}</p>
     <p class="muted small" style="margin:6px 0 0">${cur.chars} ${t("chars")} · <span class="pill">${esc(cur.rights_status)}</span></p>`;
   document.getElementById("story").addEventListener("change", (e) => { s.itemId = Number(e.target.value); drawStory(); drawPreview(); });
-  box.querySelectorAll("[data-lf]").forEach((b) => b.addEventListener("click", () => { s.langFilter = b.dataset.lf; drawStory(); drawPreview(); }));
+  box.querySelectorAll("[data-lf]").forEach((b) => b.addEventListener("click", async () => {
+    s.langFilter = b.dataset.lf; s.items = (await api(`/api/items?limit=200${s.langFilter ? "&language=" + s.langFilter : ""}`)).items; drawStory(); drawPreview();
+  }));
 }
 
 function aiStoryDialog(onAdded) {
