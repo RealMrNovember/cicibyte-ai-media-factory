@@ -16,7 +16,7 @@
 | 3 | Üretim hattı ve medya | ⬜ Sıradaki |
 | 4 | Yönetim paneli (React, tr/en) | ⬜ |
 | 5 | YouTube yayıncı ve DL380 dağıtımı | ⬜ |
-| — | Showroom ve indirme sitesi | ⬜ v0.1 ekran görüntüleri hazır olunca |
+| — | Showroom ve indirme sitesi (`cicibytetechnology` sunucusu, `*.cicibyte.com`) | ⬜ v0.1 ekran görüntüleri hazır olunca |
 
 **Test durumu:** 224 otomatik testin hepsi geçiyor. Docker kurulumu, yedekleme/geri yükleme ve gerçek `r/nosleep` beslemesinden toplama, laptop'taki Docker'da uçtan uca denendi.
 
@@ -88,6 +88,9 @@
 - [ ] `OPERATIONS.md` (günlük bakım, hata giderme) ve `SECURITY.md`.
 
 ### Showroom ve indirme sitesi *(ayrı proje)*
+> **Nerede:** `cicibytetechnology` sunucusunda, `cicibyte.com` altında bir subdomain. **DL380'e kurulmayacak.**
+> DL380'e yalnızca medya fabrikası uygulamasının kendisi kurulacak (Plan 5).
+
 - [ ] Subdomain adının seçilmesi (öneri: `mediafactory.cicibyte.com`).
 - [ ] Cloudflare'de DNS kaydı. **Senin yapman gereken bir adım.**
 - [ ] `cicibytetechnology` sunucusunda aaPanel/nginx üzerinden yayın. Sunucuya dokunan her adım için önce onay alınacak.
