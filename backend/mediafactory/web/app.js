@@ -69,17 +69,17 @@ function toast(msg, bad = false) {
 }
 function when(iso) { return iso ? new Date(iso).toLocaleString(lang === "tr" ? "tr-TR" : "en-GB") : "—"; }
 function pill(status) {
-  const cls = { approved: "ok", needs_review: "ok", published: "ok", failed: "bad", rejected: "bad", retry_wait: "warn", discovered: "warn" }[status] || "";
+  const cls = { approved: "ok", needs_review: "ok", published: "ok", scheduled: "ok", uploading: "warn", failed: "bad", rejected: "bad", retry_wait: "warn", discovered: "warn" }[status] || "";
   return `<span class="pill ${cls}">${esc(status)}</span>`;
 }
 function on(sel, ev, fn) { document.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn)); }
 
 // ---------- layout ----------
-const ROUTES = ["overview", "studio", "sources", "inbox", "production", "ready", "settings"];
+const ROUTES = ["overview", "studio", "sources", "inbox", "production", "ready", "schedule", "settings"];
 function route() { const r = (location.hash || "#overview").slice(1).split("/")[0]; return ROUTES.includes(r) ? r : "overview"; }
 
 function shell(inner) {
-  const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${r === "studio" ? st(r) : t(r)}</a>`).join("");
+  const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${r === "studio" ? st(r) : r === "schedule" ? sc(r) : t(r)}</a>`).join("");
   return `<div class="shell">
     <aside class="side">
       <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(desktop.server_url) : ""}</small></div>
@@ -103,7 +103,7 @@ async function render() {
   try { me = await api("/api/auth/me"); } catch { me = null; }
   $app.innerHTML = shell(`<p class="muted">…</p>`);
   bindShell();
-  const page = { overview, studio, sources, inbox, production, ready, settings }[route()];
+  const page = { overview, studio, sources, inbox, production, ready, schedule, settings }[route()];
   try { await page(document.getElementById("main")); } catch (err) {
     if (offline && route() !== "settings") { $app.innerHTML = shell(`<h1>${t(route())}</h1><p class="muted">${t("offline")}</p>`); bindShell(); }
     else toast(err.message, true);
@@ -118,7 +118,7 @@ window.addEventListener("hashchange", render);
 async function overview(el) {
   const [items, jobs] = await Promise.all([api("/api/items?limit=200"), api("/api/jobs?limit=200")]);
   const count = (s) => jobs.items.filter((j) => j.status === s).length;
-  const running = jobs.items.filter((j) => !["needs_review", "approved", "rejected", "failed", "published"].includes(j.status)).length;
+  const running = jobs.items.filter((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled"].includes(j.status)).length;
   el.innerHTML = `<h1>${t("overview")}</h1><p class="sub">${t("welcome")}</p>
     <div class="grid g4">
       <div class="card stat"><b>${items.items.length}</b><span>${t("items")}</span></div>
@@ -225,24 +225,33 @@ async function production(el) {
   const data = await api("/api/jobs?limit=100");
   el.innerHTML = `<h1>${t("production")}</h1><p class="sub">script → voice → captions → render</p>${jobsTable(data.items)}`;
   bindJobs(el);
-  if (data.items.some((j) => !["needs_review", "approved", "rejected", "failed", "published"].includes(j.status))) {
+  if (data.items.some((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled"].includes(j.status))) {
     pollTimer = setInterval(() => { if (route() === "production" && !document.querySelector(".modal")) render(); }, 5000);
   }
 }
 
 async function ready(el) {
-  const data = await api("/api/jobs?status=needs_review&limit=100");
-  const approved = await api("/api/jobs?status=approved&limit=100");
+  const [data, approved, pub] = await Promise.all([api("/api/jobs?status=needs_review&limit=100"), api("/api/jobs?status=approved&limit=100"),
+    Promise.all(["uploading", "scheduled", "published"].map((x) => api(`/api/jobs?status=${x}&limit=100`)))]);
+  const published = pub.flatMap((r) => r.items);
   const card = (j, actions) => `<div class="card video-card"><video controls preload="metadata" src="/api/jobs/${j.id}/video"></video>
       <h3>${esc(j.title || "")}</h3><div class="muted small">#${j.id} · ${esc(j.language)} · ${j.duration_s ?? "?"}s</div>
+      <div style="margin-top:6px">${ytBadge(j)}</div>
       <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a></div></div>`;
+  const ytBtn = (j) => `<button class="btn primary" data-pub="${j.id}">▶ ${sc("sendYt")}</button>`;
   el.innerHTML = `<h1>${t("ready")}</h1><p class="sub">${t("readyHint")}</p>
     <div class="grid g3">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
-    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid g3">${approved.items.map((j) => card(j, "")).join("")}</div>` : ""}`;
+    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid g3">${approved.items.map((j) => card(j, ytBtn(j))).join("")}</div>` : ""}
+    ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid g3">${published.map((j) => card(j, "")).join("")}</div>` : ""}`;
   on("[data-dec]", "click", async (e) => {
     try { await api(`/api/jobs/${e.target.dataset.id}/decision`, { method: "POST", body: { decision: e.target.dataset.dec } }); render(); }
     catch (err) { toast(err.message, true); }
   });
+  on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub));
+  on("[data-ext]", "click", (e) => { e.preventDefault(); openExternal(e.target.dataset.ext); });
+  if (published.some((j) => j.status === "uploading")) {
+    pollTimer = setInterval(() => { if (route() === "ready" && !document.querySelector(".modal")) render(); }, 6000);
+  }
 }
 
 function serverCard() {
@@ -274,7 +283,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · Reddit</p>${serverCard()}
+  const yt = await youtubeCard();
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${yt}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -294,6 +304,7 @@ async function settings(el) {
         <div><label>${t("clientSecret")}</label><input name="client_secret" type="password" required autocomplete="off"></div>
         <div><button class="btn primary">${t("save")}</button></div></form></div>`;
   bindServerCard();
+  bindYoutubeCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });
   document.getElementById("prov").addEventListener("submit", async (e) => {
     e.preventDefault(); const f = new FormData(e.target);

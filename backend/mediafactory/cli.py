@@ -105,6 +105,9 @@ def worker() -> None:
 
     fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist, throttle=DbHostThrottle(SessionLocal))
     SourcePoller(SessionLocal, fetcher=fetcher, stop_event=poller_stop).start()
+    from mediafactory.schedule.runner import Scheduler
+
+    Scheduler(SessionLocal, stop_event=poller_stop).start()
     run_worker(SessionLocal, should_stop=lambda: stopping["flag"])
 
 

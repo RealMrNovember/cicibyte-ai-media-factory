@@ -24,5 +24,10 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
         log=ctx.log,
     )
     ctx.job.payload = {**(ctx.job.payload or {}), "result": result}
-    # Rendered and waiting in the Ready catalog for a person to approve it.
-    return StageOutcome(next_status="needs_review", outputs=result)
+    # Rendered: waits in the Ready catalog for approval, unless a schedule asked for automatic approval.
+    status = "approved" if (ctx.job.payload or {}).get("auto_approve") else "needs_review"
+    return StageOutcome(next_status=status, outputs=result)
+
+
+# Register the YouTube upload stage with the same worker.
+import mediafactory.youtube.publish  # noqa: E402,F401

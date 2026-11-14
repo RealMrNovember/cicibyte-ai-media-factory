@@ -163,6 +163,17 @@ def make_handler(cfg: Config):
     return Handler
 
 
+class JsApi:
+    """Called from the panel: open sign-in pages (Google blocks embedded windows) in the real browser."""
+
+    def open_url(self, url: str) -> bool:
+        import webbrowser
+
+        if not url.startswith("https://"):
+            return False
+        return webbrowser.open(url)
+
+
 def main() -> None:
     import webview
 
@@ -171,7 +182,7 @@ def main() -> None:
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, name="local-panel", daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
-    webview.create_window(APP_NAME, url, width=1320, height=880, min_size=(420, 600), background_color="#0b0b0e")
+    webview.create_window(APP_NAME, url, js_api=JsApi(), width=1320, height=880, min_size=(420, 600), background_color="#0b0b0e")
     try:
         webview.start(private_mode=False, storage_path=str(app_home() / "webview"))
     finally:

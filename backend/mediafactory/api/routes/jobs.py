@@ -36,6 +36,7 @@ def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
         "title": result.get("title") or (job.payload or {}).get("title"),
         "duration_s": result.get("duration_s"),
         "has_video": bool(result.get("video")),
+        "youtube": (job.payload or {}).get("youtube"),
         "created_at": job.created_at.isoformat() if job.created_at else None,
         "updated_at": job.updated_at.isoformat() if job.updated_at else None,
     }
@@ -69,17 +70,10 @@ def make_from_item(
 
         if resolve(Path(get_settings().data_dir), body.background) is None:
             raise HTTPException(status_code=422, detail="background clip not found")
-    group = f"item{iid}-{len(body.languages)}l"
-    jobs = []
-    for lang in dict.fromkeys(body.languages):
-        job = create_job(db, status="discovered", source_item_id=iid, language=lang, content_group=group,
-                         payload={"title": item.title})  # fmt: skip
-        enqueue_stage(db, job.id, MAKE_SHORT, "render", inputs={
-            "item_id": iid, "language": lang, "seconds": body.seconds, "background": body.background,
-            "style": body.style.model_dump(),
-        })  # fmt: skip
-        jobs.append(job)
-    item.processing_status = "queued"
+    from mediafactory.pipeline.production import start_production
+
+    jobs = start_production(db, item, languages=body.languages, seconds=body.seconds, background=body.background,
+                            style=body.style)  # fmt: skip
     record_audit(db, actor_id=user.id, action="job.make", target_type="source_item", target_id=str(iid),
                  details={"languages": body.languages, "jobs": [j.id for j in jobs]}, ip=client_ip(request))  # fmt: skip
     return {"jobs": [job_out(j) for j in jobs]}
