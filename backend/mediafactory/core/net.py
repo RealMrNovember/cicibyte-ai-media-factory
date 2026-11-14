@@ -129,15 +129,19 @@ class SafeFetcher:
             self._last[host] = self._clock()
 
     # -- fetching -------------------------------------------------------------------------------------
-    def _fetch(self, url: str, headers: dict | None, *, raise_for_status: bool) -> FetchedResponse:
+    def _fetch(
+        self, url: str, headers: dict | None, *, raise_for_status: bool, method: str = "GET", data: dict | None = None
+    ) -> FetchedResponse:
         request_headers = {"User-Agent": self.user_agent, **(headers or {})}
         current = url
         for _ in range(self.max_redirects + 1):
             host, _scheme = self._check_url(current)
             self._throttle(host)
             try:
-                with self._client.stream("GET", current, headers=request_headers) as response:
+                with self._client.stream(method, current, headers=request_headers, data=data) as response:
                     if response.status_code in REDIRECT_CODES and response.headers.get("location"):
+                        if method != "GET":
+                            raise FetchError(f"unexpected redirect on {method} to {host}")
                         current = urljoin(current, response.headers["location"])
                         continue
                     chunks, size = [], 0
@@ -168,6 +172,10 @@ class SafeFetcher:
 
     def get(self, url: str, *, headers: dict | None = None) -> FetchedResponse:
         return self._fetch(url, headers, raise_for_status=True)
+
+    def post(self, url: str, *, data: dict, headers: dict | None = None) -> FetchedResponse:
+        """Form POST with the same address, size and rate checks; redirects are not followed."""
+        return self._fetch(url, headers, raise_for_status=True, method="POST", data=data)
 
     def robots_allowed(self, url: str) -> bool:
         parts = urlsplit(url)

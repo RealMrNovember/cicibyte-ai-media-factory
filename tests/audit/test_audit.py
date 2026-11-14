@@ -41,3 +41,14 @@ def test_audit_list_newest_first(client, make_user, db):
     items = client.get("/api/audit?limit=2").json()["items"]
     assert items[0]["action"] == "test.later"
     assert items[1]["action"] == "auth.login"
+
+
+def test_compound_secret_keys_masked(db):
+    record_audit(
+        db, actor_id=None, action="x.compound",
+        details={"client_secret": "cs-123", "refresh_token": "rt-456", "db_password": "pw-789", "name": "keep"},
+    )  # fmt: skip
+    db.flush()
+    row = db.scalar(select(AuditLog).where(AuditLog.action == "x.compound"))
+    assert not {"cs-123", "rt-456", "pw-789"} & set(str(row.details).replace("'", " ").split())
+    assert row.details["name"] == "keep"

@@ -6,7 +6,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from mediafactory import __version__
-from mediafactory.api.routes import audit, auth, providers, task_routes
+from mediafactory.api.routes import audit, auth, providers, source_credentials, task_routes
 from mediafactory.core.config import Settings, get_settings
 
 SECURITY_HEADERS = {
@@ -54,4 +54,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(audit.router)
     app.include_router(providers.router)
     app.include_router(task_routes.router)
+    app.include_router(source_credentials.router)
     return app

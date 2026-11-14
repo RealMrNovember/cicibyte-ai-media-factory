@@ -1,4 +1,4 @@
-from mediafactory.sources.adapters import reddit_rss, rss, web  # noqa: F401  (register adapters)
+from mediafactory.sources.adapters import reddit, reddit_rss, rss, web  # noqa: F401  (register adapters)
 from mediafactory.sources.adapters.base import (
     ADAPTER_REGISTRY,
     Adapter,

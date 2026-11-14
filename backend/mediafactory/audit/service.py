@@ -5,11 +5,16 @@ from sqlalchemy.orm import Session
 from mediafactory.core.redact import redact
 from mediafactory.db.models import AuditLog
 
-_SENSITIVE_KEYS = {"api_key", "apikey", "key", "token", "access_token", "refresh_token", "secret", "password"}
+_SENSITIVE_PARTS = ("secret", "password", "passwd", "token", "api_key", "apikey", "credential")
+
+
+def _sensitive(key: str) -> bool:
+    k = key.lower()
+    return k == "key" or k.endswith("_key") or any(part in k for part in _SENSITIVE_PARTS)
 
 
 def _clean(value: Any, key: str | None = None) -> Any:
-    if key is not None and key.lower() in _SENSITIVE_KEYS and value not in (None, ""):
+    if key is not None and _sensitive(key) and value not in (None, ""):
         return "****"
     if isinstance(value, str):
         return redact(value)
