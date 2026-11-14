@@ -68,3 +68,4 @@ known-first-party = ["mediafactory", "tests"]
 
 [tool.setuptools.package-data]
 "mediafactory.db" = ["migrations/*.py", "migrations/*.mako", "migrations/versions/*.py"]
+"mediafactory" = ["web/*"]

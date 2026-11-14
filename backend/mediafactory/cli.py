@@ -77,6 +77,7 @@ def worker() -> None:
     import logging
     import signal
 
+    import mediafactory.pipeline.handlers  # noqa: F401  (register stage handlers)
     from mediafactory.db.session import SessionLocal
     from mediafactory.queue.worker import run_worker
 

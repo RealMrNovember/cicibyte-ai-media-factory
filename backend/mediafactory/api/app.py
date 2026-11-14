@@ -7,7 +7,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from mediafactory import __version__
 from mediafactory.api.body_limit import MaxBodySizeMiddleware
-from mediafactory.api.routes import audit, auth, items, providers, source_credentials, sources, task_routes
+from mediafactory.api.routes import audit, auth, items, jobs, providers, source_credentials, sources, task_routes
 from mediafactory.core.config import Settings, get_settings
 
 SECURITY_HEADERS = {
@@ -59,4 +59,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(source_credentials.router)
     app.include_router(items.router)
     app.include_router(sources.router)
+    app.include_router(jobs.router)
+
+    # Panel (static, no build step). Mounted last so /api/* keeps priority.
+    from pathlib import Path
+
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=Path(__file__).resolve().parent.parent / "web", html=True), name="panel")
     return app
