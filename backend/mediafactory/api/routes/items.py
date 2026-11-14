@@ -23,7 +23,11 @@ assert set(RightsStatus.__args__) == set(RIGHTS_STATUSES)  # keep the API enum i
 
 
 def get_fetcher() -> Iterator[SafeFetcher]:
-    fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist)
+    from mediafactory.core.throttle import DbHostThrottle
+    from mediafactory.db.session import SessionLocal
+
+    # Shared with the worker through the database, so both processes respect spacing and 429 cooldowns.
+    fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist, throttle=DbHostThrottle(SessionLocal))
     try:
         yield fetcher
     finally:

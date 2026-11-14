@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -17,6 +18,7 @@ from mediafactory.sources.poller import run_source
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 CONFLICT = "a source with this name already exists"
+RUN_NOW_MIN_GAP = timedelta(seconds=60)  # be polite to sources (Reddit answers 429 to rapid repeats)
 
 # 'manual' is an intake path, not a pollable source.
 PollableAdapter = Literal["reddit_rss", "reddit", "rss", "web"]
@@ -154,6 +156,8 @@ def run_now(
     c = _get(db, sid)
     if not c.enabled:
         raise HTTPException(status_code=409, detail="source is disabled; enable it first")
+    if c.last_run_at is not None and utcnow() - c.last_run_at < RUN_NOW_MIN_GAP:
+        raise HTTPException(status_code=409, detail="this source was collected less than a minute ago; try again shortly")
     result = run_source(db, c, fetcher=fetcher)
     _audit(db, user, "source.run", c, request, result.as_dict())
     return result.as_dict()

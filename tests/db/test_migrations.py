@@ -14,6 +14,7 @@ TABLES = {
     "source_connectors",
     "source_items",
     "source_rights_records",
+    "host_rate_limits",
 }
 
 

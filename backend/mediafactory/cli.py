@@ -78,7 +78,9 @@ def worker() -> None:
 
     signal.signal(signal.SIGTERM, _stop_all)
     signal.signal(signal.SIGINT, _stop_all)
-    fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist)
+    from mediafactory.core.throttle import DbHostThrottle
+
+    fetcher = SafeFetcher(allowlist=get_settings().fetch_allowlist, throttle=DbHostThrottle(SessionLocal))
     SourcePoller(SessionLocal, fetcher=fetcher, stop_event=poller_stop).start()
     run_worker(SessionLocal, should_stop=lambda: stopping["flag"])
 

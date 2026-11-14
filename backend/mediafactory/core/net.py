@@ -79,6 +79,7 @@ class SafeFetcher:
         clock: Callable[[], float] = time.monotonic,
         transport: httpx.BaseTransport | None = None,
         user_agent: str = USER_AGENT,
+        throttle=None,
     ):
         self.allowlist = {h.lower() for h in allowlist}
         self.min_interval_s = min_interval_s
@@ -86,7 +87,11 @@ class SafeFetcher:
         self.max_redirects = max_redirects
         self.user_agent = user_agent
         self._resolver, self._sleep, self._clock = resolver, sleep, clock
-        self._last: dict[str, float] = {}
+        if throttle is None:
+            from mediafactory.core.throttle import MemoryHostThrottle
+
+            throttle = MemoryHostThrottle(default_interval_s=min_interval_s, sleep=sleep, clock=clock)
+        self.throttle = throttle
         self._robots: dict[str, RobotFileParser | None] = {}
         self._lock = threading.Lock()
         self._client = httpx.Client(timeout=httpx.Timeout(timeout_s), follow_redirects=False, transport=transport)
@@ -119,14 +124,7 @@ class SafeFetcher:
         return host, parts.scheme
 
     def _throttle(self, host: str) -> None:
-        with self._lock:
-            last = self._last.get(host)
-            now = self._clock()
-            wait = 0.0 if last is None else self.min_interval_s - (now - last)
-        if wait > 0:
-            self._sleep(wait)
-        with self._lock:
-            self._last[host] = self._clock()
+        self.throttle.acquire(host)  # waits for spacing; raises FetchError(429) while the host cools down
 
     # -- fetching -------------------------------------------------------------------------------------
     def _fetch(
@@ -161,6 +159,10 @@ class SafeFetcher:
                 raise FetchError(f"timeout fetching {host}: {exc}", retryable=True) from None
             except httpx.HTTPError as exc:
                 raise FetchError(f"{type(exc).__name__} fetching {host}: {exc}", retryable=True) from None
+            if result.status == 429:
+                from mediafactory.core.throttle import parse_retry_after
+
+                self.throttle.penalize(host, parse_retry_after(result.headers.get("retry-after")))
             if raise_for_status and result.status >= 400:
                 raise FetchError(
                     f"HTTP {result.status} from {host}",

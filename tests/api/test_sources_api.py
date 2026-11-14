@@ -55,14 +55,19 @@ def test_editor_can_manage_sources_full_cycle(client, h, db):
     assert {"source.create", "source.update", "source.delete"} <= actions
 
 
-def test_run_now_returns_ingest_result(client, h, app):
+def test_run_now_returns_ingest_result(client, h, app, db):
+    from datetime import timedelta
+
     from mediafactory.api.routes.items import get_fetcher
+    from mediafactory.db.base import utcnow
 
     app.dependency_overrides[get_fetcher] = lambda: make_fetcher(lambda r: httpx.Response(200, content=RSS))
     sid = client.post("/api/sources", json={"name": "feed", "adapter": "rss", "params": {"url": "https://example.com/f"}},
                       headers=h).json()["id"]  # fmt: skip
     r = client.post(f"/api/sources/{sid}/run", headers=h)
     assert r.status_code == 200 and r.json()["new"] == 1 and r.json()["error"] is None
+    db.get(SourceConnector, sid).last_run_at = utcnow() - timedelta(minutes=2)  # allow run-now again
+    db.flush()
     again = client.post(f"/api/sources/{sid}/run", headers=h).json()
     assert again["new"] == 0 and again["duplicates"] == 1
     src = client.get("/api/sources").json()["items"][0]
@@ -84,3 +89,14 @@ def test_delete_keeps_items(client, h, db):
     db.flush()
     db.expire_all()
     assert db.get(SourceItem, item.id) is not None and db.get(SourceConnector, sid).deleted_at is not None
+
+
+def test_run_now_twice_within_a_minute_409(client, h, app):
+    from mediafactory.api.routes.items import get_fetcher
+
+    app.dependency_overrides[get_fetcher] = lambda: make_fetcher(lambda r: httpx.Response(200, content=RSS))
+    sid = client.post("/api/sources", json={"name": "feed", "adapter": "rss", "params": {"url": "https://example.com/f"}},
+                      headers=h).json()["id"]  # fmt: skip
+    assert client.post(f"/api/sources/{sid}/run", headers=h).status_code == 200
+    r = client.post(f"/api/sources/{sid}/run", headers=h)
+    assert r.status_code == 409 and "minute" in r.json()["detail"]
