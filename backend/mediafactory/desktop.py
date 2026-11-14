@@ -214,8 +214,62 @@ def make_handler(cfg: Config):
     return Handler
 
 
+TITLEBAR_MARK = "pywebview-drag-region"
+
+
+def panel_has_titlebar(server_url: str) -> bool:
+    """True when the panel the app will show draws its own title bar: the server's panel when the server is
+    reachable (it may be older than this app), otherwise the copy bundled with the app."""
+    if reachable(server_url):
+        try:
+            u = urllib.parse.urlsplit(server_url)
+            conn = (http.client.HTTPSConnection if u.scheme == "https" else http.client.HTTPConnection)(u.netloc, timeout=5)
+            conn.request("GET", (u.path or "") + "/app.js")
+            body = conn.getresponse().read().decode("utf-8", "replace")
+            conn.close()
+            return TITLEBAR_MARK in body
+        except Exception:
+            return False
+    try:
+        return TITLEBAR_MARK in (WEB_DIR / "app.js").read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
 class JsApi:
-    """Called from the panel: open sign-in pages (Google blocks embedded windows) in the real browser."""
+    """Called from the panel: window controls for the custom title bar, and opening pages (Google sign-in
+    refuses embedded windows) in the real browser."""
+
+    def __init__(self):
+        self.window = None
+        self.maximized = False
+
+    def minimize(self) -> None:
+        self.window.minimize()
+
+    def toggle_maximize(self) -> bool:
+        if self.maximized:
+            self.window.restore()
+        else:
+            self.window.maximize()
+        self.maximized = not self.maximized
+        return self.maximized
+
+    def close(self) -> None:
+        self.window.destroy()
+
+    def size(self) -> list[int]:
+        return [self.window.width, self.window.height]
+
+    def resize(self, width: int, height: int, anchor: str = "nw") -> None:
+        """Resize keeping the opposite side in place (anchor: the corner/side that must not move)."""
+        from webview.window import FixPoint
+
+        fix = FixPoint(0)
+        for ch, point in (("n", FixPoint.NORTH), ("s", FixPoint.SOUTH), ("w", FixPoint.WEST), ("e", FixPoint.EAST)):
+            if ch in anchor:
+                fix |= point
+        self.window.resize(max(420, int(width)), max(600, int(height)), fix_point=fix or (FixPoint.NORTH | FixPoint.WEST))
 
     def open_url(self, url: str) -> bool:
         import webbrowser
@@ -229,6 +283,7 @@ def main() -> None:
     import webview
 
     webview.settings["ALLOW_DOWNLOADS"] = True  # video, cover and settings downloads from the panel
+    webview.settings["DRAG_REGION_DIRECT_TARGET_ONLY"] = True  # title bar buttons must not start a window drag
     cfg = Config(app_home())
 
     def _check_updates():
@@ -241,8 +296,13 @@ def main() -> None:
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, name="local-panel", daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
-    window = webview.create_window(APP_NAME, url, js_api=JsApi(), width=1320, height=880, min_size=(420, 600),
-                                   background_color="#0b0b0e")  # fmt: skip
+    api = JsApi()
+    # Frameless: the panel draws its own title bar (live status, window buttons, resizable edges) — but only
+    # when the panel we will show has that title bar, otherwise the window would have no close button.
+    frameless = panel_has_titlebar(cfg.server_url)
+    window = webview.create_window(APP_NAME, url, js_api=api, width=1320, height=880, min_size=(420, 600),
+                                   background_color="#0b0b0e", frameless=frameless, easy_drag=False)  # fmt: skip
+    api.window = window
     from mediafactory.desktop_monitor import Monitor
 
     icon = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent.parent / "packaging")) / "app.ico"

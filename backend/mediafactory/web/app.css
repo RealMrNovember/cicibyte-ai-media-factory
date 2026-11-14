@@ -119,3 +119,47 @@ a.btn.primary { color: var(--accent-ink); }
 .live-bar { margin: 0 0 8px; height: 8px; }
 .live-bar div { transition: width .8s ease; }
 .live-log { max-height: 220px; font-size: 12px; margin: 6px 0 0; }
+
+/* ---------- desktop title bar (frameless window) ---------- */
+.titlebar { position: fixed; top: 0; left: 0; right: 0; height: 38px; z-index: 50; display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; background: linear-gradient(180deg, #121217, #0d0d11); border-bottom: 1px solid var(--line); user-select: none; }
+.tb-left { display: flex; align-items: center; gap: 9px; padding-left: 14px; font-size: 12.5px; font-weight: 600; color: #cfcfd6; letter-spacing: .2px; }
+.tb-logo { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 9px; color: var(--accent-ink);
+  background: linear-gradient(135deg, #e3c48a, #b8914f); box-shadow: 0 0 12px rgba(201,169,110,.35); }
+.tb-status { position: relative; display: inline-flex; align-items: center; gap: 9px; height: 26px; padding: 0 16px 0 12px; border-radius: 99px;
+  font-size: 12px; font-weight: 500; color: var(--text); text-decoration: none; overflow: hidden; max-width: 46vw; white-space: nowrap;
+  background: #17171d; border: 1px solid #2a2a33; transition: border-color .3s, box-shadow .3s; }
+.tb-status:hover { border-color: var(--accent); }
+.tb-text { overflow: hidden; text-overflow: ellipsis; }
+.tb-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px rgba(201,169,110,.8); }
+.tb-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: transparent; }
+.tb-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #6fbf8e, #e3c48a); transition: width .8s ease; }
+.tb-status.idle .tb-dot { animation: tbBreathe 3.2s ease-in-out infinite; }
+.tb-status.queued .tb-dot { background: var(--warn); box-shadow: 0 0 8px rgba(217,164,65,.8); animation: tbBreathe 1.8s ease-in-out infinite; }
+.tb-status.offline .tb-dot { background: var(--bad); box-shadow: 0 0 8px rgba(224,100,92,.8); }
+.tb-status.busy { border-color: transparent; box-shadow: 0 0 18px rgba(111,191,142,.18);
+  background: linear-gradient(#17171d, #17171d) padding-box, linear-gradient(90deg, #6fbf8e, #c9a96e, #7aa2e8, #6fbf8e) border-box;
+  background-size: 100% 100%, 300% 100%; animation: tbFlow 4s linear infinite; }
+.tb-status.busy .tb-dot { background: var(--ok); box-shadow: 0 0 0 0 rgba(111,191,142,.7); animation: tbPulse 1.4s infinite; }
+.tb-status.busy .tb-text { background: linear-gradient(90deg, #ecebe7 40%, #a8f0c4 50%, #ecebe7 60%); background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: tbShimmer 2.8s linear infinite; }
+@keyframes tbFlow { to { background-position: 0 0, 300% 0; } }
+@keyframes tbPulse { 0% { box-shadow: 0 0 0 0 rgba(111,191,142,.7); } 70% { box-shadow: 0 0 0 7px rgba(111,191,142,0); } 100% { box-shadow: 0 0 0 0 rgba(111,191,142,0); } }
+@keyframes tbBreathe { 0%, 100% { opacity: .55; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes tbShimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.tb-buttons { justify-self: end; display: flex; height: 100%; }
+.tb-buttons button { width: 46px; height: 100%; border: 0; background: transparent; color: #c8c8d0; cursor: default;
+  font: 10px "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif; transition: background .12s; }
+.tb-buttons button:hover { background: rgba(255,255,255,.08); }
+.tb-buttons .tb-close:hover { background: #c42b1c; color: #fff; }
+.shell.has-titlebar { margin-top: 38px; height: calc(100vh - 38px); }
+.shell.has-titlebar .main { height: calc(100vh - 38px); }
+.rz { position: fixed; z-index: 60; }
+.rz-n { top: 0; left: 8px; right: 8px; height: 4px; cursor: ns-resize; }
+.rz-s { bottom: 0; left: 8px; right: 8px; height: 5px; cursor: ns-resize; }
+.rz-e { right: 0; top: 8px; bottom: 8px; width: 5px; cursor: ew-resize; }
+.rz-w { left: 0; top: 8px; bottom: 8px; width: 5px; cursor: ew-resize; }
+.rz-ne, .rz-nw, .rz-se, .rz-sw { width: 10px; height: 10px; }
+.rz-ne { top: 0; right: 0; cursor: nesw-resize; } .rz-sw { bottom: 0; left: 0; cursor: nesw-resize; }
+.rz-nw { top: 0; left: 0; cursor: nwse-resize; } .rz-se { bottom: 0; right: 0; cursor: nwse-resize; }
+@media (prefers-reduced-motion: reduce) { .tb-status *, .tb-status { animation: none !important; } }

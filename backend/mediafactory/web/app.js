@@ -82,7 +82,7 @@ function route() { const r = (location.hash || "#overview").slice(1).split("/")[
 
 function shell(inner) {
   const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${r === "studio" ? st(r) : r === "schedule" ? sc(r) : r === "live" ? "● " + lv(r) : t(r)}</a>`).join("");
-  return `<div class="shell">
+  return `${titlebar()}<div class="shell${isDesktopWin() ? " has-titlebar" : ""}">
     <aside class="side">
       <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(desktop.server_url) : ""}</small><a href="#live" id="liveMini" class="live-mini"></a></div>
       <nav class="nav">${nav}</nav>
@@ -111,6 +111,68 @@ async function render() {
     else toast(err.message, true);
   }
 }
+function isDesktopWin() { return !!(desktop && window.pywebview && window.pywebview.api && window.pywebview.api.minimize); }
+
+function titlebar() {
+  if (!isDesktopWin()) return "";
+  return `<div class="titlebar pywebview-drag-region" id="titlebar">
+      <div class="tb-left pywebview-drag-region"><span class="tb-logo">▶</span><span class="pywebview-drag-region">CiciByte AI Media Factory</span></div>
+      <a href="#live" class="tb-status idle" id="tbStatus"><span class="tb-dot"></span><span class="tb-text" id="tbText">…</span><span class="tb-bar"><i id="tbBar"></i></span></a>
+      <div class="tb-buttons"><button data-win="minimize" title="Minimize">&#xE921;</button><button data-win="maximize" title="Maximize">&#xE922;</button><button data-win="close" class="tb-close" title="Close">&#xE8BB;</button></div>
+    </div>
+    <div class="rz rz-n" data-rz="n"></div><div class="rz rz-s" data-rz="s"></div><div class="rz rz-e" data-rz="e"></div><div class="rz rz-w" data-rz="w"></div>
+    <div class="rz rz-ne" data-rz="ne"></div><div class="rz rz-nw" data-rz="nw"></div><div class="rz rz-se" data-rz="se"></div><div class="rz rz-sw" data-rz="sw"></div>`;
+}
+
+function bindTitlebar() {
+  if (!isDesktopWin()) return;
+  const apiw = window.pywebview.api;
+  document.querySelectorAll("[data-win]").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const a = b.dataset.win;
+    if (a === "minimize") apiw.minimize();
+    else if (a === "maximize") apiw.toggle_maximize();
+    else apiw.close();
+  }));
+  const tb = document.getElementById("titlebar");
+  tb.addEventListener("dblclick", (e) => { if (!e.target.closest("button,a")) apiw.toggle_maximize(); });
+  // Resizable edges: drag a border; the opposite side stays where it is.
+  document.querySelectorAll("[data-rz]").forEach((h) => h.addEventListener("mousedown", async (e) => {
+    e.preventDefault();
+    const edge = h.dataset.rz, [w0, h0] = await apiw.size(), x0 = e.screenX, y0 = e.screenY;
+    const anchor = (edge.includes("n") ? "s" : "n") + (edge.includes("w") ? "e" : "w");
+    let pending = false, last = null;
+    const move = (ev) => {
+      const dx = ev.screenX - x0, dy = ev.screenY - y0;
+      const w = edge.includes("e") ? w0 + dx : edge.includes("w") ? w0 - dx : w0;
+      const hh = edge.includes("s") ? h0 + dy : edge.includes("n") ? h0 - dy : h0;
+      last = [w, hh];
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => { pending = false; apiw.resize(last[0], last[1], anchor); });
+    };
+    const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  }));
+}
+
+async function refreshTitlebar() {
+  const st = document.getElementById("tbStatus");
+  if (!st) return;
+  try {
+    const a = await api("/api/activity");
+    const r = a.running[0];
+    document.getElementById("tbText").textContent = a.summary[lang] || a.summary.en;
+    st.className = "tb-status " + (r ? "busy" : a.counts.queued ? "queued" : "idle");
+    document.getElementById("tbBar").style.width = r ? `${Math.round(r.progress * 100)}%` : "0";
+  } catch {
+    document.getElementById("tbText").textContent = t("offline");
+    st.className = "tb-status offline";
+  }
+}
+setInterval(refreshTitlebar, 3000);
+
 function bindAppUpdate() {
   const b = document.getElementById("appUpdate");
   b && b.addEventListener("click", async () => {
@@ -126,10 +188,13 @@ function bindAppUpdate() {
 
 function bindShell() {
   bindAppUpdate();
+  bindTitlebar();
+  refreshTitlebar();
   if (typeof refreshLiveMini === "function") refreshLiveMini();
   on("#lang", "click", (e) => { e.preventDefault(); lang = lang === "tr" ? "en" : "tr"; localStorage.setItem("mf_lang", lang); render(); });
 }
 window.addEventListener("hashchange", render);
+window.addEventListener("pywebviewready", () => { if (desktop && !document.getElementById("titlebar")) render(); });
 
 // ---------- pages ----------
 async function overview(el) {

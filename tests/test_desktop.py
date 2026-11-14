@@ -48,3 +48,11 @@ def test_static_path_traversal_falls_back_to_index(local):
     base, _ = local
     with urllib.request.urlopen(base + "/..%2F..%2Fpyproject.toml") as r:
         assert b"<html" in r.read().lower()
+
+
+def test_frameless_only_when_the_panel_has_a_title_bar(tmp_path, monkeypatch):
+    # unreachable server -> the bundled panel decides (it has the title bar)
+    assert desktop.panel_has_titlebar("http://127.0.0.1:9") is True
+    monkeypatch.setattr(desktop, "WEB_DIR", tmp_path)
+    (tmp_path / "app.js").write_text("// an old panel without a title bar", encoding="utf-8")
+    assert desktop.panel_has_titlebar("http://127.0.0.1:9") is False
