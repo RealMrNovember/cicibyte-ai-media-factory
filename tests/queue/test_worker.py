@@ -159,3 +159,25 @@ def test_worker_survives_db_outage(factory, registry, monkeypatch):
     run_worker(factory, worker_id="w", limits=LIMITS, should_stop=lambda: stop["flag"], sleep=sleeps.append)
     assert calls["n"] == 2
     assert 5 in sleeps
+
+
+def test_log_is_visible_while_the_stage_runs(factory, registry, monkeypatch):
+    import time as _time
+
+    monkeypatch.setattr(worker_mod, "LOG_FLUSH_S", 0.05)
+    seen = {}
+
+    @registry.stage_handler("slow", "io")
+    def slow(ctx):
+        ctx.log("[1/4] script")
+        _time.sleep(0.4)
+        with factory() as other:  # another connection, like the panel
+            seen["mid"] = other.get(JobStageRun, ctx.run.id).log
+        ctx.log("[2/4] voice")
+        return StageOutcome(next_status="done")
+
+    job_id, _ = _job_with_stage(factory, "slow")
+    process_one(factory, worker_id="w", limits=LIMITS)
+    assert "[1/4] script" in (seen["mid"] or "")
+    (run,) = _runs(factory, job_id)
+    assert run.log.count("[1/4] script") == 1 and "[2/4] voice" in run.log  # no duplicates after the final write

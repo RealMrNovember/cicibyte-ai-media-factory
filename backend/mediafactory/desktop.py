@@ -11,6 +11,7 @@ import http.client
 import json
 import mimetypes
 import os
+import sys
 import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -52,8 +53,11 @@ class Config:
         return normalize(os.environ.get("MF_SERVER_URL") or self.data.get("server_url") or DEFAULT_SERVER)
 
     def set_server(self, url: str) -> None:
+        self.set_option("server_url", normalize(url))
+
+    def set_option(self, key: str, value) -> None:
         with self.lock:
-            self.data["server_url"] = normalize(url)
+            self.data[key] = value
             self.path.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
 
 
@@ -99,17 +103,21 @@ def make_handler(cfg: Config):
                 if not self.headers.get("X-MF-Client"):
                     return self._json(403, {"detail": "missing X-MF-Client header"})
                 try:
-                    url = normalize(json.loads(self._body() or b"{}").get("server_url", ""))
+                    body = json.loads(self._body() or b"{}")
                 except ValueError:
-                    url = ""
-                if not url.startswith(("http://", "https://")):
-                    return self._json(400, {"detail": "invalid address"})
-                cfg.set_server(url)
+                    body = {}
+                if "notifications" in body:
+                    cfg.set_option("notifications", bool(body["notifications"]))
+                if "server_url" in body:
+                    url = normalize(body.get("server_url", ""))
+                    if not url.startswith(("http://", "https://")):
+                        return self._json(400, {"detail": "invalid address"})
+                    cfg.set_server(url)
             url = cfg.server_url
             from mediafactory import __version__
 
             return self._json(200, {"server_url": url, "reachable": reachable(url), "app_version": __version__,
-                                    "update": cfg.update})  # fmt: skip
+                                    "update": cfg.update, "notifications": cfg.data.get("notifications", True)})  # fmt: skip
 
         def _desktop_update(self):
             """Download the newer installer (checksum-verified), start it and quit; it reopens the app."""
@@ -233,7 +241,12 @@ def main() -> None:
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, name="local-panel", daemon=True).start()
     url = f"http://127.0.0.1:{server.server_address[1]}/"
-    webview.create_window(APP_NAME, url, js_api=JsApi(), width=1320, height=880, min_size=(420, 600), background_color="#0b0b0e")
+    window = webview.create_window(APP_NAME, url, js_api=JsApi(), width=1320, height=880, min_size=(420, 600),
+                                   background_color="#0b0b0e")  # fmt: skip
+    from mediafactory.desktop_monitor import Monitor
+
+    icon = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent.parent / "packaging")) / "app.ico"
+    Monitor(cfg, window, icon=str(icon) if icon.exists() else None).start()
     try:
         webview.start(private_mode=False, storage_path=str(app_home() / "webview"))
     finally:

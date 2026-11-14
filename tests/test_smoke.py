@@ -2,4 +2,4 @@ import mediafactory
 
 
 def test_version():
-    assert mediafactory.__version__ == "0.2.1"
+    assert mediafactory.__version__ == "0.3.0"

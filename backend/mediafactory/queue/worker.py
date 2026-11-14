@@ -24,6 +24,7 @@ BACKOFF_BASE_S = 30
 OUTAGE_SLEEP_S = 5
 IDLE_SLEEP_S = 2
 HEARTBEAT_S = 30
+LOG_FLUSH_S = 3  # running stages write their log this often, so the panel can follow along live
 
 SessionFactory = Callable[[], Session]
 
@@ -50,15 +51,30 @@ def _fail(s: Session, run: JobStageRun, job: ProductionJob, message: str, *, ret
         job.status = "failed"
 
 
-def _heartbeat(factory: SessionFactory, run_id: int, interval_s: float, stop: threading.Event) -> None:
-    while not stop.wait(interval_s):
+def _joined(base_log: str, lines: list[str]) -> str:
+    return base_log + "".join(line + "\n" for line in lines)
+
+
+def _heartbeat(
+    factory: SessionFactory, run_id: int, interval_s: float, stop: threading.Event,
+    base_log: str = "", lines: list[str] | None = None,
+) -> None:  # fmt: skip
+    """Keeps the run alive (heartbeat) and writes its log as it grows (live log for the panel)."""
+    lines = lines if lines is not None else []
+    written, last_beat = 0, time.monotonic()
+    while not stop.wait(min(interval_s, LOG_FLUSH_S)):
+        values: dict = {}
+        if time.monotonic() - last_beat >= interval_s:
+            values["heartbeat_at"] = utcnow()
+            last_beat = time.monotonic()
+        if len(lines) != written:
+            written = len(lines)
+            values["log"] = _joined(base_log, lines[:written])
+        if not values:
+            continue
         try:
             with factory() as s:
-                s.execute(
-                    update(JobStageRun)
-                    .where(JobStageRun.id == run_id, JobStageRun.state == "running")
-                    .values(heartbeat_at=utcnow())
-                )
+                s.execute(update(JobStageRun).where(JobStageRun.id == run_id, JobStageRun.state == "running").values(**values))
                 s.commit()
         except OperationalError:
             log.warning("heartbeat for run %s failed (database unavailable)", run_id)
@@ -73,12 +89,12 @@ def process_one(
         s.commit()
         if run is None:
             return False
-        run_id, job_id, stage = run.id, run.job_id, run.stage
+        run_id, job_id, stage, base_log = run.id, run.job_id, run.stage, run.log or ""
 
     lines: list[str] = []
     handler = get_handler(stage)
     stop = threading.Event()
-    beat = threading.Thread(target=_heartbeat, args=(factory, run_id, heartbeat_s, stop), daemon=True)
+    beat = threading.Thread(target=_heartbeat, args=(factory, run_id, heartbeat_s, stop, base_log, lines), daemon=True)
     beat.start()
     try:
         with factory() as work:
@@ -109,7 +125,7 @@ def process_one(
     with factory() as s:
         run = s.get(JobStageRun, run_id, with_for_update=True)
         job = s.get(ProductionJob, job_id)
-        run.log = (run.log or "") + "".join(f"{line}\n" for line in lines)
+        run.log = _joined(base_log, lines)  # the final, complete log (replaces the live writes)
         if run.state != "running":
             pass  # cancelled (or reclaimed) while running: keep that state, do not advance
         elif outcome is not None:
@@ -125,6 +141,26 @@ def process_one(
     return True
 
 
+WORKER_BEAT_S = 15
+
+
+def _worker_beat(factory: SessionFactory, worker_id: str) -> None:
+    """Tell the panel (Live page, window title) that a worker is alive."""
+    from mediafactory.db.models import SystemSetting
+
+    try:
+        with factory() as s:
+            value = {"id": worker_id, "at": utcnow().isoformat()}
+            row = s.get(SystemSetting, "worker.heartbeat")
+            if row is None:
+                s.add(SystemSetting(key="worker.heartbeat", value=value))
+            else:
+                row.value = value
+            s.commit()
+    except Exception as exc:  # never let status reporting stop the worker
+        log.debug("worker beat failed: %s", exc)
+
+
 def run_worker(
     factory: SessionFactory,
     *,
@@ -136,7 +172,11 @@ def run_worker(
     worker_id = worker_id or default_worker_id()
     limits = limits or DEFAULT_LIMITS
     log.info("worker %s started with limits %s", worker_id, limits)
+    last_beat = 0.0
     while not should_stop():
+        if time.monotonic() - last_beat >= WORKER_BEAT_S:
+            last_beat = time.monotonic()
+            _worker_beat(factory, worker_id)
         try:
             busy = process_one(factory, worker_id=worker_id, limits=limits)
         except OperationalError as exc:

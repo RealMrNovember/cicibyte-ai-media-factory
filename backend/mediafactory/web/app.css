@@ -111,3 +111,11 @@ a.btn.primary { color: var(--accent-ink); }
 .clip-tags { display: block; font-size: 10px; color: var(--accent); padding: 0 6px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .clip-tags i { color: var(--muted); font-style: normal; }
 .bg-tag { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); cursor: pointer; font-size: 12px; line-height: 1; }
+.live-mini { display: block; margin-top: 8px; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.35; }
+.live-mini.on { color: var(--ok); }
+.live-step { display: flex; align-items: center; gap: 8px; margin: 10px 0 6px; font-weight: 500; }
+.dot-live { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(111,191,142,.6); animation: livePulse 1.6s infinite; }
+@keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgba(111,191,142,.6); } 70% { box-shadow: 0 0 0 8px rgba(111,191,142,0); } 100% { box-shadow: 0 0 0 0 rgba(111,191,142,0); } }
+.live-bar { margin: 0 0 8px; height: 8px; }
+.live-bar div { transition: width .8s ease; }
+.live-log { max-height: 220px; font-size: 12px; margin: 6px 0 0; }

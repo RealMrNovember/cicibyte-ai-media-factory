@@ -10,6 +10,7 @@ def factory(engine):
     def _wipe():
         with engine.begin() as conn:
             conn.execute(text("TRUNCATE job_stage_runs, production_jobs RESTART IDENTITY CASCADE"))
+            conn.execute(text("DELETE FROM system_settings WHERE key = 'worker.heartbeat'"))  # left by run_worker
 
     _wipe()
     yield sessionmaker(bind=engine, expire_on_commit=False)

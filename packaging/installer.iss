@@ -2,7 +2,7 @@
 ; Build: packaging\build_windows.ps1  (PyInstaller app folder in dist\CiciByteMediaFactory, then this script)
 
 #define AppName "CiciByte AI Media Factory"
-#define AppVersion "0.2.1"
+#define AppVersion "0.3.0"
 #define AppExe "CiciByteMediaFactory.exe"
 
 [Setup]
@@ -12,11 +12,11 @@ AppVersion={#AppVersion}
 AppPublisher=CiciByte Technology
 AppPublisherURL=https://cicibyte.com
 AppSupportURL=https://mediafactory.cicibyte.com
-DefaultDirName={autopf}\CiciByte\Media Factory
+DefaultDirName={autopf}\CiciByte\MediaFactory
+UsePreviousAppDir=no
 DefaultGroupName=CiciByte
 DisableProgramGroupPage=yes
-PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+PrivilegesRequired=admin
 OutputDir=..\dist
 OutputBaseFilename=CiciByteMediaFactory-Setup-{#AppVersion}
 SetupIconFile=app.ico

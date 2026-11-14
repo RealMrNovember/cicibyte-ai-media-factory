@@ -7,7 +7,6 @@ next to it (the .exe is not code-signed yet, so the checksum is what proves it i
 import hashlib
 import json
 import re
-import subprocess
 import sys
 import urllib.request
 from pathlib import Path
@@ -78,9 +77,12 @@ def download(info: dict, folder: Path) -> Path:
 
 def launch_installer(path: Path) -> None:
     """Start the installer silently and detached; it closes this app, updates it and starts it again."""
-    flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-    args = [str(path), "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS"]
-    if sys.platform == "win32":
-        subprocess.Popen(args, creationflags=flags, close_fds=True)  # noqa: S603
-    else:  # pragma: no cover - the installer is Windows-only
+    params = "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS"
+    if sys.platform != "win32":  # pragma: no cover - the installer is Windows-only
         raise UpdateError("automatic install is only available on Windows")
+    import ctypes
+
+    # The app lives in Program Files, so the installer needs administrator rights: ask through UAC ("runas").
+    rc = ctypes.windll.shell32.ShellExecuteW(None, "runas", str(path), params, None, 1)  # type: ignore[attr-defined]
+    if rc <= 32:
+        raise UpdateError("the installer could not be started (administrator permission was not given)")
