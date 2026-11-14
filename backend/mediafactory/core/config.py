@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     session_ttl_hours: int = 72
     # Peers whose X-Forwarded-For / X-Forwarded-Proto headers are trusted (IPs or CIDRs, or "*").
     trusted_proxies: list[str] = Field(default_factory=lambda: ["127.0.0.1"])
+    # Host names source fetching may reach even though they resolve to private addresses.
+    fetch_allowlist: list[str] = Field(default_factory=list)
 
     @field_validator("secret_key")
     @classmethod
