@@ -3,16 +3,17 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from mediafactory.ai.client import ProviderError, list_models
+from mediafactory.api.db_utils import save_unique
 from mediafactory.api.deps import client_ip, get_db, require_admin
 from mediafactory.audit.service import record_audit
 from mediafactory.core.crypto import encrypt
 from mediafactory.db.models import AIProvider, User
 
 router = APIRouter(prefix="/api/providers", tags=["providers"])
+CONFLICT = "a provider with this name already exists"
 
 DEFAULT_TIMEOUT = {"local": 600, "remote": 120}
 
@@ -59,14 +60,6 @@ def _get(db: Session, pid: int) -> AIProvider:
     return p
 
 
-def _flush(db: Session) -> None:
-    try:
-        db.flush()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="a provider with this name already exists") from None
-
-
 @router.get("")
 def list_providers(db: Session = Depends(get_db, scope="function"), user: User = Depends(require_admin)) -> dict:
     return {"items": [out(p) for p in db.scalars(select(AIProvider).order_by(AIProvider.id)).all()]}
@@ -86,8 +79,7 @@ def create_provider(
         max_concurrency=body.max_concurrency,
         enabled=body.enabled,
     )
-    db.add(p)
-    _flush(db)
+    save_unique(db, lambda: db.add(p), CONFLICT)
     record_audit(
         db, actor_id=user.id, action="provider.create", target_type="ai_provider", target_id=str(p.id),
         details=body.model_dump(), ip=client_ip(request),
@@ -101,12 +93,14 @@ def update_provider(
 ) -> dict:
     p = _get(db, pid)
     changes = body.model_dump(exclude_unset=True)
-    for key, value in changes.items():
-        if key == "api_key":
-            p.api_key_enc = encrypt(value) if value else None
-        elif value is not None:
-            setattr(p, key, value)
-    _flush(db)
+    def apply() -> None:
+        for key, value in changes.items():
+            if key == "api_key":
+                p.api_key_enc = encrypt(value) if value else None
+            elif value is not None:
+                setattr(p, key, value)
+
+    save_unique(db, apply, CONFLICT)
     record_audit(
         db, actor_id=user.id, action="provider.update", target_type="ai_provider", target_id=str(p.id),
         details=changes, ip=client_ip(request),

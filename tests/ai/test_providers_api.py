@@ -93,3 +93,19 @@ def test_editor_cannot_manage_providers(client, make_user):
     make_user(email="ed@example.com", role="editor")
     login(client, email="ed@example.com")
     assert client.post("/api/providers", json=NEW, headers=csrf_headers(client)).status_code == 403
+
+
+def test_duplicate_name_keeps_session_usable(client, make_user):
+    h = admin(client, make_user)
+    client.post("/api/providers", json=NEW, headers=h)
+    assert client.post("/api/providers", json=NEW, headers=h).status_code == 409
+    assert client.get("/api/auth/me").status_code == 200
+
+
+def test_rename_conflict_409_keeps_original(client, make_user):
+    h = admin(client, make_user)
+    client.post("/api/providers", json=NEW, headers=h)
+    other = client.post("/api/providers", json={**NEW, "name": "other"}, headers=h).json()["id"]
+    assert client.patch(f"/api/providers/{other}", json={"name": "router"}, headers=h).status_code == 409
+    names = sorted(p["name"] for p in client.get("/api/providers").json()["items"])
+    assert names == ["other", "router"]

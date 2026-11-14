@@ -1,15 +1,16 @@
 from collections.abc import Iterator
 from typing import Literal
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from pydantic import BaseModel, Field
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from mediafactory.api.deps import client_ip, get_db, require_user
 from mediafactory.audit.service import record_audit
 from mediafactory.core.config import get_settings
 from mediafactory.core.net import SafeFetcher
-from mediafactory.db.models import SourceItem, User
+from mediafactory.db.models import SourceItem, SourceRightsRecord, User
 from mediafactory.db.models.sources import RIGHTS_STATUSES
 from mediafactory.sources.adapters import RawItem
 from mediafactory.sources.ingest import store_items
@@ -48,6 +49,100 @@ def item_out(item: SourceItem, *, full: bool = False) -> dict:
         "chars": len(text),
         "text": text if full else text[:400],
     }
+
+
+def _get_item(db: Session, iid: int) -> SourceItem:
+    item = db.get(SourceItem, iid)
+    if item is None:
+        raise HTTPException(status_code=404, detail="item not found")
+    return item
+
+
+@router.get("")
+def list_items(
+    status: str | None = None,
+    rights: str | None = None,
+    source_id: int | None = None,
+    q: str | None = Query(default=None, max_length=200),
+    limit: int = Query(50, ge=1, le=200),
+    before_id: int | None = None,
+    db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:
+    query = select(SourceItem).order_by(SourceItem.id.desc()).limit(limit)
+    if status:
+        query = query.where(SourceItem.processing_status == status)
+    if rights:
+        query = query.where(SourceItem.rights_status == rights)
+    if source_id is not None:
+        query = query.where(SourceItem.source_id == source_id)
+    if q:
+        pattern = f"%{q}%"
+        query = query.where(or_(SourceItem.title.ilike(pattern), SourceItem.normalized_text.ilike(pattern)))
+    if before_id is not None:
+        query = query.where(SourceItem.id < before_id)
+    return {"items": [item_out(i) for i in db.scalars(query).all()]}
+
+
+@router.get("/{iid}")
+def get_item(iid: int, db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)) -> dict:
+    item = _get_item(db, iid)
+    history = db.scalars(
+        select(SourceRightsRecord).where(SourceRightsRecord.item_id == iid).order_by(SourceRightsRecord.id)
+    ).all()
+    return {
+        "item": item_out(item, full=True),
+        "rights_history": [
+            {"from_status": r.from_status, "to_status": r.to_status, "note": r.note, "actor_id": r.actor_id,
+             "at": r.at.isoformat()}  # fmt: skip
+            for r in history
+        ],
+    }
+
+
+class StatusIn(BaseModel):
+    processing_status: Literal["discovered", "rejected", "archived"]
+
+
+@router.patch("/{iid}")
+def update_item_status(
+    iid: int, body: StatusIn, request: Request, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    item = _get_item(db, iid)
+    previous = item.processing_status
+    item.processing_status = body.processing_status
+    record_audit(
+        db, actor_id=user.id, action="item.status", target_type="source_item", target_id=str(iid),
+        details={"from": previous, "to": body.processing_status}, ip=client_ip(request),
+    )  # fmt: skip
+    return {"item": item_out(item)}
+
+
+class RightsIn(BaseModel):
+    rights_status: RightsStatus
+    note: str | None = Field(default=None, max_length=1000)
+    attribution_required: bool | None = None
+
+
+@router.post("/{iid}/rights")
+def change_rights(
+    iid: int, body: RightsIn, request: Request, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    item = _get_item(db, iid)
+    previous = item.rights_status
+    item.rights_status = body.rights_status
+    if body.attribution_required is not None:
+        item.attribution_required = body.attribution_required
+    db.add(SourceRightsRecord(item_id=iid, from_status=previous, to_status=body.rights_status, note=body.note,
+                              actor_id=user.id))  # fmt: skip
+    record_audit(
+        db, actor_id=user.id, action="item.rights", target_type="source_item", target_id=str(iid),
+        details={"from": previous, "to": body.rights_status, "note": body.note}, ip=client_ip(request),
+    )  # fmt: skip
+    db.flush()
+    return {"item": item_out(item)}
 
 
 class ManualIn(BaseModel):
