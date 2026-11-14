@@ -109,6 +109,26 @@ def test_model_stays_loaded_between_requests(tmp_path, monkeypatch):
         tts.chatterbox_shutdown()
 
 
+def test_short_keep_and_low_memory_release_the_model(tmp_path, monkeypatch):
+    import time
+
+    _fake_chatterbox(tmp_path, monkeypatch)
+    monkeypatch.setattr(tts._SERVER, "REAP_S", 0.05)
+    try:
+        tts.chatterbox_request({"text": "a", "language": "tr", "out": str(tmp_path / "1.wav")}, keep_s=0.2)
+        assert tts._SERVER.proc is not None
+        time.sleep(1.5)
+        assert tts._SERVER.proc is None  # a preview gives the memory back quickly
+        tts.chatterbox_request({"text": "a", "language": "tr", "out": str(tmp_path / "1.wav")})  # default: long keep
+        time.sleep(0.5)
+        assert tts._SERVER.proc is not None
+        monkeypatch.setattr(tts, "low_memory", lambda: True)
+        time.sleep(1.5)
+        assert tts._SERVER.proc is None  # released when the machine runs short of memory
+    finally:
+        tts.chatterbox_shutdown()
+
+
 def test_cloned_voice_sends_its_reference(data, monkeypatch):
     c = clones.add_clone(data, "me.wav", io.BytesIO(_tone_bytes(6)), label="x", consent=True)
     _fake_chatterbox(data, monkeypatch)

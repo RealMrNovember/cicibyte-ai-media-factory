@@ -160,7 +160,7 @@ def change_speed(wav: Path, speed: float) -> None:
 
 def synthesize_voice(
     voice_id: str, language: str, text: str, out_wav: Path, *, models_dir: Path, speed: float = 1.0,
-    timeout: int = 1800,
+    timeout: int = 1800, keep_s: float | None = None,
 ) -> float:  # fmt: skip
     """Speak `text` with the chosen catalog voice (any engine); returns the audio length in seconds."""
     vid = voice_for(language, voice_id)
@@ -172,7 +172,7 @@ def synthesize_voice(
         ref = clones.clone_path(clones.data_dir(), vid)
         if ref is not None:
             req["reference"] = str(ref)
-        chatterbox_request(req, timeout=timeout)
+        chatterbox_request(req, timeout=timeout, keep_s=keep_s)
         change_speed(out_wav, speed)
         return wav_seconds(out_wav)
     return synthesize(text, ensure_voice(language, models_dir, vid), out_wav, length_scale=1.0 / speed)
@@ -183,8 +183,10 @@ class _ChatterboxServer:
     It answers one JSON line per request, and is stopped after IDLE_S without work to give the memory back."""
 
     IDLE_S = 600
+    REAP_S = 15.0
 
     def __init__(self) -> None:
+        self.keep_s: float = self.IDLE_S
         self.lock = threading.Lock()
         self.proc: subprocess.Popen | None = None
         self.lines: queue.Queue = queue.Queue()
@@ -215,9 +217,9 @@ class _ChatterboxServer:
 
     def _reaper(self, proc: subprocess.Popen) -> None:
         while proc.poll() is None:
-            time.sleep(15)
-            with self.lock:
-                if self.proc is proc and time.monotonic() - self.last_used > self.IDLE_S:
+            time.sleep(self.REAP_S)
+            with self.lock:  # held during a request, so a busy server is never stopped
+                if self.proc is proc and (time.monotonic() - self.last_used > self.keep_s or low_memory()):
                     self._stop()
                     return
 
@@ -231,10 +233,11 @@ class _ChatterboxServer:
         except Exception:  # noqa: BLE001
             proc.kill()
 
-    def request(self, req: dict, timeout: float) -> dict:
+    def request(self, req: dict, timeout: float, keep_s: float | None = None) -> dict:
         with self.lock:
             if self.proc is None or self.proc.poll() is not None:
                 self._start()
+            self.keep_s = self.IDLE_S if keep_s is None else keep_s
             self.last_used = time.monotonic()
             deadline = time.monotonic() + timeout
             try:
@@ -270,9 +273,23 @@ class _ChatterboxServer:
 _SERVER = _ChatterboxServer()
 
 
-def chatterbox_request(req: dict, *, timeout: float = 1800) -> dict:
-    """Synthesise one request with the shared Chatterbox server (started on first use)."""
-    return _SERVER.request(req, timeout)
+LOW_MEMORY_MB = 1500
+
+
+def low_memory() -> bool:
+    """True when the machine has less than LOW_MEMORY_MB available (Linux; elsewhere never)."""
+    try:
+        with open("/proc/meminfo", encoding="ascii") as f:
+            info = dict(ln.split(":", 1) for ln in f if ":" in ln)
+        return int(info["MemAvailable"].split()[0]) // 1024 < LOW_MEMORY_MB
+    except (OSError, KeyError, ValueError):
+        return False
+
+
+def chatterbox_request(req: dict, *, timeout: float = 1800, keep_s: float | None = None) -> dict:
+    """Synthesise one request with the shared Chatterbox server (started on first use). It stays loaded for
+    keep_s seconds afterwards (default IDLE_S), or until memory runs low."""
+    return _SERVER.request(req, timeout, keep_s)
 
 
 def chatterbox_shutdown() -> None:

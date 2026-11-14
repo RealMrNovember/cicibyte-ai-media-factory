@@ -18,6 +18,7 @@ from mediafactory.pipeline.tts import (
 )  # fmt: skip
 
 router = APIRouter(prefix="/api/voices", tags=["voices"])
+PREVIEW_KEEP_S = 90  # the API keeps Chatterbox only briefly: the worker needs the memory for videos
 
 SAMPLE = {
     "en": "It was three in the morning when I heard the attic door open. Slowly. By itself.",
@@ -92,7 +93,8 @@ def preview(body: PreviewIn, user: User = Depends(require_user)):
         out.parent.mkdir(parents=True, exist_ok=True)
         try:
             tmp = out.with_suffix(".tmp.wav")
-            synthesize_voice(body.voice, language, SAMPLE[language], tmp, models_dir=data / "models", speed=body.speed)
+            synthesize_voice(body.voice, language, SAMPLE[language], tmp, models_dir=data / "models", speed=body.speed,
+                             keep_s=PREVIEW_KEEP_S)  # fmt: skip
             shift_pitch(tmp, body.pitch)
             tmp.replace(out)
         except Exception as exc:
