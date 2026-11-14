@@ -1,7 +1,7 @@
 """foundation
 
 Revision ID: 0001
-Revises: 
+Revises:
 Create Date: 2026-11-14 05:49:23.402666
 """
 from collections.abc import Sequence
