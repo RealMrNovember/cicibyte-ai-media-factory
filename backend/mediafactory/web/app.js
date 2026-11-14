@@ -115,7 +115,9 @@ function bindAppUpdate() {
   const b = document.getElementById("appUpdate");
   b && b.addEventListener("click", async () => {
     b.disabled = true; b.textContent = t("appUpdating");
-    const r = await fetch("/desktop/update", { method: "POST", headers: { "X-MF-Client": "panel" } });
+    let r;
+    try { r = await fetch("/desktop/update", { method: "POST", headers: { "X-MF-Client": "panel" } }); }
+    catch { return toast(t("appRestarting")); }  // the app closes itself to install: a dropped connection is expected
     const d = await r.json().catch(() => ({}));
     if (!r.ok) { b.disabled = false; b.textContent = t("appUpdateNow"); return toast(d.detail || r.statusText, true); }
     toast(t("appRestarting"));

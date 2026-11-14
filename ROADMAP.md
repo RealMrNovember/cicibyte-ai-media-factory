@@ -1,6 +1,6 @@
 # CiciByte AI Media Factory: Yol Haritası
 
-**Son güncelleme:** 14 Kasım 2026 · **Sürüm:** 0.1.0 önizleme (`main`)
+**Son güncelleme:** 14 Kasım 2026 · **Sürüm:** 0.2.1 (`main`) · [Sürümler](https://github.com/RealMrNovember/cicibyte-ai-media-factory/releases)
 **İlgili belgeler:** [Tasarım](docs/superpowers/specs/2026-11-14-media-factory-design.md) · [Ürün şartnamesi](docs/PROJECT_SPEC.md) · [Kaynak ve hak politikası](docs/SOURCE_RIGHTS.md) · [Kurulum](docs/DEPLOYMENT.md)
 **Site:** https://mediafactory.cicibyte.com
 
@@ -28,10 +28,11 @@
 | 4 | Panel (tr/en) + Stüdyo | ✅ |
 | 5 | YouTube: kanal bağlama, yükleme, zamanlı yayın + Takvim | ✅ kod · 🟡 gerçek kanalla denenmedi |
 | 6 | Windows uygulaması ve kurulum sihirbazı | ✅ · Mac/Linux paketleri ⬜ |
-| — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
+| — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor, GitHub'dan kendini güncelliyor |
+| 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 294 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 313 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -115,6 +116,23 @@
 - Panel sunucudan yükleniyor (arayüz güncellemeleri için yeniden kurulum gerekmez); sunucuya ulaşılamazsa uygulamadaki kopya kullanılıyor. Sunucu adresi Ayarlar'dan değiştirilebiliyor. Google girişi gibi sayfalar sistem tarayıcısında açılıyor.
 - Derleme: `packaging/build_windows.ps1`.
 
+### Plan 7: Otomatik güncelleme ve taşıma
+- **Sunucu:**
+  - systemd zamanlayıcısıyla 30 dakikada bir GitHub `main` kontrol ediliyor. Yeni commit varsa kurulum, veritabanı geçişi, yeniden başlatma ve sağlık kontrolü yapılıyor; sağlık kontrolü geçmezse önceki commit'e dönülüyor.
+  - Video üretilirken güncelleme bekliyor.
+  - Ayarlar → Güncellemeler'de sürüm, durum, kayıt, otomatik açma/kapama ve "Şimdi güncelle" var.
+  - Docker kurulumları için de çalışıyor (`MF_UPDATE_MODE=docker`).
+  - Gerçek deneme: sunucu 202a638'den 7adc246'ya yaklaşık 8 sn'de geçti.
+- **Masaüstü:**
+  - GitHub Releases'teki son sürüm kontrol ediliyor; panelde "Şimdi güncelle" şeridi çıkıyor.
+  - Kurulum dosyası yalnızca bu deponun sürümlerinden ve SHA-256 eşleşirse kabul ediliyor; sessiz kurulumdan sonra uygulama yeniden açılıyor.
+  - Gerçek deneme: v0.2.0 kendini v0.2.1'e güncelledi.
+- **Yedekle ve taşı:**
+  - AI sağlayıcıları ve anahtarlar, görev rotaları, kaynaklar, takvimler, YouTube ve Reddit tek dosyaya aktarılıyor.
+  - Anahtarlar yalnızca parolayla ve şifreli dahil ediliyor (PBKDF2 + Fernet).
+  - İçe aktarma isimle birleştiriyor, hiçbir şeyi silmiyor.
+- **Masaüstünden dosya indirme** (video, kapak, ayar dosyası) düzeltildi.
+
 ### Dağıtım (DL380)
 - **CT 175 `mediafactory`:** Debian 13; PostgreSQL 17, ffmpeg, yazı tipleri; systemd servisleri `mf-api` ve `mf-worker`.
 - Tailscale'de `mediafactory` adıyla görünüyor; uygulama `http://mediafactory:8080` adresine bağlanıyor.
@@ -131,7 +149,8 @@
 - [ ] **Gerçek YouTube denemesi:** Google OAuth istemcisi oluşturulup kanal bağlanacak, ilk video gönderilecek. **Senin yapman gereken bir adım.** Google'ın doğrulanmamış uygulamalardan yüklenen videoları gizliye kilitleme durumu kontrol edilecek.
 - [ ] **Arka plan klipleri:** Kütüphaneye ilk Minecraft/parkur kliplerinin (lisanslı) yüklenmesi.
 - [ ] **Reddit erişimi:** Reddit, kimliksiz RSS isteklerini sunucunun IP'sinden engelliyor (403/429). Ayarlar → Reddit'e resmî API uygulamasının bilgileri girilince bütün Reddit kaynakları otomatik olarak API'ye geçer. **Senin yapman gereken bir adım** (reddit.com/prefs/apps → "script" uygulaması).
-- [ ] **GitHub Releases:** Kurulum dosyasının sürüm olarak yayınlanması.
+- [x] **GitHub Releases:** v0.2.0 ve v0.2.1 yayında; masaüstü uygulaması buradan güncelleniyor.
+- [ ] **Otopilot:** "Her X saatte bir rastgele konu ve hikâye seç → video → YouTube'da yayınla" tam otomatik zamanlama.
 
 ### Üretim kalitesi (Plan 3'ün devamı)
 - [x] faster-whisper ile gerçek kelime hizalaması.
@@ -193,9 +212,10 @@
 
 ## Sıradaki adım
 
-1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
-3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+1. Otopilot zamanlaması (her X saatte üret ve yayınla).
+2. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
+3. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
+4. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 

@@ -61,6 +61,32 @@ Videos can be sent from **Ready videos** (now or at a chosen time; YouTube publi
 or by a publishing schedule under **Schedule**. Google may keep videos uploaded by an unverified app private
 until the app passes Google's audit.
 
+## Automatic updates
+
+Turn them on once (as root, from the repository checkout):
+
+```bash
+sudo bash deploy/update/install-autoupdate.sh                         # bare metal (systemd)
+sudo MF_UPDATE_MODE=docker bash deploy/update/install-autoupdate.sh   # docker compose
+```
+
+Every 30 minutes the server checks the `main` branch on GitHub. When there is a new commit it installs it, runs
+the database migrations, restarts the services and checks `/api/health`. If the new version does not come up
+healthy it goes back to the previous commit. Updates wait while a video is being produced.
+**Settings → Updates** shows the running version, the latest commit, the status and the log, and lets you turn
+automatic updates off or press **Check & update now**.
+
+The desktop app updates itself from GitHub Releases: when a newer release exists, a banner offers **Update now**.
+The installer is only accepted from this repository's releases and only when its SHA-256 matches the published
+`.sha256` file.
+
+## Moving settings to another computer
+
+**Settings → Backup & move → Export settings** writes AI providers (with keys), task routes, sources, schedules,
+YouTube and Reddit settings to a JSON file. Keys are only included when you set a password; they are encrypted
+with it. On the other computer or server use **Import** with the same password. Import adds and updates by
+name and never deletes. Videos, clips and music are not part of the file.
+
 ## Source collection
 
 The worker collects enabled sources on their own schedule (default every 60 minutes; failing sources back
