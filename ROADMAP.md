@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 288 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 294 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -56,12 +56,17 @@
 - **RSS tam metin:** Yalnızca özet veren beslemelerde makale sayfasından tam metin çekiliyor (robots.txt'e uyularak). En kısa uzunluk filtresi ve RSS 1.0/RDF desteği var.
 - **Reddit:** Reddit kimlik bilgisi girilince Reddit RSS kaynakları otomatik olarak resmî API'yi kullanıyor. Reddit istekleri arası 10 sn.
 - Gelen Kutusu ve Stüdyo'da dil filtresi (Tümü / English / Türkçe).
+- **Konu filtresi:** Her hikâyenin konusu kaynağından geliyor. Konular: korku, dram, bilim, tarih, haber…; elle ve AI ile eklenenler "Elle / AI ile" altında. Stüdyo'da sayılarıyla konu çipleri ve kaynak seçici var.
+- **Kaynak açma/kapama:** Kaynaklar sayfasında her kaynak için anahtar var; kapalı kaynak toplanmıyor, açılınca hemen sıraya giriyor.
 
 ### Plan 3: Üretim hattı (çekirdek)
 - **Senaryo:** Bağlı AI ile özgün senaryo (hook, gelişme, twist, takip çağrısı); başlık, açıklama ve etiketler. Bozuk JSON'a dayanıklı ayrıştırma.
 - **Ses (ses seçici):**
   - Piper ile İngilizcede 18 ses: erkek ve kadın; Amerikan, İngiliz ve İskoç aksanı; bazıları yüksek kalite.
   - Türkçede Piper'ın tek sesi (`dfki`) var. Çeşitlilik hız (0.8–1.3×) ve ton (−4…+4 yarım ton, süre korunarak) ile sağlanıyor.
+  - **Chatterbox Multilingual** (Resemble AI, MIT lisansı): çok daha doğal Türkçe ve İngilizce ses. Ayrı bir sanal ortamda çalışıyor (`MF_CHATTERBOX_PYTHON`); kurulu değilse seçeneklerde görünmüyor.
+    - CPU'da yavaş: sesin süresinin yaklaşık 9 katı (40 sn'lik ses ≈ 6 dk). Toplu ve takvimli üretim için uygun.
+    - Çıktılara Resemble'ın PerTh filigranı gömülü.
   - Stüdyo'da dil başına ses seçimi ve "Dinle" önizlemesi var; önizlemeler önbelleğe alınıyor. Takvim, Stüdyo'daki sesi kullanabiliyor.
   - Ses modelleri ilk kullanımda indiriliyor (60–120 MB).
 - **Altyazı:**
@@ -134,7 +139,8 @@
 - [ ] Script Doctor öz-değerlendirme döngüsü (AI'ın kendi senaryosunu puanlayıp iyileştirmesi).
 - [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
 - [x] Ses seçimi, hız ve ton ayarı (Stüdyo ve Takvim).
-- [ ] Daha doğal sesler: Kokoro (İngilizce), XTTS / F5-TTS gibi Türkçe destekli modeller; telaffuz sözlüğü.
+- [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
+- [ ] Chatterbox'ı hızlandırma (GPU ya da kalıcı model süreci), kendi sesinle klonlama (referans ses yükleme), telaffuz sözlüğü.
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [x] Kapak görseli ve kalite kontrolü.
@@ -188,7 +194,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Daha doğal sesler (özellikle Türkçe).
+2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
 3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---

@@ -14,7 +14,7 @@ def test_catalog_has_both_languages_and_valid_defaults():
     assert langs == {"en", "tr"}
     for lang, vid in tts.DEFAULT_VOICE.items():
         assert tts.VOICE_CATALOG[vid]["language"] == lang
-    assert all(v["gender"] in ("male", "female") for v in tts.VOICE_CATALOG.values())
+    assert all(v["gender"] in ("male", "female", "neutral") for v in tts.VOICE_CATALOG.values())
 
 
 def test_voice_for_language_falls_back_to_default():
@@ -69,3 +69,48 @@ def test_make_passes_voice_settings(client, db):
     assert client.post(f"/api/items/{it.id}/make", json=body, headers=H).status_code == 201
     run = db.scalar(select(JobStageRun).order_by(JobStageRun.id.desc()).limit(1))
     assert run.inputs["voice"] == {"en": "en_GB-cori-high", "tr": "tr_TR-dfki-medium", "speed": 0.9, "pitch": -2}
+
+
+def test_chatterbox_hidden_unless_installed(client, monkeypatch):
+    monkeypatch.delenv("MF_CHATTERBOX_PYTHON", raising=False)
+    ids = {v["id"] for v in client.get("/api/voices").json()["voices"]}
+    assert "tr-chatterbox" not in ids
+    assert tts.voice_for("tr", "tr-chatterbox") == "tr_TR-dfki-medium"  # falls back when not installed
+
+
+def test_chatterbox_engine_runs_worker_and_applies_speed(tmp_path, monkeypatch):
+    """A fake 'chatterbox python' stands in for the real virtualenv: it writes a 2 s WAV like the worker would."""
+    import sys
+
+    fake = tmp_path / "fake_worker_python.py"
+    fake.write_text(
+        "import json, sys, wave\n"
+        "req = json.loads(sys.stdin.read())\n"
+        "w = wave.open(req['out'], 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)\n"
+        "w.writeframes(bytes(2) * 48000); w.close()\n"
+        "print(json.dumps({'ok': True, 'seconds': 2.0}))\n",
+        encoding="utf-8",
+    )
+    launcher = tmp_path / ("py.cmd" if sys.platform == "win32" else "py.sh")
+    if sys.platform == "win32":
+        launcher.write_text(f'@"{sys.executable}" "{fake}"\n', encoding="utf-8")
+    else:
+        launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{fake}"\n', encoding="utf-8")
+        launcher.chmod(0o755)
+    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", str(launcher))
+    monkeypatch.setattr(tts, "WORKER", fake)  # the launcher ignores it; keeps the call shape real
+    assert tts.voice_for("tr", "tr-chatterbox") == "tr-chatterbox"
+    out = tmp_path / "v.wav"
+    secs = tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", out, models_dir=tmp_path, speed=1.25)
+    assert abs(secs - 1.6) < 0.1  # 2 s sped up 1.25x
+
+
+def test_chatterbox_failure_is_reported(tmp_path, monkeypatch):
+    import sys
+
+    bad = tmp_path / "bad.py"
+    bad.write_text("import json; print(json.dumps({'ok': False, 'error': 'model download failed'}))\n", encoding="utf-8")
+    monkeypatch.setenv("MF_CHATTERBOX_PYTHON", sys.executable)
+    monkeypatch.setattr(tts, "WORKER", bad)
+    with pytest.raises(RuntimeError, match="model download failed"):
+        tts.synthesize_voice("tr-chatterbox", "tr", "Merhaba.", tmp_path / "x.wav", models_dir=tmp_path)

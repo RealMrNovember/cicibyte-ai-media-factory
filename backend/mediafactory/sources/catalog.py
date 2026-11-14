@@ -141,3 +141,16 @@ CATALOG: list[CatalogSource] = [
 
 BY_KEY = {s.key: s for s in CATALOG}
 assert len(BY_KEY) == len(CATALOG), "duplicate catalog keys"
+
+
+def _identity(adapter: str, params: dict) -> tuple[str, str]:
+    kind = "reddit" if adapter.startswith("reddit") else adapter
+    return kind, str(params.get("subreddit") or params.get("url") or "").lower()
+
+
+_CATEGORY_BY_IDENTITY = {_identity(s.adapter, s.params): s.category for s in CATALOG}
+
+
+def category_for(adapter: str, params: dict | None) -> str:
+    """Topic of a source: its catalog category, or "other" for sources added by hand."""
+    return _CATEGORY_BY_IDENTITY.get(_identity(adapter, params or {}), "other")

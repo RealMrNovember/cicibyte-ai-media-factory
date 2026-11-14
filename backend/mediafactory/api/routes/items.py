@@ -34,9 +34,16 @@ def get_fetcher() -> Iterator[SafeFetcher]:
         fetcher.close()
 
 
-def item_out(item: SourceItem, *, full: bool = False) -> dict:
+def item_out(item: SourceItem, *, full: bool = False, source: tuple[str, str] | None = None) -> dict:
+    """`source` is (name, topic) of the item's connector when known."""
     text = item.normalized_text or ""
+    if item.source_type == "manual" or item.source_id is None:
+        source_name, category = None, "manual"
+    else:
+        source_name, category = source or (None, "other")
     return {
+        "category": category,
+        "source_name": source_name,
         "id": item.id,
         "source_id": item.source_id,
         "source_type": item.source_type,
@@ -69,6 +76,7 @@ def list_items(
     source_id: int | None = None,
     q: str | None = Query(default=None, max_length=200),
     language: str | None = Query(default=None, max_length=8),
+    category: str | None = Query(default=None, max_length=20),
     limit: int = Query(50, ge=1, le=200),
     before_id: int | None = None,
     db: Session = Depends(get_db, scope="function"),
@@ -85,12 +93,54 @@ def list_items(
         query = query.where(SourceItem.rights_status == rights)
     if source_id is not None:
         query = query.where(SourceItem.source_id == source_id)
+    sources = _source_topics(db)
+    if category == "manual":
+        query = query.where(SourceItem.source_type == "manual")
+    elif category:
+        ids = [sid for sid, (_, cat) in sources.items() if cat == category]
+        query = query.where(SourceItem.source_type != "manual", SourceItem.source_id.in_(ids or [-1]))
     if q:
         pattern = f"%{q}%"
         query = query.where(or_(SourceItem.title.ilike(pattern), SourceItem.normalized_text.ilike(pattern)))
     if before_id is not None:
         query = query.where(SourceItem.id < before_id)
-    return {"items": [item_out(i) for i in db.scalars(query).all()]}
+    return {"items": [item_out(i, source=sources.get(i.source_id)) for i in db.scalars(query).all()]}
+
+
+def _source_topics(db: Session) -> dict[int, tuple[str, str]]:
+    from mediafactory.db.models import SourceConnector
+    from mediafactory.sources.catalog import category_for
+
+    return {c.id: (c.name, category_for(c.adapter, c.params)) for c in db.scalars(select(SourceConnector))}
+
+
+@router.get("/topics")
+def item_topics(
+    language: str | None = Query(default=None, max_length=8), status: str | None = Query(default=None, max_length=16),
+    db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    """How many stories each topic and each source has (for the Studio filters)."""
+    from sqlalchemy import func
+
+    q = select(SourceItem.source_id, SourceItem.source_type, func.count()).group_by(SourceItem.source_id, SourceItem.source_type)
+    if language == "en":
+        q = q.where(or_(SourceItem.language == "en", SourceItem.language.is_(None)))
+    elif language:
+        q = q.where(SourceItem.language == language)
+    if status:
+        q = q.where(SourceItem.processing_status == status)
+    sources = _source_topics(db)
+    topics: dict[str, int] = {}
+    per_source = []
+    for sid, stype, n in db.execute(q):
+        if stype == "manual" or sid is None:
+            topics["manual"] = topics.get("manual", 0) + n
+            continue
+        name, cat = sources.get(sid, (f"#{sid}", "other"))
+        topics[cat] = topics.get(cat, 0) + n
+        per_source.append({"id": sid, "name": name, "category": cat, "count": n})
+    return {"topics": [{"key": k, "count": v} for k, v in sorted(topics.items(), key=lambda kv: -kv[1])],
+            "sources": sorted(per_source, key=lambda s: -s["count"])}  # fmt: skip
 
 
 @router.get("/{iid}")

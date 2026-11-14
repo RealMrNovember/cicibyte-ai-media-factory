@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from mediafactory.api.deps import require_user
 from mediafactory.core.config import get_settings
 from mediafactory.db.models import User
-from mediafactory.pipeline.tts import DEFAULT_VOICE, VOICE_CATALOG, ensure_voice, shift_pitch, synthesize
+from mediafactory.pipeline.tts import DEFAULT_VOICE, VOICE_CATALOG, available, shift_pitch, synthesize_voice
 
 router = APIRouter(prefix="/api/voices", tags=["voices"])
 
@@ -24,7 +24,7 @@ SAMPLE = {
 def list_voices(user: User = Depends(require_user)) -> dict:
     data = Path(get_settings().data_dir) / "models" / "piper"
     voices = [{k: v for k, v in voice.items() if k != "path"} | {"downloaded": (data / f"{voice['id']}.onnx").exists()}
-              for voice in VOICE_CATALOG.values()]  # fmt: skip
+              for voice in VOICE_CATALOG.values() if available(voice)]  # fmt: skip
     return {"voices": voices, "defaults": DEFAULT_VOICE}
 
 
@@ -38,7 +38,7 @@ class PreviewIn(BaseModel):
 def preview(body: PreviewIn, user: User = Depends(require_user)):
     """A short sample in this voice (downloads the voice the first time; cached afterwards)."""
     voice = VOICE_CATALOG.get(body.voice)
-    if voice is None:
+    if voice is None or not available(voice):
         raise HTTPException(status_code=404, detail="unknown voice")
     data = Path(get_settings().data_dir)
     key = hashlib.sha256(f"{body.voice}|{body.speed:.2f}|{body.pitch}".encode()).hexdigest()[:20]
@@ -46,9 +46,9 @@ def preview(body: PreviewIn, user: User = Depends(require_user)):
     if not out.exists():
         out.parent.mkdir(parents=True, exist_ok=True)
         try:
-            path = ensure_voice(voice["language"], data / "models", body.voice)
             tmp = out.with_suffix(".tmp.wav")
-            synthesize(SAMPLE[voice["language"]], path, tmp, length_scale=1.0 / body.speed)
+            synthesize_voice(body.voice, voice["language"], SAMPLE[voice["language"]], tmp, models_dir=data / "models",
+                             speed=body.speed)  # fmt: skip
             shift_pitch(tmp, body.pitch)
             tmp.replace(out)
         except Exception as exc:

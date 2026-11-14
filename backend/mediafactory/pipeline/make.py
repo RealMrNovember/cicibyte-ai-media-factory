@@ -16,7 +16,7 @@ from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
 from mediafactory.pipeline.thumbnail import make_thumbnail
 from mediafactory.pipeline.script import generate_script
-from mediafactory.pipeline.tts import ensure_voice, shift_pitch, synthesize, voice_for, wav_seconds
+from mediafactory.pipeline.tts import shift_pitch, synthesize_voice, voice_for, wav_seconds
 from mediafactory.pipeline.voice import VoiceSettings
 
 
@@ -44,9 +44,9 @@ def make_short(
 
     vs = VoiceSettings(**(voice or {}))
     voice_id = voice_for(language, getattr(vs, language, None))
-    log(f"[2/4] voice (Piper {voice_id}, speed {vs.speed:g}x, pitch {vs.pitch:+d})")
-    voice_path = ensure_voice(language, data_dir / "models", voice_id)
-    duration = synthesize(script["narration"], voice_path, out / "voice.wav", length_scale=vs.length_scale)
+    log(f"[2/4] voice ({voice_id}, speed {vs.speed:g}x, pitch {vs.pitch:+d})")
+    duration = synthesize_voice(voice_id, language, script["narration"], out / "voice.wav", models_dir=data_dir / "models",
+                                speed=vs.speed)  # fmt: skip
     if vs.pitch:
         shift_pitch(out / "voice.wav", vs.pitch)
         duration = wav_seconds(out / "voice.wav")

@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    settings: "Settings", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
+    settings: "Settings", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
     lastRun: "Last run", status: "Status", error: "Error", make: "Make video", makeTitle: "Make a Short",
@@ -20,7 +20,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    settings: "Ayarlar", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
+    settings: "Ayarlar", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
     lastRun: "Son çalışma", status: "Durum", error: "Hata", make: "Video üret", makeTitle: "Shorts üret",
@@ -137,7 +137,7 @@ async function sources(el) {
   const data = await api("/api/sources");
   const rows = data.items.map((s) => `<tr>
       <td><b>${esc(s.name)}</b><div class="muted small">${esc(s.adapter)} · ${esc(s.params.subreddit || s.params.url || "")}</div></td>
-      <td>${s.enabled ? `<span class="pill ok">${t("enabled")}</span>` : `<span class="pill">off</span>`}</td>
+      <td><label class="switch" title="${s.enabled ? t("enabled") : t("disabledSrc")}"><input type="checkbox" data-toggle-src="${s.id}" ${s.enabled ? "checked" : ""}><span></span></label></td>
       <td class="small">${when(s.last_run_at)}<div class="muted">${s.items_total} ${t("items").toLowerCase()}</div></td>
       <td class="small">${s.last_error ? `<span class="pill bad">${esc(s.last_error).slice(0, 90)}</span>` : "—"}</td>
       <td><div class="row"><button class="btn" data-run="${s.id}">${t("runNow")}</button>
@@ -162,6 +162,11 @@ async function sources(el) {
       await api("/api/sources", { method: "POST", body: { name: f.get("name"), adapter, params, poll_interval_min: Number(f.get("interval")) } });
       toast(t("sourceAdded")); render();
     } catch (err) { toast(err.message, true); }
+  });
+  on("[data-toggle-src]", "change", async (e) => {
+    const box = e.target;
+    try { await api(`/api/sources/${box.dataset.toggleSrc}`, { method: "PATCH", body: { enabled: box.checked } }); toast(box.checked ? t("srcOn") : t("srcOff")); }
+    catch (err) { box.checked = !box.checked; toast(err.message, true); }
   });
   on("[data-run]", "click", async (e) => {
     e.target.disabled = true;
