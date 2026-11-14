@@ -30,7 +30,7 @@
 | 6 | Windows uygulaması ve kurulum sihirbazı | ✅ · Mac/Linux paketleri ⬜ |
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor, GitHub'dan kendini güncelliyor |
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
-| 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ kod · 🟡 v0.3.0 yayınlanmadı |
+| 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ v0.3.0 |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
 **Test durumu:** 332 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
@@ -230,8 +230,6 @@
 ---
 
 ## Sıradaki adım
-
-0. **v0.3.0 sürümü:** Yeni başlık çubuğunu gerçek pencerede doğrulamak, kurulum dosyasını Program Files için derlemek ve GitHub'da yayınlamak. Geliştirme bilgisayarında RAM yetersiz kaldığı için (7,3 GB'ın 0,7 GB'ı boş) ertelendi.
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
 2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
