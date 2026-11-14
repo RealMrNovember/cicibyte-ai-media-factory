@@ -13,13 +13,14 @@ from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
 from mediafactory.pipeline.render import render_short
 from mediafactory.pipeline.script import generate_script
-from mediafactory.pipeline.tts import ensure_voice, synthesize
+from mediafactory.pipeline.tts import ensure_voice, shift_pitch, synthesize, voice_for, wav_seconds
+from mediafactory.pipeline.voice import VoiceSettings
 
 
 def make_short(
     session: Session, item_id: int, *, language: str, data_dir: Path, seconds: int = 50,
     background: Path | None = None, background_choice: str = "random", style: dict | None = None,
-    script: dict | None = None, log=print,
+    script: dict | None = None, voice: dict | None = None, log=print,
 ) -> dict:  # fmt: skip
     caption_style = CaptionStyle(**(style or {}))
     item = session.get(SourceItem, item_id)
@@ -38,9 +39,14 @@ def make_short(
     (out / "script.json").write_text(json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8")
     log(f"      -> '{script['title']}' via {script['model']} ({len(script['narration'].split())} words)")
 
-    log("[2/4] voice (Piper)")
-    voice = ensure_voice(language, data_dir / "models")
-    duration = synthesize(script["narration"], voice, out / "voice.wav")
+    vs = VoiceSettings(**(voice or {}))
+    voice_id = voice_for(language, getattr(vs, language, None))
+    log(f"[2/4] voice (Piper {voice_id}, speed {vs.speed:g}x, pitch {vs.pitch:+d})")
+    voice_path = ensure_voice(language, data_dir / "models", voice_id)
+    duration = synthesize(script["narration"], voice_path, out / "voice.wav", length_scale=vs.length_scale)
+    if vs.pitch:
+        shift_pitch(out / "voice.wav", vs.pitch)
+        duration = wav_seconds(out / "voice.wav")
     log(f"      -> {duration:.1f}s of narration")
 
     log("[3/4] captions")

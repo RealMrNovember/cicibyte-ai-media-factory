@@ -39,6 +39,7 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
         background_choice=inputs.get("background", "random"),
         style=inputs.get("style"),
         script=inputs.get("script"),
+        voice=inputs.get("voice"),
         data_dir=Path(get_settings().data_dir),
         log=ctx.log,
     )

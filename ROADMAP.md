@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 259 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 265 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -59,7 +59,11 @@
 
 ### Plan 3: Üretim hattı (çekirdek)
 - **Senaryo:** Bağlı AI ile özgün senaryo (hook, gelişme, twist, takip çağrısı); başlık, açıklama ve etiketler. Bozuk JSON'a dayanıklı ayrıştırma.
-- **Ses:** Piper; İngilizce `ryan-high`, Türkçe `dfki-medium`. Ses modelleri ilk kullanımda indiriliyor.
+- **Ses (ses seçici):**
+  - Piper ile İngilizcede 18 ses: erkek ve kadın; Amerikan, İngiliz ve İskoç aksanı; bazıları yüksek kalite.
+  - Türkçede Piper'ın tek sesi (`dfki`) var. Çeşitlilik hız (0.8–1.3×) ve ton (−4…+4 yarım ton, süre korunarak) ile sağlanıyor.
+  - Stüdyo'da dil başına ses seçimi ve "Dinle" önizlemesi var; önizlemeler önbelleğe alınıyor. Takvim, Stüdyo'daki sesi kullanabiliyor.
+  - Ses modelleri ilk kullanımda indiriliyor (60–120 MB).
 - **Altyazı:**
   - **faster-whisper ile gerçek kelime zamanlaması.** Ses dinleniyor, duyulan kelimeler senaryodaki metinle eşleştiriliyor; metin her zaman senaryodaki gibi kalıyor. Yanlış duyulan kelimelerin zamanı komşularından hesaplanıyor.
   - Gerçek denemede İngilizcede 86 kelimenin 85'i, Türkçede 87 kelimenin 76'sı birebir eşleşti. Whisper çalışmazsa tahmini zamanlamaya düşülüyor.
@@ -122,7 +126,8 @@
 - [x] Senaryo düzenleme ekranı (üretimden önce ve sonra).
 - [ ] Script Doctor öz-değerlendirme döngüsü (AI'ın kendi senaryosunu puanlayıp iyileştirmesi).
 - [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
-- [ ] Ses seçimi (Kokoro İngilizce; ses/hız ayarı Stüdyo'da), telaffuz sözlüğü.
+- [x] Ses seçimi, hız ve ton ayarı (Stüdyo ve Takvim).
+- [ ] Daha doğal sesler: Kokoro (İngilizce), XTTS / F5-TTS gibi Türkçe destekli modeller; telaffuz sözlüğü.
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [ ] Kapak görseli (thumbnail) ve kalite kontrolü (ses seviyesi, süre, siyah kare).
@@ -175,7 +180,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. Ses seçimi (farklı Piper sesleri, hız) ve kapak görseli.
+2. Kapak görseli (thumbnail) ve kalite kontrolü.
 3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---

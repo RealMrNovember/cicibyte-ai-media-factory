@@ -12,6 +12,7 @@ from mediafactory.api.deps import client_ip, get_db, require_user
 from mediafactory.audit.service import record_audit
 from mediafactory.db.models import Schedule, User
 from mediafactory.pipeline.style import CaptionStyle
+from mediafactory.pipeline.voice import VoiceSettings
 from mediafactory.schedule.runner import ACTIONS, plan_next
 from mediafactory.schedule.timing import parse_times, zone
 
@@ -24,6 +25,7 @@ class ProduceParams(BaseModel):
     seconds: int = Field(default=50, ge=15, le=170)
     background: str = Field(default="random", max_length=120)
     style: CaptionStyle = Field(default_factory=CaptionStyle)
+    voice: VoiceSettings = Field(default_factory=VoiceSettings)
     auto_approve: bool = False
     source_id: int | None = None
     min_chars: int | None = Field(default=None, ge=0, le=100_000)
