@@ -117,7 +117,7 @@ function titlebar() {
   if (!isDesktopWin()) return "";
   return `<div class="titlebar pywebview-drag-region" id="titlebar">
       <div class="tb-left pywebview-drag-region"><span class="tb-logo">▶</span><span class="pywebview-drag-region">CiciByte AI Media Factory</span></div>
-      <a href="#live" class="tb-status idle" id="tbStatus"><span class="tb-dot"></span><span class="tb-text" id="tbText">…</span><span class="tb-bar"><i id="tbBar"></i></span></a>
+      <a href="#live" class="tb-status idle" id="tbStatus"><span class="tb-dot"></span><span class="tb-body" id="tbText">…</span><span class="tb-bar"><i id="tbBar"></i></span></a>
       <div class="tb-buttons"><button data-win="minimize" title="Minimize">&#xE921;</button><button data-win="maximize" title="Maximize">&#xE922;</button><button data-win="close" class="tb-close" title="Close">&#xE8BB;</button></div>
     </div>
     <div class="rz rz-n" data-rz="n"></div><div class="rz rz-s" data-rz="s"></div><div class="rz rz-e" data-rz="e"></div><div class="rz rz-w" data-rz="w"></div>
@@ -157,17 +157,39 @@ function bindTitlebar() {
   }));
 }
 
+const TB_STEPS = [["script", "✍️"], ["voice", "🎙️"], ["captions", "💬"], ["render", "🎬"], ["cover image", "🖼️"]];
+const TB_LABEL = {
+  en: { script: "Script", writing: "Script", voice: "Voice", captions: "Captions", render: "Render", "cover image": "Cover & QC", uploading: "YouTube", null: "Starting" },
+  tr: { script: "Senaryo", writing: "Senaryo", voice: "Ses", captions: "Altyazı", render: "Render", "cover image": "Kapak & QC", uploading: "YouTube", null: "Başlıyor" },
+};
+function tbMmss(s) { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+
 async function refreshTitlebar() {
   const st = document.getElementById("tbStatus");
   if (!st) return;
+  const body = document.getElementById("tbText");
   try {
     const a = await api("/api/activity");
     const r = a.running[0];
-    document.getElementById("tbText").textContent = a.summary[lang] || a.summary.en;
+    const L = TB_LABEL[lang] || TB_LABEL.en;
+    if (r) {
+      const step = r.step === "writing" ? "script" : r.step;
+      const idx = TB_STEPS.findIndex(([k]) => k === step);
+      const icon = r.step === "uploading" ? "⬆️" : (TB_STEPS[idx] || ["", "⚙️"])[1];
+      const segs = TB_STEPS.map(([k], i) => `<i class="${i < idx ? "done" : i === idx ? "now" : ""}" title="${esc(L[k] || k)}"></i>`).join("");
+      const more = a.counts.running - 1 + a.counts.queued;
+      body.innerHTML = `<span class="tb-step">${icon} ${esc(L[r.step] || r.step || L.null)}</span>
+        <span class="tb-title">${esc(r.title)}</span>
+        <span class="tb-segs">${segs}</span>
+        <span class="tb-pct">${Math.round(r.progress * 100)}%</span><span class="tb-time">${tbMmss(r.elapsed_s)}</span>
+        ${more > 0 ? `<span class="tb-more">+${more}</span>` : ""}`;
+    } else {
+      body.innerHTML = `<span class="tb-idle">${esc((a.summary[lang] || a.summary.en).replace(/^●\s*/, ""))}</span>`;
+    }
     st.className = "tb-status " + (r ? "busy" : a.counts.queued ? "queued" : "idle");
     document.getElementById("tbBar").style.width = r ? `${Math.round(r.progress * 100)}%` : "0";
   } catch {
-    document.getElementById("tbText").textContent = t("offline");
+    body.textContent = t("offline");
     st.className = "tb-status offline";
   }
 }

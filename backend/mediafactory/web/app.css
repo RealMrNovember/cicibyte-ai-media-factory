@@ -163,3 +163,24 @@ a.btn.primary { color: var(--accent-ink); }
 .rz-ne { top: 0; right: 0; cursor: nesw-resize; } .rz-sw { bottom: 0; left: 0; cursor: nesw-resize; }
 .rz-nw { top: 0; left: 0; cursor: nwse-resize; } .rz-se { bottom: 0; right: 0; cursor: nwse-resize; }
 @media (prefers-reduced-motion: reduce) { .tb-status *, .tb-status { animation: none !important; } }
+
+/* richer live capsule */
+.tb-status { height: 28px; padding: 0 12px 0 11px; max-width: 60vw; }
+.tb-body { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.tb-step { flex: none; font-weight: 600; background: linear-gradient(90deg, #8ef0b6, #e8c886); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tb-title { min-width: 0; max-width: 22vw; overflow: hidden; text-overflow: ellipsis; color: #d9d9e0; font-weight: 400; }
+.tb-segs { flex: none; display: inline-flex; gap: 3px; }
+.tb-segs i { width: 14px; height: 5px; border-radius: 3px; background: #2c2c35; }
+.tb-segs i.done { background: linear-gradient(90deg, #6fbf8e, #8ed6a8); }
+.tb-segs i.now { background: linear-gradient(90deg, #a78bfa, #5eead4, #e3c48a, #a78bfa); background-size: 300% 100%; animation: tbFlow 1.6s linear infinite;
+  box-shadow: 0 0 8px rgba(94,234,212,.7); }
+.tb-pct { flex: none; font-variant-numeric: tabular-nums; color: #5eead4; font-weight: 600; }
+.tb-time { flex: none; font-variant-numeric: tabular-nums; color: var(--muted); }
+.tb-more { flex: none; font-size: 11px; padding: 1px 7px; border-radius: 99px; background: rgba(167,139,250,.18); color: #c4b5fd; border: 1px solid rgba(167,139,250,.35); }
+.tb-idle { color: #cfcfd6; }
+.tb-status.busy { box-shadow: 0 0 22px rgba(94,234,212,.16), 0 0 2px rgba(167,139,250,.5);
+  background: linear-gradient(#141419, #141419) padding-box, linear-gradient(90deg, #a78bfa, #5eead4, #e3c48a, #f472b6, #a78bfa) border-box;
+  background-size: 100% 100%, 400% 100%; animation: tbFlow 5s linear infinite; }
+.tb-status.busy .tb-dot { background: #5eead4; }
+.tb-bar i { background: linear-gradient(90deg, #a78bfa, #5eead4, #e3c48a); }
+.tb-status.idle { background: linear-gradient(#16161b, #16161b) padding-box, linear-gradient(90deg, #3a3326, #c9a96e55, #3a3326) border-box; }
