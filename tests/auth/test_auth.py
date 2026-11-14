@@ -1,4 +1,4 @@
-from tests.auth.conftest import csrf_headers, login
+from tests.helpers import csrf_headers, login
 
 
 def test_login_ok_sets_cookie(client, make_user):
