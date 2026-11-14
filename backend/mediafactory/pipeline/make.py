@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from mediafactory.db.models import SourceItem
+from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve
 from mediafactory.pipeline.style import CaptionStyle
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
@@ -43,7 +44,10 @@ def make_short(
     log(f"      -> {duration:.1f}s of narration")
 
     log("[3/4] captions")
-    cues = cues_for(script["narration"], duration, words_per_cue=caption_style.words_per_cue)
+    times, note = word_times(out / "voice.wav", script["narration"], language=language, duration=duration,
+                             models_dir=data_dir / "models")  # fmt: skip
+    log(f"      -> {note}")
+    cues = cues_for(script["narration"], duration, words_per_cue=caption_style.words_per_cue, times=times)
     (out / "captions.ass").write_text(to_ass(cues, language, style=caption_style), encoding="utf-8")
     (out / "captions.srt").write_text(to_srt(cues), encoding="utf-8")
     (out / "captions.vtt").write_text(to_vtt(cues), encoding="utf-8")

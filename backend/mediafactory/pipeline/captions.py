@@ -24,17 +24,24 @@ def upper(text: str, language: str) -> str:
 
 
 def cues_for(
-    narration: str, duration: float, *, words_per_cue: int = WORDS_PER_CAPTION, lead_in: float = 0.15
+    narration: str, duration: float, *, words_per_cue: int = WORDS_PER_CAPTION, lead_in: float = 0.15,
+    times: list[tuple[float, float]] | None = None,
 ) -> list[Cue]:
+    """Caption cues; `times` are real per-word timings (from whisper), otherwise timing is estimated."""
     words = re.findall(r"\S+", narration)
     if not words:
         return []
-    weights = [len(w) + 2 + (6 if w[-1] in ".!?" else 3 if w[-1] in ",;:" else 0) for w in words]
-    per = max(0.5, duration - lead_in) / sum(weights)
-    timed, t = [], lead_in
-    for w, wt in zip(words, weights, strict=True):
-        timed.append((t, t + wt * per, w))
-        t += wt * per
+    if times is not None:
+        if len(times) != len(words):
+            raise ValueError("one timing per narration word is required")
+        timed = [(s, e, w) for (s, e), w in zip(times, words, strict=True)]
+    else:
+        weights = [len(w) + 2 + (6 if w[-1] in ".!?" else 3 if w[-1] in ",;:" else 0) for w in words]
+        per = max(0.5, duration - lead_in) / sum(weights)
+        timed, t = [], lead_in
+        for w, wt in zip(words, weights, strict=True):
+            timed.append((t, t + wt * per, w))
+            t += wt * per
     cues = []
     for i in range(0, len(timed), words_per_cue):
         group = timed[i : i + words_per_cue]

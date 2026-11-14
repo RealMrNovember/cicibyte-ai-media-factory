@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 252 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 259 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -60,7 +60,11 @@
 ### Plan 3: Üretim hattı (çekirdek)
 - **Senaryo:** Bağlı AI ile özgün senaryo (hook, gelişme, twist, takip çağrısı); başlık, açıklama ve etiketler. Bozuk JSON'a dayanıklı ayrıştırma.
 - **Ses:** Piper; İngilizce `ryan-high`, Türkçe `dfki-medium`. Ses modelleri ilk kullanımda indiriliyor.
-- **Altyazı:** Ses süresinden tahmini kelime zamanlaması; ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
+- **Altyazı:**
+  - **faster-whisper ile gerçek kelime zamanlaması.** Ses dinleniyor, duyulan kelimeler senaryodaki metinle eşleştiriliyor; metin her zaman senaryodaki gibi kalıyor. Yanlış duyulan kelimelerin zamanı komşularından hesaplanıyor.
+  - Gerçek denemede İngilizcede 86 kelimenin 85'i, Türkçede 87 kelimenin 76'sı birebir eşleşti. Whisper çalışmazsa tahmini zamanlamaya düşülüyor.
+  - Model `MF_WHISPER_MODEL` (varsayılan `small`), CPU'da int8; 40 sn'lik ses için birkaç saniye.
+  - Çıktılar: ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
 - **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan.
 - **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
 - **Hazır Videolar:** Onayla / Reddet / İndir / Düzenle ve yeniden üret. İki dil seçilince aynı içerik için iki ayrı video.
@@ -114,7 +118,7 @@
 - [ ] **GitHub Releases:** Kurulum dosyasının sürüm olarak yayınlanması.
 
 ### Üretim kalitesi (Plan 3'ün devamı)
-- [ ] faster-whisper ile gerçek kelime hizalaması (şu an tahmini zamanlama).
+- [x] faster-whisper ile gerçek kelime hizalaması.
 - [x] Senaryo düzenleme ekranı (üretimden önce ve sonra).
 - [ ] Script Doctor öz-değerlendirme döngüsü (AI'ın kendi senaryosunu puanlayıp iyileştirmesi).
 - [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
@@ -160,7 +164,6 @@
 ## 🐞 Bilinen eksikler
 
 - **Ağ güvenliği:** Giriş olmadığı için sunucu portu internete açılmamalı (Tailscale veya `localhost` + reverse proxy kimlik doğrulaması).
-- **Altyazı zamanlaması:** Tahmini olduğu için uzun cümlelerde altyazı sesten biraz kayabilir (whisper hizalamasıyla düzelecek).
 - **Stüdyo önizlemesi:** Yazı tiplerini Google Fonts'tan yüklüyor; internet yoksa önizleme yedek yazı tipine düşer (videoyu etkilemez).
 - **Önizleme ve video farkı:** Önizleme CSS ile yapılıyor; konturda ve satır kırılmasında videodan küçük farklar olabilir.
 - **YouTube:** Yükleme yarıda kesilip tekrar denenirse aynı video iki kez yüklenebilir (idempotency yok).
@@ -172,9 +175,8 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-2. faster-whisper ile kelime düzeyinde altyazı hizalaması.
-3. Ses seçimi (farklı Piper sesleri, hız) ve kapak görseli.
-4. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+2. Ses seçimi (farklı Piper sesleri, hız) ve kapak görseli.
+3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 
