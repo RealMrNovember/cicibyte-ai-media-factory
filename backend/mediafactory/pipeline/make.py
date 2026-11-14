@@ -17,7 +17,8 @@ from mediafactory.pipeline.tts import ensure_voice, synthesize
 
 def make_short(
     session: Session, item_id: int, *, language: str, data_dir: Path, seconds: int = 50,
-    background: Path | None = None, background_choice: str = "random", style: dict | None = None, log=print,
+    background: Path | None = None, background_choice: str = "random", style: dict | None = None,
+    script: dict | None = None, log=print,
 ) -> dict:  # fmt: skip
     caption_style = CaptionStyle(**(style or {}))
     item = session.get(SourceItem, item_id)
@@ -27,8 +28,12 @@ def make_short(
     out.mkdir(parents=True, exist_ok=True)
 
     started = time.monotonic()
-    log(f"[1/4] script ({language}) from item {item_id}: {item.title[:70]}")
-    script = generate_script(session, item, language=language, seconds=seconds)
+    if script and str(script.get("narration", "")).strip():
+        log(f"[1/4] script ({language}): using the reviewed script '{script.get('title', '')[:70]}'")
+        script = {**script, "model": script.get("model") or "edited"}
+    else:
+        log(f"[1/4] script ({language}) from item {item_id}: {item.title[:70]}")
+        script = generate_script(session, item, language=language, seconds=seconds)
     (out / "script.json").write_text(json.dumps(script, ensure_ascii=False, indent=2), encoding="utf-8")
     log(f"      -> '{script['title']}' via {script['model']} ({len(script['narration'].split())} words)")
 

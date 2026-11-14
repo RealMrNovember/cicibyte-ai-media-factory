@@ -23,6 +23,7 @@ class MakeIn(BaseModel):
     seconds: int = Field(default=50, ge=15, le=170)
     background: str = Field(default="random", max_length=120, description='"random", "none" or a library clip name')
     style: CaptionStyle = Field(default_factory=CaptionStyle)
+    review_script: bool = False
 
 
 def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
@@ -73,7 +74,7 @@ def make_from_item(
     from mediafactory.pipeline.production import start_production
 
     jobs = start_production(db, item, languages=body.languages, seconds=body.seconds, background=body.background,
-                            style=body.style)  # fmt: skip
+                            style=body.style, review_script=body.review_script)  # fmt: skip
     record_audit(db, actor_id=user.id, action="job.make", target_type="source_item", target_id=str(iid),
                  details={"languages": body.languages, "jobs": [j.id for j in jobs]}, ip=client_ip(request))  # fmt: skip
     return {"jobs": [job_out(j) for j in jobs]}
@@ -95,15 +96,66 @@ def get_job(jid: int, db: Session = Depends(get_db, scope="function"), user: Use
     job = _job(db, jid)
     runs = db.scalars(select(JobStageRun).where(JobStageRun.job_id == jid).order_by(JobStageRun.id)).all()
     out = job_out(job, list(runs))
-    out["script"] = None
+    out["script"] = current_script(job)
+    return out
+
+
+def current_script(job: ProductionJob) -> dict | None:
+    """The reviewed/edited script if there is one, else the script the video was made from."""
+    if (job.payload or {}).get("script"):
+        return job.payload["script"]
     video = ((job.payload or {}).get("result") or {}).get("video")
     if video:
         script = Path(video).parent / "script.json"
         if script.exists():
             import json
 
-            out["script"] = json.loads(script.read_text(encoding="utf-8"))
-    return out
+            return json.loads(script.read_text(encoding="utf-8"))
+    return None
+
+
+class ScriptIn(BaseModel):
+    title: str = Field(min_length=1, max_length=100)
+    narration: str = Field(min_length=20, max_length=20_000)
+    description: str = Field(default="", max_length=4800)
+    tags: list[str] = Field(default_factory=list, max_length=20)
+    render: bool = False
+
+
+EDITABLE = ("script_draft", "needs_review", "approved", "rejected", "failed")
+
+
+@router.post("/jobs/{jid}/script")
+def save_script(
+    jid: int, body: ScriptIn, request: Request, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    """Save an edited script; with render=true make the voice and video again from it."""
+    job = _job(db, jid)
+    if job.status not in EDITABLE:
+        raise HTTPException(status_code=409, detail=f"the script can't be changed while the job is {job.status}")
+    if (job.payload or {}).get("youtube", {}).get("id"):
+        raise HTTPException(status_code=409, detail="this video is already on YouTube")
+    base = current_script(job) or {}
+    script = {**base, "title": body.title.strip(), "narration": body.narration.strip(),
+              "hook": body.narration.strip().split(".")[0][:300], "description": body.description.strip(),
+              "tags": [t.strip().lstrip("#") for t in body.tags if t.strip()][:10]}  # fmt: skip
+    job.payload = {**(job.payload or {}), "script": script, "title": script["title"]}
+    if body.render:
+        make = (job.payload or {}).get("make") or _last_make_inputs(db, jid)
+        if not make:
+            raise HTTPException(status_code=409, detail="the original production settings are missing")
+        enqueue_stage(db, job.id, MAKE_SHORT, "render", inputs={**make, "script": script})
+        job.status = "script_approved"
+    record_audit(db, actor_id=user.id, action="job.script", target_type="production_job", target_id=str(jid),
+                 details={"render": body.render, "words": len(script["narration"].split())}, ip=client_ip(request))  # fmt: skip
+    return job_out(job)
+
+
+def _last_make_inputs(db: Session, jid: int) -> dict | None:
+    run = db.scalar(select(JobStageRun).where(JobStageRun.job_id == jid, JobStageRun.stage.in_((MAKE_SHORT, "draft_script")))
+                    .order_by(JobStageRun.id.desc()).limit(1))  # fmt: skip
+    return {k: v for k, v in (run.inputs or {}).items() if k != "script"} if run else None
 
 
 @router.post("/jobs/{jid}/cancel")

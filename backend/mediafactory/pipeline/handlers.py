@@ -6,6 +6,24 @@ from mediafactory.core.config import get_settings
 from mediafactory.queue.registry import StageContext, StageOutcome, stage_handler
 
 MAKE_SHORT = "make_short"
+DRAFT_SCRIPT = "draft_script"
+
+
+@stage_handler(DRAFT_SCRIPT, "llm")
+def draft_script_stage(ctx: StageContext) -> StageOutcome:
+    """Write the script only and stop, so a person can edit it before voice and video are made."""
+    from mediafactory.db.models import SourceItem
+    from mediafactory.pipeline.script import generate_script
+
+    inputs = ctx.run.inputs or {}
+    item = ctx.session.get(SourceItem, int(inputs["item_id"]))
+    if item is None:
+        raise ValueError(f"source item {inputs['item_id']} not found")
+    ctx.log(f"writing the script ({inputs.get('language', 'en')}) for review: {item.title[:70]}")
+    script = generate_script(ctx.session, item, language=inputs.get("language", "en"), seconds=int(inputs.get("seconds", 50)))
+    ctx.job.payload = {**(ctx.job.payload or {}), "script": script, "title": script.get("title") or item.title}
+    ctx.log(f"-> '{script['title']}' ({len(script['narration'].split())} words); waiting for your review")
+    return StageOutcome(next_status="script_draft", outputs={"title": script["title"]})
 
 
 @stage_handler(MAKE_SHORT, "render")
@@ -20,6 +38,7 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
         seconds=int(inputs.get("seconds", 50)),
         background_choice=inputs.get("background", "random"),
         style=inputs.get("style"),
+        script=inputs.get("script"),
         data_dir=Path(get_settings().data_dir),
         log=ctx.log,
     )

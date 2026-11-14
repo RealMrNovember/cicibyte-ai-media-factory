@@ -23,7 +23,7 @@
 | # | Parça | Durum |
 |---|---|---|
 | 1 | Temel: kurulum, AI yönlendirme, iş kuyruğu, yedekleme | ✅ |
-| 2 | Kaynaklar ve alım (Reddit, RSS, web, dosya) | ✅ |
+| 2 | Kaynaklar ve alım + **kaynak kataloğu** (45 hazır kaynak, Türkçe ve İngilizce) | ✅ |
 | 3 | Üretim hattı: senaryo → ses → altyazı → 9:16 video | ✅ çekirdek · 🟡 gelişmiş adımlar kaldı |
 | 4 | Panel (tr/en) + Stüdyo | ✅ |
 | 5 | YouTube: kanal bağlama, yükleme, zamanlı yayın + Takvim | ✅ kod · 🟡 gerçek kanalla denenmedi |
@@ -31,7 +31,7 @@
 | — | DL380 üretim sunucusu (CT 175 `mediafactory`) | ✅ çalışıyor |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 237 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 252 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -47,6 +47,15 @@
 - Adaptörler: `reddit_rss` (kimlik bilgisi gerekmez), `reddit` (resmî API), `rss`, `web`, elle ekleme (metin, URL, `.txt` `.md` `.pdf` `.docx`).
 - Güvenli çekici: SSRF engeli, 5 MB sınırı, robots.txt, site başına ortak istek aralığı ve 429 soğuması (Reddit 5 sn).
 - Kanonik URL + hash ile tekilleştirme, hak durumu ve hak geçmişi, hata alan kaynakta üstel geri çekilme.
+- **Kaynak kataloğu:**
+  - Dile (EN/TR) ve türe göre filtrelenen, tek tıkla eklenen 43 hazır kaynak.
+  - Türler: hikâye ve kurgu, korku ve gizem, gerçek hayat dramları, komik, ilginç bilgiler, bilim ve uzay, tarih ve kültür, teknoloji, haber.
+  - İngilizce: Reddit topluluklarının yanı sıra Atlas Obscura, Live Science, NASA, ScienceDaily, HistoryExtra, Wikipedia, BBC ve diğerleri.
+  - Türkçe: Kayıp Rıhtım, Onedio, Evrim Ağacı, Bilim Genç, Arkeofili, Independent Türkçe, Webtekno, BBC Türkçe, DW Türkçe, Euronews, NTV, Habertürk, r/Turkey.
+  - Hepsi sunucuya eklendi; ilk toplamada 190+ İngilizce ve 100+ Türkçe hikâye geldi.
+- **RSS tam metin:** Yalnızca özet veren beslemelerde makale sayfasından tam metin çekiliyor (robots.txt'e uyularak). En kısa uzunluk filtresi ve RSS 1.0/RDF desteği var.
+- **Reddit:** Reddit kimlik bilgisi girilince Reddit RSS kaynakları otomatik olarak resmî API'yi kullanıyor. Reddit istekleri arası 10 sn.
+- Gelen Kutusu ve Stüdyo'da dil filtresi (Tümü / English / Türkçe).
 
 ### Plan 3: Üretim hattı (çekirdek)
 - **Senaryo:** Bağlı AI ile özgün senaryo (hook, gelişme, twist, takip çağrısı); başlık, açıklama ve etiketler. Bozuk JSON'a dayanıklı ayrıştırma.
@@ -54,7 +63,10 @@
 - **Altyazı:** Ses süresinden tahmini kelime zamanlaması; ASS (videoya gömülü), SRT ve VTT. Türkçe için doğru büyük harf (i → İ).
 - **Render:** ffmpeg ile 1080×1920, libx264. Klip yoksa hareketli gradyan arka plan.
 - **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
-- **Hazır Videolar:** Onayla / Reddet / İndir. İki dil seçilince aynı içerik için iki ayrı video.
+- **Hazır Videolar:** Onayla / Reddet / İndir / Düzenle ve yeniden üret. İki dil seçilince aynı içerik için iki ayrı video.
+- **Senaryo düzenleme:**
+  - Stüdyo'da "Videoyu yapmadan önce senaryoyu bana göster" seçeneği var. AI yazar ve iş durur; başlık, anlatım (kelime ve süre sayacıyla), açıklama ve etiketleri düzenleyip "Onayla ve videoyu üret" dersin.
+  - Hazır videolarda metni değiştirip aynı ayarlarla yeniden üretebilirsin.
 
 ### Plan 4: Panel ve Stüdyo
 - Derleme gerektirmeyen panel (tr/en), sabit yan menü, mobil uyumlu.
@@ -98,13 +110,13 @@
 ### Yakın vade (v0.1'i kapatmak için)
 - [ ] **Gerçek YouTube denemesi:** Google OAuth istemcisi oluşturulup kanal bağlanacak, ilk video gönderilecek. **Senin yapman gereken bir adım.** Google'ın doğrulanmamış uygulamalardan yüklenen videoları gizliye kilitleme durumu kontrol edilecek.
 - [ ] **Arka plan klipleri:** Kütüphaneye ilk Minecraft/parkur kliplerinin (lisanslı) yüklenmesi.
-- [ ] **Türkçe kaynaklar:** Güvenilir Türkçe korku RSS kaynağı bulunamadı; şimdilik elle ekleme ve "AI ile yaz" kullanılıyor. İzinli Türkçe kaynak (ör. kendi blogun, izinli siteler) eklenecek.
-- [ ] **Reddit 429:** Reddit, sunucunun IP'sine sık sık 429 veriyor. Reddit API kimlik bilgisi Ayarlar'dan girilirse sorun çözülür; alternatif olarak istek aralığı uzatılacak.
+- [ ] **Reddit erişimi:** Reddit, kimliksiz RSS isteklerini sunucunun IP'sinden engelliyor (403/429). Ayarlar → Reddit'e resmî API uygulamasının bilgileri girilince bütün Reddit kaynakları otomatik olarak API'ye geçer. **Senin yapman gereken bir adım** (reddit.com/prefs/apps → "script" uygulaması).
 - [ ] **GitHub Releases:** Kurulum dosyasının sürüm olarak yayınlanması.
 
 ### Üretim kalitesi (Plan 3'ün devamı)
 - [ ] faster-whisper ile gerçek kelime hizalaması (şu an tahmini zamanlama).
-- [ ] Script Doctor öz-değerlendirme döngüsü ve senaryo düzenleme ekranı (üretimden önce metni elle düzeltme).
+- [x] Senaryo düzenleme ekranı (üretimden önce ve sonra).
+- [ ] Script Doctor öz-değerlendirme döngüsü (AI'ın kendi senaryosunu puanlayıp iyileştirmesi).
 - [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
 - [ ] Ses seçimi (Kokoro İngilizce; ses/hız ayarı Stüdyo'da), telaffuz sözlüğü.
 - [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
@@ -159,9 +171,10 @@
 
 ## Sıradaki adım
 
-1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak.
-2. Senaryo düzenleme ekranı ve whisper ile altyazı hizalaması.
-3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
+2. faster-whisper ile kelime düzeyinde altyazı hizalaması.
+3. Ses seçimi (farklı Piper sesleri, hız) ve kapak görseli.
+4. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 

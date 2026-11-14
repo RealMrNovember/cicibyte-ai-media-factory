@@ -11,7 +11,7 @@ const ST = {
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
-    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
+    previewHint: "Click the preview to place the captions.", addStory: "Add your own story", storyTitle: "Title", storyText: "Story text (paste it here)", orFile: "…or upload a file (.txt, .md, .pdf, .docx)", storyLang: "Language of the text", storyAdded: "Story added", storyDup: "This story was already in your list", needText: "Paste a text or choose a file", aiStory: "Write with AI", aiTitle: "Write a new story with AI", topic: "Topic or idea (optional)", topicPh: "e.g. noises from the attic of a village house", length: "Length", writing: "Writing… this can take a minute", allLangs: "All languages", reviewFirst: "Show me the script before making the video", reviewScript: "Review script", editRerender: "Edit & remake", scriptTitle: "Title", narration: "Narration (read aloud)", ytDesc: "YouTube description", tagsComma: "Tags (comma separated)", wordsN: "words", approxSec: "≈ seconds", saveOnly: "Save", approveMake: "Approve & make video", saveRemake: "Save & remake video", draftsWaiting: "script(s) waiting for your review", remakeStarted: "Making the video again", short: "Short", medium: "Medium", long: "Long", noStories: "No stories yet — add a source and collect.",
     noClips: "No clips yet. Upload gameplay or stock footage you are allowed to use.", sure: "Delete this clip?",
   },
   tr: {
@@ -23,7 +23,7 @@ const ST = {
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
-    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
+    previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", addStory: "Kendi hikâyeni ekle", storyTitle: "Başlık", storyText: "Hikâye metni (buraya yapıştır)", orFile: "…ya da dosya yükle (.txt, .md, .pdf, .docx)", storyLang: "Metnin dili", storyAdded: "Hikâye eklendi", storyDup: "Bu hikâye zaten listende vardı", needText: "Bir metin yapıştır ya da dosya seç", aiStory: "AI ile yaz", aiTitle: "AI ile yeni hikâye yaz", topic: "Konu ya da fikir (isteğe bağlı)", topicPh: "ör. köy evinin tavanından gelen sesler", length: "Uzunluk", writing: "Yazılıyor… bir dakika sürebilir", allLangs: "Tüm diller", reviewFirst: "Videoyu yapmadan önce senaryoyu bana göster", reviewScript: "Senaryoyu incele", editRerender: "Düzenle ve yeniden üret", scriptTitle: "Başlık", narration: "Anlatım (seslendirilecek metin)", ytDesc: "YouTube açıklaması", tagsComma: "Etiketler (virgülle)", wordsN: "kelime", approxSec: "≈ saniye", saveOnly: "Kaydet", approveMake: "Onayla ve videoyu üret", saveRemake: "Kaydet ve videoyu yeniden üret", draftsWaiting: "senaryo incelemeni bekliyor", remakeStarted: "Video yeniden üretiliyor", short: "Kısa", medium: "Orta", long: "Uzun", noStories: "Henüz hikâye yok — kaynak ekleyip topla.",
     noClips: "Henüz klip yok. Kullanma iznin olan oyun ya da stok görüntüsü yükle.", sure: "Bu klip silinsin mi?",
   },
 };
@@ -246,7 +246,9 @@ function drawOutput() {
       <label class="row"><input type="checkbox" data-lang="en" ${s.languages.includes("en") ? "checked" : ""} style="width:auto"> English</label>
       <label class="row"><input type="checkbox" data-lang="tr" ${s.languages.includes("tr") ? "checked" : ""} style="width:auto"> Türkçe</label></div>
     <label>${t("seconds")} <b class="val">${s.seconds}</b></label><input type="range" id="secs" min="15" max="170" step="5" value="${s.seconds}">
+    <label class="row" style="margin-top:14px"><input type="checkbox" id="reviewFirst" ${s.reviewFirst ? "checked" : ""} style="width:auto"> ${st("reviewFirst")}</label>
     <div class="row" style="margin-top:16px"><button class="btn primary big" id="produce">▶ ${st("produce")}</button></div>`;
+  document.getElementById("reviewFirst").addEventListener("change", (e) => { s.reviewFirst = e.target.checked; });
   box.querySelectorAll("[data-lang]").forEach((n) => n.addEventListener("change", () => {
     s.languages = [...box.querySelectorAll("[data-lang]")].filter((x) => x.checked).map((x) => x.dataset.lang);
   }));
@@ -256,10 +258,37 @@ function drawOutput() {
     if (!s.languages.length) return toast(t("languages"), true);
     e.target.disabled = true;
     try {
-      await api(`/api/items/${s.itemId}/make`, { method: "POST", body: { languages: s.languages, seconds: s.seconds, background: s.background, style: s.style } });
+      await api(`/api/items/${s.itemId}/make`, { method: "POST", body: { languages: s.languages, seconds: s.seconds, background: s.background, style: s.style, review_script: !!s.reviewFirst } });
       toast(t("makeStarted")); location.hash = "#production";
     } catch (err) { toast(err.message, true); e.target.disabled = false; }
   });
+}
+
+async function scriptEditor(jobId) {
+  const j = await api(`/api/jobs/${jobId}`);
+  const sc0 = j.script || { title: j.title || "", narration: "", description: "", tags: [] };
+  const draft = j.status === "script_draft";
+  const m = modal(`<h1>✎ ${draft ? st("reviewScript") : st("editRerender")}</h1><p class="muted small">#${j.id} · ${esc((j.language || "").toUpperCase())}</p>
+    <form id="scf"><label>${st("scriptTitle")}</label><input name="title" maxlength="100" required value="${esc(sc0.title || "")}">
+    <label>${st("narration")} <span class="muted" id="wc"></span></label><textarea name="narration" required style="min-height:280px">${esc(sc0.narration || "")}</textarea>
+    <label>${st("ytDesc")}</label><textarea name="description" style="min-height:80px">${esc(sc0.description || "")}</textarea>
+    <label>${st("tagsComma")}</label><input name="tags" value="${esc((sc0.tags || []).join(", "))}">
+    <div class="row" style="margin-top:14px"><button class="btn primary" data-render="1">▶ ${draft ? st("approveMake") : st("saveRemake")}</button>
+      <button class="btn" data-render="0">${st("saveOnly")}</button></div></form>`);
+  const f = m.querySelector("#scf");
+  const count = () => { const n = f.narration.value.trim().split(/\s+/).filter(Boolean).length; m.querySelector("#wc").textContent = `${n} ${st("wordsN")} · ${Math.round(n / 2.5)} ${st("approxSec")}`; };
+  f.narration.addEventListener("input", count); count();
+  f.querySelectorAll("[data-render]").forEach((b) => b.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!f.reportValidity()) return;
+    const renderIt = b.dataset.render === "1";
+    try {
+      await api(`/api/jobs/${jobId}/script`, { method: "POST", body: { title: f.title.value, narration: f.narration.value, description: f.description.value,
+        tags: f.tags.value.split(",").map((x) => x.trim()).filter(Boolean), render: renderIt } });
+      m.remove(); toast(renderIt ? st("remakeStarted") : t("saved"));
+      if (renderIt) location.hash = "#production"; else render();
+    } catch (err) { toast(err.message, true); }
+  }));
 }
 
 function sampleWords() {

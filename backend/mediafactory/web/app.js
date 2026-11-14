@@ -120,7 +120,7 @@ window.addEventListener("hashchange", render);
 async function overview(el) {
   const [items, jobs] = await Promise.all([api("/api/items?limit=200"), api("/api/jobs?limit=200")]);
   const count = (s) => jobs.items.filter((j) => j.status === s).length;
-  const running = jobs.items.filter((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled"].includes(j.status)).length;
+  const running = jobs.items.filter((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled", "script_draft"].includes(j.status)).length;
   el.innerHTML = `<h1>${t("overview")}</h1><p class="sub">${t("welcome")}</p>
     <div class="grid g4">
       <div class="card stat"><b>${items.items.length}</b><span>${t("items")}</span></div>
@@ -241,6 +241,7 @@ function jobsTable(items) {
       <td><b>#${j.id}</b> <span class="muted">${esc(j.language || "")}</span><div class="clip">${esc(j.title || "")}</div></td>
       <td>${pill(j.status)}</td><td class="small muted">${when(j.updated_at)}</td>
       <td><div class="row"><button class="btn" data-job="${j.id}">${t("open")}</button>
+      ${j.status === "script_draft" ? `<button class="btn primary" data-edit-script="${j.id}">✎ ${st("reviewScript")}</button>` : ""}
       ${j.status === "failed" ? `<button class="btn" data-retry="${j.id}">${t("retry")}</button>` : ""}
       ${["discovered", "retry_wait"].includes(j.status) ? `<button class="btn danger" data-cancel="${j.id}">${t("cancel")}</button>` : ""}</div></td></tr>`).join("");
   return `<div class="card"><table><tr><th></th><th>${t("status")}</th><th></th><th></th></tr>${rows}</table></div>`;
@@ -254,15 +255,18 @@ function bindJobs(el) {
       ${j.has_video ? `<video controls src="/api/jobs/${j.id}/video" style="width:100%;max-height:60vh;margin-top:12px;background:#000;border-radius:10px"></video>` : ""}
       ${j.script ? `<h3>${t("script")}</h3><pre>${esc(j.script.narration)}</pre>` : ""}<h3>${t("stages")}</h3>${stages}`);
   });
+  on("[data-edit-script]", "click", (e) => scriptEditor(e.target.dataset.editScript));
   on("[data-retry]", "click", async (e) => { try { await api(`/api/jobs/${e.target.dataset.retry}/retry`, { method: "POST" }); render(); } catch (err) { toast(err.message, true); } });
   on("[data-cancel]", "click", async (e) => { try { await api(`/api/jobs/${e.target.dataset.cancel}/cancel`, { method: "POST" }); render(); } catch (err) { toast(err.message, true); } });
 }
 
 async function production(el) {
   const data = await api("/api/jobs?limit=100");
-  el.innerHTML = `<h1>${t("production")}</h1><p class="sub">script → voice → captions → render</p>${jobsTable(data.items)}`;
+  const drafts = data.items.filter((j) => j.status === "script_draft").length;
+  el.innerHTML = `<h1>${t("production")}</h1><p class="sub">script → voice → captions → render</p>
+    ${drafts ? `<div class="card banner">✎ ${drafts} ${st("draftsWaiting")}</div>` : ""}${jobsTable(data.items)}`;
   bindJobs(el);
-  if (data.items.some((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled"].includes(j.status))) {
+  if (data.items.some((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled", "script_draft"].includes(j.status))) {
     pollTimer = setInterval(() => { if (route() === "production" && !document.querySelector(".modal")) render(); }, 5000);
   }
 }
@@ -277,14 +281,15 @@ async function ready(el) {
       <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a></div></div>`;
   const ytBtn = (j) => `<button class="btn primary" data-pub="${j.id}">▶ ${sc("sendYt")}</button>`;
   el.innerHTML = `<h1>${t("ready")}</h1><p class="sub">${t("readyHint")}</p>
-    <div class="grid videos">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
-    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid videos">${approved.items.map((j) => card(j, ytBtn(j))).join("")}</div>` : ""}
+    <div class="grid videos">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button><button class="btn" data-edit-script="${j.id}">✎ ${st("editRerender")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
+    ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid videos">${approved.items.map((j) => card(j, ytBtn(j) + `<button class="btn" data-edit-script="${j.id}">✎ ${st("editRerender")}</button>`)).join("")}</div>` : ""}
     ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid videos">${published.map((j) => card(j, "")).join("")}</div>` : ""}`;
   on("[data-dec]", "click", async (e) => {
     try { await api(`/api/jobs/${e.target.dataset.id}/decision`, { method: "POST", body: { decision: e.target.dataset.dec } }); render(); }
     catch (err) { toast(err.message, true); }
   });
   on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub));
+  on("[data-edit-script]", "click", (e) => scriptEditor(e.target.dataset.editScript));
   on("[data-ext]", "click", (e) => { e.preventDefault(); openExternal(e.target.dataset.ext); });
   if (published.some((j) => j.status === "uploading")) {
     pollTimer = setInterval(() => { if (route() === "ready" && !document.querySelector(".modal")) render(); }, 6000);
