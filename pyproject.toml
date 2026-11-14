@@ -60,3 +60,6 @@ known-first-party = ["mediafactory", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/mediafactory/db/migrations/versions/*" = ["E501", "W291"]
+
+[tool.setuptools.package-data]
+"mediafactory.db" = ["migrations/*.py", "migrations/*.mako", "migrations/versions/*.py"]

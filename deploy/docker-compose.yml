@@ -1,0 +1,58 @@
+# CiciByte AI Media Factory — production stack.
+# Run from the repository root:  docker compose -f deploy/docker-compose.yml --env-file .env up -d
+name: mediafactory
+
+x-app-env: &app-env
+  MF_DATABASE_URL: postgresql+psycopg://mf:${MF_DB_PASSWORD:?run deploy/install.sh first}@db:5432/mf
+  MF_SECRET_KEY: ${MF_SECRET_KEY:?run deploy/install.sh first}
+  MF_DATA_DIR: /data
+  MF_ALLOWED_HOSTS: ${MF_ALLOWED_HOSTS:-["localhost","127.0.0.1"]}
+  MF_SESSION_TTL_HOURS: ${MF_SESSION_TTL_HOURS:-72}
+
+services:
+  db:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mf
+      POSTGRES_PASSWORD: ${MF_DB_PASSWORD:?run deploy/install.sh first}
+      POSTGRES_DB: mf
+    volumes:
+      - mf_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mf -d mf"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: cicibyte/mediafactory:${MF_VERSION:-0.1.0.dev0}
+    restart: unless-stopped
+    command: ["sh", "-c", "mf migrate && mf api --host 0.0.0.0 --port 8080"]
+    environment: *app-env
+    ports:
+      - "127.0.0.1:${MF_BIND_PORT:-8080}:8080"
+    volumes:
+      - mf_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    image: cicibyte/mediafactory:${MF_VERSION:-0.1.0.dev0}
+    restart: unless-stopped
+    command: ["mf", "worker"]
+    environment: *app-env
+    volumes:
+      - mf_data:/data
+    healthcheck:
+      disable: true
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mf_pg:
+  mf_data:

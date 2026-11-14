@@ -56,6 +56,22 @@ def test_create_admin_twice_without_reset_fails(engine, clean_users):
     assert verify_password(_password(first.output), before)
 
 
+def test_migrate_upgrades_to_head(alembic_cfg, migrated):
+    from alembic import command
+    from sqlalchemy import create_engine, inspect
+
+    from tests.conftest import TEST_DATABASE_URL
+
+    command.downgrade(alembic_cfg, "base")
+    r = runner.invoke(app, ["migrate"])
+    assert r.exit_code == 0, r.output
+    eng = create_engine(TEST_DATABASE_URL)
+    try:
+        assert "users" in inspect(eng).get_table_names()
+    finally:
+        eng.dispose()
+
+
 def test_create_admin_reset_changes_password(engine, clean_users):
     runner.invoke(app, ["create-admin", "--email", "boss@example.com"])
     before = _stored_hash(engine)

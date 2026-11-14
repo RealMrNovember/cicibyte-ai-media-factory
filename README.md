@@ -22,9 +22,29 @@ locally, and publish to multiple YouTube channels — only after you approve.
 - **Human-approved publishing:** uploads are private by default; nothing is published without your approval.
 - **Source- and rights-aware:** every item keeps its source, hash and rights status.
 
+## Quick start
+
+```bash
+git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
+cd cicibyte-ai-media-factory
+bash deploy/install.sh you@example.com
+```
+
+Requires Docker + Compose v2. The panel is bound to `127.0.0.1:8080`; see
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Tailscale/reverse-proxy access, updates and backups.
+
 ## Status
 
-Under active development (v0.1). Installation instructions will be added with the first release.
+Under active development (v0.1): the foundation (auth, AI provider routing, job queue, Docker install)
+is in place; sources, the production pipeline, the panel and YouTube publishing are next.
+
+## Development
+
+```bash
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+docker compose -f deploy/docker-compose.test.yml up -d --wait   # throwaway PostgreSQL on 127.0.0.1:55432
+.venv/bin/pytest -q
+```
 
 ## Support
 

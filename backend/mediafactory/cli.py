@@ -10,6 +10,25 @@ def main() -> None:
     """CiciByte AI Media Factory command line."""
 
 
+@app.command("migrate")
+def migrate(revision: str = typer.Argument("head", help="Target revision")) -> None:
+    """Apply database migrations (works from an installed package, no repo checkout needed)."""
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    import mediafactory.db as db_pkg
+    from mediafactory.core.config import get_settings
+
+    cfg = Config()
+    cfg.set_main_option("script_location", str(Path(db_pkg.__file__).parent / "migrations"))
+    cfg.set_main_option("sqlalchemy.url", get_settings().database_url)
+    cfg.attributes["configure_logger"] = False
+    command.upgrade(cfg, revision)
+    typer.echo(f"database migrated to {revision}")
+
+
 @app.command("api")
 def api(
     host: str = typer.Option(None, help="Bind address (default: MF_BIND_HOST)"),
