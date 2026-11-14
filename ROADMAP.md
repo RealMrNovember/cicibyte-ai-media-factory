@@ -32,7 +32,7 @@
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 313 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 324 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -84,6 +84,7 @@
 - **Kapak görseli:** Arka plan klibinden en canlı ve altyazısız kare seçiliyor; üzerine Stüdyo yazı tipi ve vurgu rengiyle büyük başlık yazılıyor. Uzun başlıkta yazı küçülüyor. YouTube'a yüklerken kapak da gönderiliyor (kanal doğrulanmamışsa YouTube reddedebilir; yükleme yine tamamlanır).
 - **Kalite kontrolü:** Her videoda çözünürlük, süre, ses varlığı, ses yüksekliği (LUFS), tepe seviyesi, uzun sessizlik, siyah ekran ve altyazı kontrol ediliyor. Hazır Videolar'da ✓/⚠ rozeti ve ayrıntı penceresi var. QC'den geçmeyen video, otomatik onaylı takvimde bile incelemeye düşüyor.
 - **Arka plan kütüphanesi:** Klip yükleme (2 GB'a kadar), isteğe bağlı lisans notu, küçük resim, art arda aynı klibi seçmeme.
+  - Kliplere birden çok **konu etiketi** verilebiliyor (Stüdyo'da 🏷). "Rastgele" arka planda önce hikâyenin konusuyla etiketli klipler kullanılıyor, yoksa tüm klipler.
 - **Hazır Videolar:** Onayla / Reddet / İndir / Düzenle ve yeniden üret. İki dil seçilince aynı içerik için iki ayrı video.
 - **Senaryo düzenleme:**
   - Stüdyo'da "Videoyu yapmadan önce senaryoyu bana göster" seçeneği var. AI yazar ve iş durur; başlık, anlatım (kelime ve süre sayacıyla), açıklama ve etiketleri düzenleyip "Onayla ve videoyu üret" dersin.
@@ -110,6 +111,11 @@
   - "Video üret" zamanlamaları: seçilen saat ve günlerde, kullanılmamış hikâyelerden üretiyor; adet, dil, süre, kaynak ve Stüdyo stili seçilebiliyor; isteğe bağlı otomatik onay.
   - "YouTube'a gönder" zamanlamaları: her saatte en eski onaylı videoları gönderiyor.
   - Saat dilimine duyarlı.
+  - **"Her X saatte bir"** sıklığı ve etkin saat aralığı (ör. 09:00–23:00, gece paylaşım yok).
+  - **Otopilot (üret ve yayınla):**
+    - Her çalışmada seçilen konudan (ya da rastgele bir konudan) kullanılmamış rastgele bir hikâye seçiliyor; dil rastgele, EN ya da TR olabiliyor.
+    - Video Stüdyo stili, sesi ve müziğiyle üretiliyor; kalite kontrolünden geçerse otomatik onaylanıp hemen YouTube'a gönderiliyor.
+    - Kontrolden geçmezse yayınlanmıyor, incelemeye düşüyor. Kanal bağlı değilse video onaylı olarak bekliyor.
 
 ### Plan 6: Masaüstü uygulaması
 - Windows uygulaması (pywebview / WebView2) ve **Inno Setup kurulum sihirbazı**: Türkçe/İngilizce kurulum, Başlat menüsü ve masaüstü kısayolu, kaldırma desteği.
@@ -150,7 +156,7 @@
 - [ ] **Arka plan klipleri:** Kütüphaneye ilk Minecraft/parkur kliplerinin (lisanslı) yüklenmesi.
 - [ ] **Reddit erişimi:** Reddit, kimliksiz RSS isteklerini sunucunun IP'sinden engelliyor (403/429). Ayarlar → Reddit'e resmî API uygulamasının bilgileri girilince bütün Reddit kaynakları otomatik olarak API'ye geçer. **Senin yapman gereken bir adım** (reddit.com/prefs/apps → "script" uygulaması).
 - [x] **GitHub Releases:** v0.2.0 ve v0.2.1 yayında; masaüstü uygulaması buradan güncelleniyor.
-- [ ] **Otopilot:** "Her X saatte bir rastgele konu ve hikâye seç → video → YouTube'da yayınla" tam otomatik zamanlama.
+- [x] **Otopilot:** "Her X saatte bir rastgele konu ve hikâye seç → video → YouTube'da yayınla".
 
 ### Üretim kalitesi (Plan 3'ün devamı)
 - [x] faster-whisper ile gerçek kelime hizalaması.
@@ -212,10 +218,9 @@
 
 ## Sıradaki adım
 
-1. Otopilot zamanlaması (her X saatte üret ve yayınla).
-2. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
-3. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
-4. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
+1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
+2. Ses klonlama (kendi sesin) ve Chatterbox'ı hızlandırma.
+3. Yerel LLM'lerin testi ve kazananın `local` sağlayıcıya bağlanması.
 
 ---
 
