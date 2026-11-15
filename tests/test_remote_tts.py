@@ -112,3 +112,13 @@ def test_server_rejects_bad_requests():
         assert httpx.post(f"{base}/synthesize", content=b"not json", headers=h).status_code == 400
     finally:
         srv.shutdown()
+
+
+def test_worker_writes_16bit_wav_without_torchaudio(tmp_path):
+    torch = pytest.importorskip("torch")
+    from mediafactory.pipeline.chatterbox_worker import save_wav
+
+    out = tmp_path / "x.wav"
+    save_wav(str(out), torch.zeros(1, 2400), 24000)
+    with wave.open(str(out)) as w:
+        assert (w.getsampwidth(), w.getnchannels(), w.getframerate(), w.getnframes()) == (2, 1, 24000, 2400)

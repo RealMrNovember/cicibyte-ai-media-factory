@@ -28,6 +28,20 @@ def _chunks(text: str) -> list[str]:
     return chunks + [buf] if buf else chunks
 
 
+def save_wav(path: str, wav, rate: int) -> None:
+    """16-bit mono PCM with the standard library (newer torchaudio needs the extra torchcodec package to save)."""
+    import wave
+
+    import numpy as np
+
+    pcm = (np.clip(wav.detach().cpu().float().numpy().reshape(-1), -1.0, 1.0) * 32767).astype("<i2")
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(int(rate))
+        w.writeframes(pcm.tobytes())
+
+
 class Engine:
     def __init__(self, threads: int, device: str = "cpu") -> None:
         import torch
@@ -52,8 +66,6 @@ class Engine:
         self.model.conds = self.refs[key]
 
     def run(self, req: dict) -> dict:
-        import torchaudio as ta
-
         torch, model = self.torch, self.model
         exaggeration = float(req.get("exaggeration", 0.5))
         self._condition(req.get("reference"), exaggeration)
@@ -67,7 +79,7 @@ class Engine:
         if not pieces:
             raise ValueError("no text to speak")
         wav = torch.cat(pieces[:-1], dim=-1)
-        ta.save(req["out"], wav, model.sr, encoding="PCM_S", bits_per_sample=16)  # 16-bit PCM: readable by `wave`
+        save_wav(req["out"], wav, model.sr)
         return {"ok": True, "seconds": wav.shape[-1] / model.sr}
 
 

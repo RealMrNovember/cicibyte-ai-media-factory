@@ -201,7 +201,7 @@
 - [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
 - [x] Chatterbox'ı hızlandırma (kalıcı model süreci) ve kendi sesinle klonlama (referans ses yükleme).
 - [x] Telaffuz sözlüğü: Stüdyo → Ses → 📖 Telaffuz sözlüğü. Yalnızca seslendirilen metin değişir; altyazı, başlık ve açıklama orijinal yazımı korur. Satır satır dinleme.
-- [ ] Chatterbox için GPU: Doku2'deki RTX 5060'ta ses sunucusu (kod hazır: `pipeline/tts_server.py`, MF_CHATTERBOX_URL/TOKEN; ulaşılamazsa sunucudaki CPU kopyasına düşer). Kurulum sürüyor.
+- [x] Chatterbox için GPU: Doku2'deki RTX 5060'ta ses sunucusu (`mf-tts` servisi, yalnızca Tailscale adresinde, anahtarlı). Türkçe önizleme işlemcide 50–78 sn, ekran kartında 4–5 sn. Doku2 kapalıysa sunucudaki CPU kopyasına düşer.
 - [x] Hassas içerik ve hak kontrolü: AI (`classify` rotası, yoksa `script`) senaryoda platformların kısıtladığı içeriği işaretliyor (çocuklara zarar, cinsellik, kendine zarar, nefret, tehlikeli talimat, aşırı vahşet, gerçek yakın trajedi). Korku türü sorun sayılmıyor. İşaretlenen ya da hakları "kısıtlı" olan video kalite kontrolünden geçemez; otopilotta bile yayınlanmaz, incelemeye düşer. AI kontrol yapamazsa da incelemeye düşer.
 - [x] Coverr API ile arama (Ayarlar → Stok klipler'e kendi anahtarın) ve Mixkit bağlantısından içe aktarma; lisans ve kaynak her klibin yanında saklanıyor. İlk 4 Mixkit parkur klibi kütüphanede.
 - [x] Kapak görseli ve kalite kontrolü.
