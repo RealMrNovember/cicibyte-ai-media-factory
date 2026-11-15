@@ -33,10 +33,11 @@
 | 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ v0.3.0 |
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
 | 10 | Script Doctor, özgünlük kontrolü, hassas içerik ve hak kontrolü | ✅ |
+| 12 | Kanallar ve konseptler, hazır video stoku | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 394 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 404 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -203,7 +204,7 @@
 - [x] Kapak görseli ve kalite kontrolü.
 - [x] Arka plan müziği (kütüphane + telifsiz ambiyanslar, kısma).
 - [ ] Ses efektleri (kapı gıcırtısı, kalp atışı…) ve 16:9 format (v0.2).
-- [ ] Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
+- [x] Kanallar ve konseptler: Takvim → Kanallar ve konseptler'de kanal başına tarif (dil, konu, süre, Stüdyo'dan stil/ses/müzik, YouTube kanalı, platformlar, görünürlük). "Şimdi bir tane üret", otopilot ve yayın zamanlamaları konsepti izleyebiliyor. **Stok hedefi:** sunucu 10 dakikada bir, hedefin altındaki konseptler için (her seferinde en fazla 2) yeni video üretiyor; isteğe bağlı otomatik onay. Ayar yedeğine dahil.
 
 ### YouTube (Plan 5'in devamı)
 - [ ] Kanal başına günlük yükleme sınırı ve kota takibi.
@@ -253,7 +254,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
-3. Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
+3. Ses efektleri (kapı gıcırtısı, kalp atışı…) ve 16:9 format.
 
 ---
 

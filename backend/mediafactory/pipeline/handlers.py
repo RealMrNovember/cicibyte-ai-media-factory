@@ -61,7 +61,10 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
         ctx.job.status = "approved"
         platforms = auto_publish.get("platforms") or ["youtube"]
         try:
-            publish_job(ctx.session, ctx.job, platforms=platforms, privacy=auto_publish.get("privacy", "public"))
+            from mediafactory.db.models import YouTubeChannel
+
+            chan = ctx.session.get(YouTubeChannel, auto_publish["channel_id"]) if auto_publish.get("channel_id") else None
+            publish_job(ctx.session, ctx.job, platforms=platforms, privacy=auto_publish.get("privacy", "public"), channel=chan)
             ctx.log(f"queued for {' + '.join(platforms)} (autopilot)")
             status = ctx.job.status
         except ValueError as exc:  # e.g. no channel connected: keep it approved for later

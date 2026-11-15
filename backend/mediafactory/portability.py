@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from mediafactory import __version__
 from mediafactory.core.crypto import decrypt, encrypt
-from mediafactory.db.models import AIProvider, AITaskRoute, Schedule, SourceConnector, YouTubeChannel
+from mediafactory.db.models import AIProvider, AITaskRoute, Concept, Schedule, SourceConnector, YouTubeChannel
 from mediafactory.sources.credentials import get_reddit_credentials, set_reddit_credentials
 
 FORMAT = "cicibyte-mediafactory-settings"
@@ -63,6 +63,12 @@ def export_settings(db: Session, *, password: str | None) -> dict:
                     for c in db.scalars(select(SourceConnector).where(SourceConnector.deleted_at.is_(None)).order_by(SourceConnector.id))],
         "schedules": [{"name": s.name, "kind": s.kind, "enabled": s.enabled, "times": s.times, "weekdays": s.weekdays,
                        "timezone": s.timezone, "params": s.params} for s in db.scalars(select(Schedule).order_by(Schedule.id))],
+        "concepts": [{"name": c.name, "enabled": c.enabled, "language": c.language, "topic": c.topic, "seconds": c.seconds,
+                      "style": c.style, "voice": c.voice, "music": c.music, "background": c.background,
+                      "youtube_channel": (db.get(YouTubeChannel, c.youtube_channel_id).channel_id
+                                          if c.youtube_channel_id and db.get(YouTubeChannel, c.youtube_channel_id) else None),
+                      "platforms": c.platforms, "privacy": c.privacy, "ready_buffer": c.ready_buffer,
+                      "auto_approve": c.auto_approve} for c in db.scalars(select(Concept).order_by(Concept.id))],
         "youtube": {"client_id": (oauth.get_client(db) or {}).get("client_id"),
                     "channels": [{"channel_id": c.channel_id, "title": c.title, "thumbnail": c.thumbnail,
                                   "is_default": c.is_default} for c in db.scalars(select(YouTubeChannel))]},
@@ -178,6 +184,17 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
         counts["channels"] += 1
     if sec.get("reddit"):
         set_reddit_credentials(db, sec["reddit"]["client_id"], sec["reddit"]["client_secret"])
+    db.flush()
+    for c in data.get("concepts", []):
+        row = db.scalar(select(Concept).where(Concept.name == c["name"])) or Concept(name=c["name"])
+        chan = db.scalar(select(YouTubeChannel).where(YouTubeChannel.channel_id == c["youtube_channel"])) if c.get("youtube_channel") else None
+        for key in ("enabled", "language", "topic", "seconds", "style", "voice", "music", "background", "platforms",
+                    "privacy", "ready_buffer", "auto_approve"):
+            if key in c:
+                setattr(row, key, c[key])
+        row.youtube_channel_id = chan.id if chan else None
+        db.add(row)
+        counts["concepts"] = counts.get("concepts", 0) + 1
     ig = data.get("instagram") or {}
     if ig.get("user_id") and sec.get("instagram_token"):
         from mediafactory.instagram.publish import save_account

@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from mediafactory.db.models import ProductionJob, Schedule, SourceItem
+from mediafactory.db.models import Concept, ProductionJob, Schedule, SourceItem
 from mediafactory.schedule.timing import next_interval, next_run
 
 log = logging.getLogger(__name__)
@@ -46,13 +46,17 @@ def run_produce(db: Session, schedule: Schedule) -> str:
 
 
 def run_publish(db: Session, schedule: Schedule) -> str:
+    from mediafactory.concepts import channel_for, jobs_of
     from mediafactory.publishing import publish_job
 
     p = schedule.params or {}
-    platforms = p.get("platforms") or ["youtube"]
-    candidates = db.scalars(
-        select(ProductionJob).where(ProductionJob.status == "approved").order_by(ProductionJob.updated_at).limit(50)
-    )
+    concept = db.get(Concept, int(p["concept_id"])) if p.get("concept_id") else None
+    platforms = (concept.platforms if concept else None) or p.get("platforms") or ["youtube"]
+    privacy = concept.privacy if concept else p.get("privacy", "public")
+    q = select(ProductionJob).where(ProductionJob.status == "approved")
+    if concept:
+        q = q.where(jobs_of(concept.id))
+    candidates = db.scalars(q.order_by(ProductionJob.updated_at).limit(50))
     sent = 0
     for job in candidates:
         if sent >= max(1, min(10, int(p.get("count", 1)))):
@@ -61,7 +65,7 @@ def run_publish(db: Session, schedule: Schedule) -> str:
             p.get("language") and job.language != p["language"]
         ):
             continue
-        publish_job(db, job, platforms=platforms, privacy=p.get("privacy", "public"))
+        publish_job(db, job, platforms=platforms, privacy=privacy, channel=channel_for(db, concept))
         sent += 1
     return f"{sent} videos sent to {' + '.join(platforms)}" if sent else "no approved videos waiting"
 
@@ -99,6 +103,16 @@ def run_autopilot(db: Session, schedule: Schedule) -> str:
     from mediafactory.pipeline.production import start_production
 
     p = schedule.params or {}
+    if p.get("concept_id"):
+        from mediafactory.concepts import produce
+
+        concept = db.get(Concept, int(p["concept_id"]))
+        if concept is None:
+            return "the concept of this schedule was deleted"
+        job = produce(db, concept, origin=f"autopilot:{schedule.id}", auto_approve=True, auto_publish=p.get("publish", True))
+        if job is None:
+            return f"no unused story for the concept “{concept.name}”"
+        return f"{concept.name}: “{(job.payload or {}).get('title', '')[:60]}” → video #{job.id}{' (will be published)' if p.get('publish', True) else ''}"
     item = pick_story(db, topic=p.get("topic", "random"), language=p.get("language", "random"))
     if item is None:
         return "no unused story for this topic/language"
@@ -147,6 +161,21 @@ class Scheduler(threading.Thread):
         self.factory, self.stop_event, self.interval_s = factory, stop_event, interval_s
 
     _token_checked = 0.0
+    _stock_checked = 0.0
+
+    def _keep_stock(self) -> None:
+        """Every 10 minutes: produce videos for concepts whose ready stock is below its target."""
+        import time as _time
+
+        from mediafactory.concepts import keep_stock
+
+        if _time.monotonic() - self._stock_checked < 600:
+            return
+        self._stock_checked = _time.monotonic()
+        with self.factory() as db:
+            for note in keep_stock(db):
+                log.info("stock: %s", note)
+            db.commit()
 
     def _keep_instagram_token(self) -> None:
         """Once an hour: refresh the Instagram token when due, so it does not expire unused (60 days)."""
@@ -171,6 +200,7 @@ class Scheduler(threading.Thread):
             try:
                 run_due(self.factory)
                 self._keep_instagram_token()
+                self._keep_stock()
             except OperationalError as exc:
                 log.warning("database unavailable for schedules (%s)", type(exc).__name__)
             except Exception:

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -41,3 +41,32 @@ class YouTubeChannel(Base):
     refresh_token_enc: Mapped[str] = mapped_column(Text)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     connected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Concept(Base):
+    """A channel concept: one recipe (language, topic, voice, look, where to publish) and a stock target.
+
+    Autopilot and publishing schedules can follow a concept; with `ready_buffer` > 0 the server keeps that
+    many videos of the concept ready (waiting for review or approved) by producing new ones when needed.
+    """
+
+    __tablename__ = "concepts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    language: Mapped[str] = mapped_column(String(8), default="en")
+    topic: Mapped[str] = mapped_column(String(20), default="random")
+    seconds: Mapped[int] = mapped_column(Integer, default=50)
+    style: Mapped[dict] = mapped_column(JSONB, default=dict)
+    voice: Mapped[dict] = mapped_column(JSONB, default=dict)
+    music: Mapped[dict] = mapped_column(JSONB, default=dict)
+    background: Mapped[str] = mapped_column(String(120), default="random")
+    youtube_channel_id: Mapped[int | None] = mapped_column(
+        ForeignKey("youtube_channels.id", ondelete="SET NULL"), nullable=True
+    )
+    platforms: Mapped[list] = mapped_column(JSONB, default=lambda: ["youtube"])
+    privacy: Mapped[str] = mapped_column(String(10), default="public")
+    ready_buffer: Mapped[int] = mapped_column(Integer, default=0)
+    auto_approve: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

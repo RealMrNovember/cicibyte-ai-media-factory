@@ -38,6 +38,7 @@ class PublishParams(BaseModel):
     privacy: Literal["public", "unlisted", "private"] = "public"
     language: Literal["en", "tr"] | None = None
     platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    concept_id: int | None = None  # follow a concept: its videos, channel, platforms and visibility
 
 
 class AutopilotParams(BaseModel):
@@ -53,6 +54,7 @@ class AutopilotParams(BaseModel):
     publish: bool = True
     privacy: Literal["public", "unlisted", "private"] = "public"
     platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    concept_id: int | None = None  # follow a concept: its language, topic, voice, look, channel and platforms
 
 
 class ScheduleIn(BaseModel):

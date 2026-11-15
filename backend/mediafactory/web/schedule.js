@@ -77,7 +77,9 @@ async function schedule(el) {
         <button class="btn danger" data-delsch="${s.id}">${t("delete")}</button></div></td></tr>`).join("");
   el.innerHTML = `<div class="row"><h1>${sc("schedule")}</h1><span class="spacer"></span><button class="btn primary" id="newSch">＋ ${sc("newSchedule")}</button></div>
     <p class="sub">${sc("scheduleSub")}</p>
-    <div class="card">${list.items.length ? `<table><tr><th></th><th>${sc("times")}</th><th>${sc("nextRun")}</th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>`;
+    <div class="card">${list.items.length ? `<table><tr><th></th><th>${sc("times")}</th><th>${sc("nextRun")}</th><th></th></tr>${rows}</table>` : `<p class="muted">${t("noData")}</p>`}</div>
+    ${await conceptsCard()}`;
+  bindConceptsCard();
   const byId = Object.fromEntries(list.items.map((s) => [s.id, s]));
   document.getElementById("newSch").addEventListener("click", () => scheduleDialog(null, sources.items));
   on("[data-edit]", "click", (e) => scheduleDialog(byId[e.target.dataset.edit], sources.items));
@@ -122,7 +124,7 @@ function scheduleDialog(s, sources) {
   drawFreq();
   const drawKind = () => {
     if (f.kind.value === "autopilot") {
-      kp.innerHTML = `<p class="muted small">${sc("autoHelp")}</p>
+      kp.innerHTML = `<p class="muted small">${sc("autoHelp")}</p>${conceptSelect(p.concept_id)}
         <div class="grid g2"><div><label>${sc("topic")}</label><select name="topic"><option value="random">${sc("randomTopic")}</option>${Object.keys(TOPICS).filter((k) => k !== "other").map((k) => `<option value="${k}" ${p.topic === k ? "selected" : ""}>${esc(topicLabel(k))}</option>`).join("")}</select></div>
           <div><label>${t("languages")}</label><select name="alang"><option value="random">${sc("randomLang")}</option><option value="en" ${p.language === "en" ? "selected" : ""}>English</option><option value="tr" ${p.language === "tr" ? "selected" : ""}>Türkçe</option></select></div>
           <div><label>${t("seconds")}</label><input name="seconds" type="number" min="15" max="170" value="${p.seconds || 50}"></div>
@@ -141,7 +143,7 @@ function scheduleDialog(s, sources) {
     } else {
       kp.innerHTML = `<div class="grid g2"><div><label>${sc("perSlot")}</label><input name="count" type="number" min="1" max="10" value="${p.count || 1}"></div>
         <div><label>${sc("privacy")}</label><select name="privacy">${["public", "unlisted", "private"].map((v) => `<option value="${v}" ${p.privacy === v ? "selected" : ""}>${sc(v)}</option>`).join("")}</select></div></div>
-        ${platBoxes(p.platforms || ["youtube"])}
+        ${conceptSelect(p.concept_id)}${platBoxes(p.platforms || ["youtube"])}
         <label>${t("languages")}</label><select name="language"><option value="">${sc("anyLang")}</option><option value="en" ${p.language === "en" ? "selected" : ""}>English</option><option value="tr" ${p.language === "tr" ? "selected" : ""}>Türkçe</option></select>`;
     }
   };
@@ -154,6 +156,7 @@ function scheduleDialog(s, sources) {
     if (kindV === "autopilot") {
       params = { topic: f.topic.value, language: f.alang.value, seconds: Number(f.seconds.value), privacy: f.privacy.value,
         publish: f.publish.checked, platforms: platValues(f).length ? platValues(f) : ["youtube"], background: "random",
+        concept_id: f.concept && f.concept.value ? Number(f.concept.value) : null,
         style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
     } else if (kindV === "produce") {
       params = { count: Number(f.count.value), seconds: Number(f.seconds.value), languages: ["en", "tr"].filter((l) => f[l].checked),
@@ -161,7 +164,7 @@ function scheduleDialog(s, sources) {
         style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
     } else {
       params = { count: Number(f.count.value), privacy: f.privacy.value, language: f.language.value || null,
-        platforms: platValues(f).length ? platValues(f) : ["youtube"] };
+        platforms: platValues(f).length ? platValues(f) : ["youtube"], concept_id: f.concept && f.concept.value ? Number(f.concept.value) : null };
     }
     const body = { name: f.name.value, kind: kindV, enabled: s ? s.enabled : true, timezone: f.tz.value.trim() || "UTC",
       times: f.freq.value === "times" ? f.times.value.split(/[,\s]+/).filter(Boolean) : [],

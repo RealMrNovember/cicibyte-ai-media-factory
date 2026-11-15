@@ -138,6 +138,20 @@ also appear in the source, or 12 or more words are copied in a row, the quality 
 waits in Ready for a person even when a schedule auto-approves or auto-publishes. Your own stories (AI
 stories you add) are not checked. Copying through translation is not detected.
 
+## Channels & concepts
+
+**Schedule → Channels & concepts** stores one recipe per channel: language, topic, length, caption style,
+voice and music (taken from your current Studio settings), the YouTube channel, platforms (YouTube and/or
+Instagram) and visibility. **Make one now** produces a video with it. Autopilot and publishing schedules can
+*follow a concept*: autopilot then makes and publishes with the concept's recipe and channel, and a publishing
+schedule sends only that concept's approved videos.
+
+A **stock target** keeps that many of the concept's videos ready (queued, waiting for review or approved).
+Every 10 minutes the server tops up concepts below their target, at most two new videos at a time, from
+unused stories in the concept's language and topic. With "approve automatically" on, stock videos that pass
+the quality check are approved and a publishing schedule can send them; otherwise they wait for you.
+Concepts are part of the settings backup.
+
 ## Sensitive content and rights check
 
 After the script is written, the AI (task route `classify`; the `script` route is used when `classify` is not

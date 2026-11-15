@@ -26,12 +26,20 @@ def _seed(db):
     set_reddit_credentials(db, "reddit-id", "reddit-secret")
     from mediafactory.instagram.publish import save_account
 
+    from mediafactory.db.models import Concept
+
+    db.add(Concept(name="Gece TR", language="tr", seconds=40, style={}, voice={"speed": 1.1}, music={}, background="random",
+                   platforms=["youtube", "instagram"], privacy="public", ready_buffer=3, auto_approve=True,
+                   youtube_channel_id=db.scalar(select(YouTubeChannel)).id))  # fmt: skip
+    db.flush()
     save_account(db, "IG-secret-token-0123456789abcdef", info={"user_id": "17", "username": "cici", "account_type": "BUSINESS"})
     db.flush()
 
 
 def _wipe(db):
-    for model in (AITaskRoute, AIProvider, SourceConnector, Schedule, YouTubeChannel):
+    from mediafactory.db.models import Concept
+
+    for model in (Concept, AITaskRoute, AIProvider, SourceConnector, Schedule, YouTubeChannel):
         for row in db.scalars(select(model)):
             db.delete(row)
     from mediafactory.db.models import SystemSetting
@@ -71,6 +79,11 @@ def test_round_trip_with_password_restores_everything(db):
     from mediafactory.instagram.publish import access_token
 
     assert access_token(db)[0] == "IG-secret-token-0123456789abcdef" and summary["instagram"] == 1
+    from mediafactory.db.models import Concept
+
+    concept = db.scalar(select(Concept))
+    assert concept.name == "Gece TR" and concept.ready_buffer == 3 and concept.voice == {"speed": 1.1}
+    assert concept.youtube_channel_id == db.scalar(select(YouTubeChannel)).id and summary["concepts"] == 1
 
 
 def test_wrong_password_is_refused(db):

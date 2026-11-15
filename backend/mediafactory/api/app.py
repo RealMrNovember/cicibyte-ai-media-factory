@@ -7,7 +7,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from mediafactory import __version__
 from mediafactory.api.body_limit import MaxBodySizeMiddleware
-from mediafactory.api.routes import activity, backgrounds, settings_io, system, music, voices, source_catalog, schedules, youtube, instagram, audit, auth, items, jobs, providers, source_credentials, sources, task_routes
+from mediafactory.api.routes import activity, backgrounds, settings_io, system, music, voices, source_catalog, schedules, concepts, youtube, instagram, audit, auth, items, jobs, providers, source_credentials, sources, task_routes
 from mediafactory.core.config import Settings, get_settings
 
 SECURITY_HEADERS = {
@@ -63,6 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(jobs.router)
     app.include_router(backgrounds.router)
     app.include_router(schedules.router)
+    app.include_router(concepts.router)
     app.include_router(youtube.router)
     app.include_router(instagram.router)
     app.include_router(voices.router)
