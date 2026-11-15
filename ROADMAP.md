@@ -32,9 +32,11 @@
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
 | 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ v0.3.0 |
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
+| 10 | Script Doctor, özgünlük kontrolü | ✅ |
+| 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 361 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 385 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -118,6 +120,15 @@
     - Her çalışmada seçilen konudan (ya da rastgele bir konudan) kullanılmamış rastgele bir hikâye seçiliyor; dil rastgele, EN ya da TR olabiliyor.
     - Video Stüdyo stili, sesi ve müziğiyle üretiliyor; kalite kontrolünden geçerse otomatik onaylanıp hemen YouTube'a gönderiliyor.
     - Kontrolden geçmezse yayınlanmıyor, incelemeye düşüyor. Kanal bağlı değilse video onaylı olarak bekliyor.
+
+### Plan 11: Instagram
+- **Profesyonel hesap (Creator / İşletme):** Resmî Instagram API'si (Instagram girişiyle). Ayarlar → Instagram'a Meta uygulamasından alınan erişim anahtarı yapıştırılıyor; anahtar şifreli saklanıyor ve sunucu 60 günlük süresi dolmadan kendisi yeniliyor (haftada bir).
+- Video sunucudan doğrudan (resumable) yükleniyor; sunucunun internete açık olması gerekmiyor. Açıklamaya başlık, açıklama ve etiketler (en fazla 30 hashtag, 2.200 karakter) yazılıyor.
+- **Yayınla** penceresinde YouTube, Instagram ya da ikisi seçiliyor; zamanlamalar ve otopilot da aynı seçimi sunuyor. İkisi seçilince önce YouTube, hemen ardından Instagram yükleniyor (ikisi aynı anda iş durumunu bozmasın diye).
+- Instagram API'sinde zamanlı yayın yok: zamanlanan Reels sunucuda bekleyip o saatte gönderiliyor.
+- Instagram hatası YouTube'da yayınlanmış videoyu "başarısız" yapmıyor; hata Instagram rozetinde görünüyor ve yeniden denenebiliyor. Geçici hatalar (429/5xx) 5 ve 10 dakika sonra kendiliğinden tekrar deneniyor.
+- **Kişisel hesap:** Instagram API'si kişisel hesaplardan paylaşıma izin vermiyor. Bu hesaplar için her videoda **Instagram'da elle paylaş** var: videoyu indir, hazır açıklamayı kopyala, Instagram'da Reels olarak paylaş, "Paylaştım" ile işaretle. Ayarlar ve pencerelerde bu fark açıklanıyor.
+- Instagram bağlantısı ayar yedeğine (şifreli) dahil.
 
 ### Plan 6: Masaüstü uygulaması
 - Windows uygulaması (pywebview / WebView2) ve **Inno Setup kurulum sihirbazı**: Türkçe/İngilizce kurulum, Başlat menüsü ve masaüstü kısayolu, kaldırma desteği.
@@ -217,6 +228,7 @@
 | Üretim sunucusu CT 175 `mediafactory` | ✅ | — |
 | Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | 🟡 ilk deneme CCSE yükü yüzünden geçersiz (CT 120'nin 8 çekirdeğini paylaşıyorlar); test CCSE'nin boş olduğu gece saatlerine kuruldu | Ben |
 | Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
+| Meta uygulaması + Instagram erişim anahtarı (profesyonel hesap) | ⬜ | **Sen** |
 | Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
 | Oyun arka planı klipleri (kendi kaydın / Coverr / Mixkit) | ⬜ | Sen + ben |
 | Sohbete yazılan Proxmox parolalarının değiştirilmesi | ⬜ | **Sen** |
@@ -239,7 +251,7 @@
 
 ## Sıradaki adım
 
-1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
+1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
 3. classify / rights_review aşamaları, hassas içerik işaretleme.
 

@@ -43,7 +43,7 @@ def test_autopilot_schedule_makes_a_publishable_job(db):
 
     assert run_due(lambda: contextlib.nullcontext(db), now=now) == 1
     job = db.scalar(select(ProductionJob))
-    assert job.language == "tr" and job.payload["auto_approve"] and job.payload["auto_publish"] == {"privacy": "public"}
+    assert job.language == "tr" and job.payload["auto_approve"] and job.payload["auto_publish"] == {"privacy": "public", "platforms": ["youtube"]}
     assert sch.next_run_at == now + timedelta(hours=2)
 
 

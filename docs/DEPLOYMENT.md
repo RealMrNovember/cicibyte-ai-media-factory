@@ -61,6 +61,26 @@ Videos can be sent from **Ready videos** (now or at a chosen time; YouTube publi
 or by a publishing schedule under **Schedule**. Google may keep videos uploaded by an unverified app private
 until the app passes Google's audit.
 
+## Instagram
+
+Reels are published with the official **Instagram API with Instagram Login**. It works only for a
+**professional account** (Creator or Business); switching is free in Instagram → Settings → Account type.
+
+1. At https://developers.facebook.com create an app (type *Business*) and add the product **Instagram →
+   API setup with Instagram login**.
+2. Add your Instagram account there and press **Generate token**.
+3. In the app open **Settings → Instagram**, paste the token and press **Connect**.
+
+The token lasts 60 days; the server renews it by itself (weekly and before it runs out). The video is sent
+straight from the server (resumable upload), so the server does not need a public address. In **Ready videos**
+use **Publish** and tick YouTube, Instagram or both; schedules and autopilot have the same choice. With both,
+YouTube uploads first and Instagram follows. Instagram has no scheduled publishing in its API, so a scheduled
+Reel waits on the server and is sent at that time. Instagram allows about 50 API posts per 24 hours.
+
+**Personal accounts** cannot publish through the API (Instagram does not allow it). For them each video has
+**Share on Instagram manually**: download the video, copy the ready caption, post it in Instagram, then mark it
+as shared.
+
 ## Automatic updates
 
 Turn them on once (as root, from the repository checkout):

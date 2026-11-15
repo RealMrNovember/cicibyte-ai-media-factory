@@ -3,7 +3,7 @@
 import logging
 import threading
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
@@ -46,9 +46,10 @@ def run_produce(db: Session, schedule: Schedule) -> str:
 
 
 def run_publish(db: Session, schedule: Schedule) -> str:
-    from mediafactory.youtube.publish import queue_upload
+    from mediafactory.publishing import publish_job
 
     p = schedule.params or {}
+    platforms = p.get("platforms") or ["youtube"]
     candidates = db.scalars(
         select(ProductionJob).where(ProductionJob.status == "approved").order_by(ProductionJob.updated_at).limit(50)
     )
@@ -56,11 +57,13 @@ def run_publish(db: Session, schedule: Schedule) -> str:
     for job in candidates:
         if sent >= max(1, min(10, int(p.get("count", 1)))):
             break
-        if (job.payload or {}).get("youtube", {}).get("id") or (p.get("language") and job.language != p["language"]):
+        if (job.payload or {}).get("youtube", {}).get("id") or (job.payload or {}).get("instagram") or (
+            p.get("language") and job.language != p["language"]
+        ):
             continue
-        queue_upload(db, job, privacy=p.get("privacy", "public"))
+        publish_job(db, job, platforms=platforms, privacy=p.get("privacy", "public"))
         sent += 1
-    return f"{sent} videos sent to YouTube" if sent else "no approved videos waiting"
+    return f"{sent} videos sent to {' + '.join(platforms)}" if sent else "no approved videos waiting"
 
 
 def pick_story(db: Session, *, topic: str = "random", language: str = "random", rng=None) -> SourceItem | None:
@@ -104,7 +107,8 @@ def run_autopilot(db: Session, schedule: Schedule) -> str:
         db, item, languages=[lang if lang in ("en", "tr") else "en"], seconds=int(p.get("seconds", 50)),
         background=p.get("background", "random"), style=p.get("style"), voice=p.get("voice"), music=p.get("music"),
         auto_approve=True, origin=f"autopilot:{schedule.id}",
-        extra_payload={"auto_publish": {"privacy": p.get("privacy", "public")}} if p.get("publish", True) else None,
+        extra_payload={"auto_publish": {"privacy": p.get("privacy", "public"), "platforms": p.get("platforms") or ["youtube"]}}
+        if p.get("publish", True) else None,
     )  # fmt: skip
     return f"“{item.title[:60]}” → video #{jobs[0].id}{' (will be published)' if p.get('publish', True) else ''}"
 
@@ -114,7 +118,7 @@ ACTIONS = {"produce": run_produce, "publish": run_publish, "autopilot": run_auto
 
 def run_due(factory: Callable[[], Session], *, now: datetime | None = None, limit: int = 10) -> int:
     """Run every enabled schedule whose time has come (each in its own transaction)."""
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     with factory() as db:
         ids = list(db.scalars(select(Schedule.id).where(Schedule.enabled.is_(True), Schedule.next_run_at <= now)
                               .order_by(Schedule.next_run_at).limit(limit)))  # fmt: skip
@@ -142,11 +146,31 @@ class Scheduler(threading.Thread):
         super().__init__(name="scheduler", daemon=True)
         self.factory, self.stop_event, self.interval_s = factory, stop_event, interval_s
 
+    _token_checked = 0.0
+
+    def _keep_instagram_token(self) -> None:
+        """Once an hour: refresh the Instagram token when due, so it does not expire unused (60 days)."""
+        import time as _time
+
+        from mediafactory.instagram.client import InstagramError
+        from mediafactory.instagram.publish import refresh_stored_token
+
+        if _time.monotonic() - self._token_checked < 3600:
+            return
+        self._token_checked = _time.monotonic()
+        with self.factory() as db:
+            try:
+                refresh_stored_token(db)
+                db.commit()
+            except InstagramError as exc:
+                log.warning("Instagram token refresh failed: %s", exc)
+
     def run(self) -> None:
         log.info("scheduler started (every %ss)", self.interval_s)
         while not self.stop_event.is_set():
             try:
                 run_due(self.factory)
+                self._keep_instagram_token()
             except OperationalError as exc:
                 log.warning("database unavailable for schedules (%s)", type(exc).__name__)
             except Exception:

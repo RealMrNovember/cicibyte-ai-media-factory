@@ -396,20 +396,23 @@ async function ready(el) {
   const [data, approved, pub] = await Promise.all([api("/api/jobs?status=needs_review&limit=100"), api("/api/jobs?status=approved&limit=100"),
     Promise.all(["uploading", "scheduled", "published"].map((x) => api(`/api/jobs?status=${x}&limit=100`)))]);
   const published = pub.flatMap((r) => r.items);
+  await loadInstagram();
+  const byJob = Object.fromEntries([...data.items, ...approved.items, ...published].map((j) => [String(j.id), j]));
   const card = (j, actions) => `<div class="card video-card"><video controls preload="none" poster="/api/jobs/${j.id}/poster" src="/api/jobs/${j.id}/video"></video>
       <h3>${esc(j.title || "")}</h3><div class="muted small">#${j.id} · ${esc(j.language)} · ${j.duration_s ?? "?"}s</div>
       <div class="row" style="margin-top:6px;gap:6px">${qcBadge(j)}${ytBadge(j)}</div>
       <div class="row" style="margin-top:10px">${actions}<a class="btn" href="/api/jobs/${j.id}/video" download>${t("download")}</a>${j.has_thumbnail ? `<a class="btn" href="/api/jobs/${j.id}/thumbnail" download>${t("cover")}</a>` : ""}</div></div>`;
-  const ytBtn = (j) => `<button class="btn primary" data-pub="${j.id}">▶ ${sc("sendYt")}</button>`;
+  const ytBtn = (j) => publishButtons(j);
   el.innerHTML = `<h1>${t("ready")}</h1><p class="sub">${t("readyHint")}</p>
     <div class="grid videos">${data.items.map((j) => card(j, `<button class="btn primary" data-dec="approve" data-id="${j.id}">${t("approve")}</button><button class="btn danger" data-dec="reject" data-id="${j.id}">${t("reject")}</button><button class="btn" data-edit-script="${j.id}">✎ ${st("editRerender")}</button>`)).join("") || `<p class="muted">${t("noData")}</p>`}</div>
     ${approved.items.length ? `<h1 style="margin-top:28px;font-size:18px">${t("approved")}</h1><div class="grid videos">${approved.items.map((j) => card(j, ytBtn(j) + `<button class="btn" data-edit-script="${j.id}">✎ ${st("editRerender")}</button>`)).join("")}</div>` : ""}
-    ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid videos">${published.map((j) => card(j, "")).join("")}</div>` : ""}`;
+    ${published.length ? `<h1 style="margin-top:28px;font-size:18px">${sc("publishedList")}</h1><div class="grid videos">${published.map((j) => card(j, publishButtons(j))).join("")}</div>` : ""}`;
   on("[data-dec]", "click", async (e) => {
     try { await api(`/api/jobs/${e.target.dataset.id}/decision`, { method: "POST", body: { decision: e.target.dataset.dec } }); render(); }
     catch (err) { toast(err.message, true); }
   });
-  on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub));
+  on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub, byJob[e.target.dataset.pub]));
+  on("[data-igman]", "click", (e) => manualInstagram(e.target.dataset.igman));
   on("[data-qc]", "click", (e) => {
     const j = [...data.items, ...approved.items, ...published].find((x) => String(x.id) === e.currentTarget.dataset.qc);
     if (!j || !j.qc) return;
@@ -542,8 +545,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  const [yt, upd] = await Promise.all([youtubeCard(), updatesCard()]);
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Reddit</p>${serverCard()}${upd}${yt}${backupCard()}
+  const [yt, ig, upd] = await Promise.all([youtubeCard(), instagramCard(), updatesCard()]);
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · Reddit</p>${serverCard()}${upd}${yt}${ig}${backupCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -564,6 +567,7 @@ async function settings(el) {
         <div><button class="btn primary">${t("save")}</button></div></form></div>`;
   bindServerCard();
   bindYoutubeCard();
+  bindInstagramCard();
   bindUpdatesCard();
   bindBackupCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });

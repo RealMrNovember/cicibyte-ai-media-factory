@@ -4,7 +4,7 @@
 const SC = {
   en: {
     schedule: "Schedule", scheduleSub: "Produce new videos and publish approved ones automatically, at the times you choose.",
-    newSchedule: "New schedule", kindProduce: "Produce videos", kindPublish: "Publish to YouTube", kindAuto: "Autopilot: make & publish", autoHelp: "Each run picks a random unused story (of the topic you choose), makes the video with your Studio style, voice and music, and — if it passes the quality check — publishes it to YouTube.", freq: "When", atTimes: "At set times", every: "Every", hours: "hours", activeFrom: "Active from", activeTo: "until", topic: "Topic", randomTopic: "Random topic", randomLang: "Random language", publishIt: "Publish to YouTube automatically", everyN: "every",  kind: "Type",
+    newSchedule: "New schedule", kindProduce: "Produce videos", kindPublish: "Publish approved videos", kindAuto: "Autopilot: make & publish", autoHelp: "Each run picks a random unused story (of the topic you choose), makes the video with your Studio style, voice and music, and — if it passes the quality check — publishes it to YouTube.", freq: "When", atTimes: "At set times", every: "Every", hours: "hours", activeFrom: "Active from", activeTo: "until", topic: "Topic", randomTopic: "Random topic", randomLang: "Random language", publishIt: "Publish to YouTube automatically", everyN: "every",  kind: "Type",
     times: "Times (e.g. 09:00, 18:30)", days: "Days", tz: "Time zone", count: "How many each time",
     perSlot: "Videos per time slot", autoApprove: "Approve automatically (skip my review)", useStudio: "Use my current Studio caption style, voice and music",
     source: "From source", anySource: "Any source", privacy: "Visibility", public: "Public", unlisted: "Unlisted", private: "Private",
@@ -15,11 +15,21 @@ const SC = {
     connectWait: "Finish signing in in your browser — this page updates by itself.", channels: "Connected channels",
     disconnect: "Disconnect", sendYt: "Send to YouTube", now: "Upload now", later: "Schedule for", when: "Publish at",
     queuedYt: "Queued for YouTube", onYt: "On YouTube", scheduledYt: "Scheduled", noChannel: "Connect a YouTube channel in Settings first.",
-    publishedList: "On YouTube / scheduled", watch: "Open",
+    publishedList: "Published / scheduled", watch: "Open",
+    publish: "Publish", platforms: "Where", ytOnly: "only for YouTube", instagram: "Instagram",
+    igHelp: "Reels are published through the official Instagram API. This needs a professional account (Creator or Business) — switching is free in Instagram → Settings → Account type. A personal account can't publish through the API: use “Share manually” on each video instead.",
+    igSteps: "1) At developers.facebook.com create an app (type: Business) and add the product “Instagram” → “API setup with Instagram login”. 2) Add your Instagram account there and press “Generate token”. 3) Paste the token below. The server renews it by itself before it expires (60 days).",
+    igGuide: "Meta's guide", igToken: "Access token", igConnected: "Connected", igNone: "Not connected", igExpires: "token renewed automatically, valid until",
+    igQueued: "Instagram: queued", igUploading: "Instagram: uploading", igOn: "On Instagram", igManual: "Shared on Instagram", igFailed: "Instagram failed",
+    igScheduled: "Instagram at", igManualBtn: "Share on Instagram manually", igManualTitle: "Share on Instagram yourself",
+    igManualHelp: "Your account isn't connected for automatic publishing (personal accounts can't use the Instagram API). Post it yourself in three steps:",
+    igM1: "Download the video", igM2: "Copy the caption", igM3: "Open Instagram (web or phone), create a Reel, choose the video and paste the caption.",
+    igOpen: "Open instagram.com", copied: "Copied", igMarkDone: "I've shared it", igNeedsConnect: "Connect an Instagram professional account in Settings to publish automatically.",
+    pubPlatforms: "Publish to",
   },
   tr: {
     schedule: "Takvim", scheduleSub: "Seçtiğin saatlerde otomatik video üret ve onaylı videoları YouTube'a gönder.",
-    newSchedule: "Yeni zamanlama", kindProduce: "Video üret", kindPublish: "YouTube'a gönder", kindAuto: "Otopilot: üret ve yayınla", autoHelp: "Her çalışmada (seçtiğin konudan) kullanılmamış rastgele bir hikâye seçer, Stüdyo stilin, sesin ve müziğinle videoyu üretir ve kalite kontrolünden geçerse YouTube'da yayınlar.", freq: "Ne zaman", atTimes: "Belirli saatlerde", every: "Her", hours: "saatte bir", activeFrom: "Etkin saatler", activeTo: "ile", topic: "Konu", randomTopic: "Rastgele konu", randomLang: "Rastgele dil", publishIt: "YouTube'da otomatik yayınla", everyN: "her",  kind: "Tür",
+    newSchedule: "Yeni zamanlama", kindProduce: "Video üret", kindPublish: "Onaylıları yayınla", kindAuto: "Otopilot: üret ve yayınla", autoHelp: "Her çalışmada (seçtiğin konudan) kullanılmamış rastgele bir hikâye seçer, Stüdyo stilin, sesin ve müziğinle videoyu üretir ve kalite kontrolünden geçerse YouTube'da yayınlar.", freq: "Ne zaman", atTimes: "Belirli saatlerde", every: "Her", hours: "saatte bir", activeFrom: "Etkin saatler", activeTo: "ile", topic: "Konu", randomTopic: "Rastgele konu", randomLang: "Rastgele dil", publishIt: "YouTube'da otomatik yayınla", everyN: "her",  kind: "Tür",
     times: "Saatler (ör. 09:00, 18:30)", days: "Günler", tz: "Saat dilimi", count: "Her seferinde kaç tane",
     perSlot: "Her saatte kaç video", autoApprove: "Otomatik onayla (benim incelememi atla)", useStudio: "Stüdyo'daki mevcut altyazı stilimi, sesimi ve müziğimi kullan",
     source: "Kaynak", anySource: "Tüm kaynaklar", privacy: "Görünürlük", public: "Herkese açık", unlisted: "Liste dışı", private: "Gizli",
@@ -30,7 +40,17 @@ const SC = {
     connectWait: "Tarayıcıda girişi tamamla — bu sayfa kendiliğinden güncellenir.", channels: "Bağlı kanallar",
     disconnect: "Bağlantıyı kes", sendYt: "YouTube'a gönder", now: "Hemen yükle", later: "Zamanla", when: "Yayın zamanı",
     queuedYt: "YouTube sırasında", onYt: "YouTube'da", scheduledYt: "Zamanlandı", noChannel: "Önce Ayarlar'dan bir YouTube kanalı bağla.",
-    publishedList: "YouTube'da / zamanlanmış", watch: "Aç",
+    publishedList: "Yayınlanan / zamanlanmış", watch: "Aç",
+    publish: "Yayınla", platforms: "Nerede", ytOnly: "yalnızca YouTube için", instagram: "Instagram",
+    igHelp: "Reels videoları resmî Instagram API'siyle yayınlanır. Bunun için profesyonel hesap (Creator ya da İşletme) gerekir — Instagram → Ayarlar → Hesap türü'nden ücretsiz geçebilirsin. Kişisel hesaplar API ile paylaşamaz: onlar için her videoda “Elle paylaş” kullan.",
+    igSteps: "1) developers.facebook.com'da bir uygulama oluştur (tür: Business) ve “Instagram” → “Instagram girişiyle API kurulumu” ürününü ekle. 2) Instagram hesabını orada ekleyip “Generate token”a bas. 3) Anahtarı aşağıya yapıştır. Sunucu, süresi (60 gün) dolmadan kendisi yeniler.",
+    igGuide: "Meta'nın rehberi", igToken: "Erişim anahtarı (token)", igConnected: "Bağlı", igNone: "Bağlı değil", igExpires: "anahtar kendiliğinden yenilenir, geçerlilik",
+    igQueued: "Instagram: sırada", igUploading: "Instagram: yükleniyor", igOn: "Instagram'da", igManual: "Instagram'da paylaşıldı", igFailed: "Instagram başarısız",
+    igScheduled: "Instagram", igManualBtn: "Instagram'da elle paylaş", igManualTitle: "Instagram'da kendin paylaş",
+    igManualHelp: "Hesabın otomatik yayın için bağlı değil (kişisel hesaplar Instagram API'sini kullanamaz). Üç adımda kendin paylaş:",
+    igM1: "Videoyu indir", igM2: "Açıklamayı kopyala", igM3: "Instagram'ı aç (web ya da telefon), yeni Reels oluştur, videoyu seç ve açıklamayı yapıştır.",
+    igOpen: "instagram.com'u aç", copied: "Kopyalandı", igMarkDone: "Paylaştım", igNeedsConnect: "Otomatik yayın için Ayarlar'dan bir Instagram profesyonel hesabı bağla.",
+    pubPlatforms: "Nerede yayınlansın",
   },
 };
 const sc = (k) => (SC[lang] && SC[lang][k]) || st(k);
@@ -47,8 +67,8 @@ async function schedule(el) {
   const rows = list.items.map((s) => `<tr>
       <td><b>${esc(s.name)}</b><div class="muted small">${s.kind === "produce" ? sc("kindProduce") : s.kind === "publish" ? sc("kindPublish") : "🤖 " + sc("kindAuto")} ·
         ${s.kind === "produce" ? `${s.params.count}× · ${esc((s.params.languages || []).join("+"))}${s.params.auto_approve ? " · auto ✓" : ""}`
-          : s.kind === "publish" ? `${s.params.count}× · ${esc(sc(s.params.privacy))}`
-          : `${esc(s.params.topic === "random" ? sc("randomTopic") : topicLabel(s.params.topic))} · ${esc(s.params.language === "random" ? sc("randomLang") : s.params.language)}${s.params.publish ? " · ▶ " + esc(sc(s.params.privacy)) : ""}`}</div></td>
+          : s.kind === "publish" ? `${s.params.count}× · ${esc((s.params.platforms || ["youtube"]).join(" + "))} · ${esc(sc(s.params.privacy))}`
+          : `${esc(s.params.topic === "random" ? sc("randomTopic") : topicLabel(s.params.topic))} · ${esc(s.params.language === "random" ? sc("randomLang") : s.params.language)}${s.params.publish ? " · ▶ " + esc((s.params.platforms || ["youtube"]).join(" + ")) + " · " + esc(sc(s.params.privacy)) : ""}`}</div></td>
       <td class="small">${s.interval_min ? `${sc("everyN")} ${+(s.interval_min / 60).toFixed(2)} h${s.window ? " · " + esc(s.window.join("–")) : ""}` : esc(s.times.join(", "))}<div class="muted">${s.weekdays.length === 7 ? "—" : s.weekdays.map((d) => days[d]).join(" ")} · ${esc(s.timezone)}</div></td>
       <td class="small">${s.enabled ? when(s.next_run_at) : `<span class="muted">${sc("disabled")}</span>`}
         <div class="muted clip">${s.last_run_at ? when(s.last_run_at) + " · " + esc(s.last_result || "") : ""}</div></td>
@@ -68,6 +88,11 @@ async function schedule(el) {
   });
   on("[data-delsch]", "click", async (e) => { if (!confirm("?")) return; try { await api(`/api/schedules/${e.target.dataset.delsch}`, { method: "DELETE" }); render(); } catch (err) { toast(err.message, true); } });
 }
+
+const platBoxes = (sel) => `<label>${sc("pubPlatforms")}</label><div class="row">
+  <label class="row"><input type="checkbox" name="pl_youtube" ${sel.includes("youtube") ? "checked" : ""} style="width:auto"> ▶ YouTube</label>
+  <label class="row"><input type="checkbox" name="pl_instagram" ${sel.includes("instagram") ? "checked" : ""} style="width:auto"> ◎ Instagram</label></div>`;
+const platValues = (f) => ["youtube", "instagram"].filter((x) => f["pl_" + x] && f["pl_" + x].checked);
 
 function scheduleDialog(s, sources) {
   const p = (s && s.params) || {};
@@ -103,6 +128,7 @@ function scheduleDialog(s, sources) {
           <div><label>${t("seconds")}</label><input name="seconds" type="number" min="15" max="170" value="${p.seconds || 50}"></div>
           <div><label>${sc("privacy")}</label><select name="privacy">${["public", "unlisted", "private"].map((v) => `<option value="${v}" ${(p.privacy || "public") === v ? "selected" : ""}>${sc(v)}</option>`).join("")}</select></div></div>
         <label class="row" style="margin-top:12px"><input type="checkbox" name="publish" ${p.publish === false ? "" : "checked"} style="width:auto"> ${sc("publishIt")}</label>
+        ${platBoxes(p.platforms || ["youtube"])}
         <label class="row"><input type="checkbox" name="studio" checked style="width:auto"> ${sc("useStudio")}</label>`;
     } else if (f.kind.value === "produce") {
       kp.innerHTML = `<div class="grid g2"><div><label>${sc("count")}</label><input name="count" type="number" min="1" max="20" value="${p.count || 1}"></div>
@@ -115,6 +141,7 @@ function scheduleDialog(s, sources) {
     } else {
       kp.innerHTML = `<div class="grid g2"><div><label>${sc("perSlot")}</label><input name="count" type="number" min="1" max="10" value="${p.count || 1}"></div>
         <div><label>${sc("privacy")}</label><select name="privacy">${["public", "unlisted", "private"].map((v) => `<option value="${v}" ${p.privacy === v ? "selected" : ""}>${sc(v)}</option>`).join("")}</select></div></div>
+        ${platBoxes(p.platforms || ["youtube"])}
         <label>${t("languages")}</label><select name="language"><option value="">${sc("anyLang")}</option><option value="en" ${p.language === "en" ? "selected" : ""}>English</option><option value="tr" ${p.language === "tr" ? "selected" : ""}>Türkçe</option></select>`;
     }
   };
@@ -126,14 +153,15 @@ function scheduleDialog(s, sources) {
     let params;
     if (kindV === "autopilot") {
       params = { topic: f.topic.value, language: f.alang.value, seconds: Number(f.seconds.value), privacy: f.privacy.value,
-        publish: f.publish.checked, background: "random",
+        publish: f.publish.checked, platforms: platValues(f).length ? platValues(f) : ["youtube"], background: "random",
         style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
     } else if (kindV === "produce") {
       params = { count: Number(f.count.value), seconds: Number(f.seconds.value), languages: ["en", "tr"].filter((l) => f[l].checked),
         auto_approve: f.auto.checked, source_id: f.source.value ? Number(f.source.value) : null, background: p.background || "random",
         style: f.studio.checked ? loadStyle() : (p.style || loadStyle()), voice: f.studio.checked ? loadVoice() : (p.voice || loadVoice()), music: f.studio.checked ? loadMusic() : (p.music || loadMusic()) };
     } else {
-      params = { count: Number(f.count.value), privacy: f.privacy.value, language: f.language.value || null };
+      params = { count: Number(f.count.value), privacy: f.privacy.value, language: f.language.value || null,
+        platforms: platValues(f).length ? platValues(f) : ["youtube"] };
     }
     const body = { name: f.name.value, kind: kindV, enabled: s ? s.enabled : true, timezone: f.tz.value.trim() || "UTC",
       times: f.freq.value === "times" ? f.times.value.split(/[,\s]+/).filter(Boolean) : [],
@@ -191,29 +219,110 @@ function bindYoutubeCard() {
   });
 }
 
-// ---------- Ready videos: send to YouTube ----------
-function ytBadge(j) {
-  const y = j.youtube;
-  if (!y) return "";
-  if (y.url) return `<a class="pill ok" href="#" data-ext="${esc(y.url)}">${y.state === "scheduled" ? sc("scheduledYt") + " · " + when(y.publish_at) : sc("onYt")} ↗</a>`;
-  return `<span class="pill warn">${sc("queuedYt")}${y.publish_at ? " · " + when(y.publish_at) : ""}</span>`;
+// ---------- Instagram in Settings ----------
+let IG_ACCOUNT = null;
+async function loadInstagram() {
+  try { IG_ACCOUNT = (await api("/api/instagram")).account; } catch { IG_ACCOUNT = null; }
+  return IG_ACCOUNT;
 }
 
-function publishDialog(jobId) {
+async function instagramCard() {
+  const acc = await loadInstagram();
+  return `<div class="card" style="margin-bottom:16px" id="igCard"><h3>◎ ${sc("instagram")}</h3>
+    <p class="muted small">${sc("igHelp")}</p>
+    <p class="muted small">${sc("igSteps")} <a href="#" id="igGuide">${sc("igGuide")} ↗</a></p>
+    ${acc ? `<div class="row" style="margin:8px 0"><span class="pill ok">${sc("igConnected")}</span> <b>@${esc(acc.username)}</b>
+        <span class="muted small">${esc(acc.account_type)} · ${sc("igExpires")} ${when(acc.expires_at)}</span><span class="spacer"></span>
+        <button class="btn danger small-btn" id="igDel">${sc("disconnect")}</button></div>`
+      : `<p class="muted small">${sc("igNone")}</p>`}
+    <form id="igf" class="grid g3" style="align-items:end">
+      <div style="grid-column:span 2"><label>${sc("igToken")}</label><input name="token" type="password" autocomplete="off" required placeholder="IGAA…"></div>
+      <div><button class="btn primary">${acc ? t("save") : "◎ " + sc("connect")}</button></div></form></div>`;
+}
+
+function bindInstagramCard() {
+  const f = document.getElementById("igf");
+  if (!f) return;
+  document.getElementById("igGuide").addEventListener("click", (e) => { e.preventDefault(); openExternal("https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/get-started"); });
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try { const r = await api("/api/instagram/token", { method: "PUT", body: { access_token: f.token.value.trim() } }); toast("Instagram ✓ @" + r.account.username); render(); }
+    catch (err) { toast(err.message, true); }
+  });
+  const del = document.getElementById("igDel");
+  del && del.addEventListener("click", async () => { if (!confirm("?")) return; await api("/api/instagram", { method: "DELETE" }).catch((err) => toast(err.message, true)); render(); });
+}
+
+// ---------- Ready videos: publish to YouTube / Instagram ----------
+function ytBadge(j) {
+  const y = j.youtube, g = j.instagram;
+  let out = "";
+  if (y && y.url) out += `<a class="pill ok" href="#" data-ext="${esc(y.url)}">${y.state === "scheduled" ? sc("scheduledYt") + " · " + when(y.publish_at) : sc("onYt")} ↗</a>`;
+  else if (y) out += `<span class="pill warn">${sc("queuedYt")}${y.publish_at ? " · " + when(y.publish_at) : ""}</span>`;
+  if (g) {
+    if (g.state === "published") out += `<a class="pill ok" href="#" data-ext="${esc(g.url)}">${sc("igOn")} ↗</a>`;
+    else if (g.state === "manual") out += `<span class="pill ok">${sc("igManual")}</span>`;
+    else if (g.state === "failed") out += `<span class="pill warn" title="${esc(g.error || "")}">⚠ ${sc("igFailed")}</span>`;
+    else out += `<span class="pill warn">${g.state === "uploading" ? sc("igUploading") : g.publish_at ? sc("igScheduled") + " · " + when(g.publish_at) : sc("igQueued")}</span>`;
+  }
+  return out;
+}
+
+// What can still be done with this video, per platform.
+const ytOpen = (j) => !(j.youtube && (j.youtube.id || j.youtube.state === "queued"));
+const igOpen = (j) => !j.instagram || j.instagram.state === "failed";
+
+function publishButtons(j) {
+  let out = "";
+  if (ytOpen(j) || (igOpen(j) && IG_ACCOUNT)) out += `<button class="btn primary" data-pub="${j.id}">▶ ${sc("publish")}</button>`;
+  if (igOpen(j) && !IG_ACCOUNT) out += `<button class="btn" data-igman="${j.id}" title="${esc(sc("igNeedsConnect"))}">◎ ${sc("igManualBtn")}</button>`;
+  return out;
+}
+
+function publishDialog(jobId, j) {
+  j = j || {};
   const soon = new Date(Date.now() + 3 * 3600 * 1000);
   soon.setMinutes(0, 0, 0);
   const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  const m = modal(`<h1>${sc("sendYt")}</h1><form id="pubf">
-    <label>${sc("privacy")}</label><select name="privacy"><option value="public">${sc("public")}</option><option value="unlisted">${sc("unlisted")}</option><option value="private">${sc("private")}</option></select>
+  const canYt = ytOpen(j), canIg = igOpen(j) && !!IG_ACCOUNT;
+  const box = (name, label, ok) => ok ? `<label class="row"><input type="checkbox" name="pl_${name}" checked style="width:auto"> ${label}</label>` : "";
+  const m = modal(`<h1>${sc("publish")}</h1><form id="pubf">
+    <label>${sc("pubPlatforms")}</label><div class="row">${box("youtube", "▶ YouTube", canYt)}${box("instagram", "◎ Instagram" + (IG_ACCOUNT ? " @" + esc(IG_ACCOUNT.username) : ""), canIg)}</div>
+    ${!IG_ACCOUNT && igOpen(j) ? `<p class="muted small">◎ ${sc("igNeedsConnect")}</p>` : ""}
+    <label>${sc("privacy")} <span class="muted small">(${sc("ytOnly")})</span></label><select name="privacy"><option value="public">${sc("public")}</option><option value="unlisted">${sc("unlisted")}</option><option value="private">${sc("private")}</option></select>
     <label class="row" style="margin-top:12px"><input type="radio" name="mode" value="now" checked style="width:auto"> ${sc("now")}</label>
     <label class="row"><input type="radio" name="mode" value="later" style="width:auto"> ${sc("later")}</label>
     <input type="datetime-local" name="at" value="${local}">
-    <div class="row" style="margin-top:16px"><button class="btn primary">${sc("sendYt")}</button></div></form>`);
+    <div class="row" style="margin-top:16px"><button class="btn primary">${sc("publish")}</button></div></form>`);
   m.querySelector("#pubf").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = e.target, later = f.mode.value === "later";
-    const body = { privacy: f.privacy.value, publish_at: later ? new Date(f.at.value).toISOString() : null };
-    try { await api(`/api/jobs/${jobId}/publish`, { method: "POST", body }); m.remove(); toast(sc("queuedYt")); render(); }
+    const platforms = platValues(f);
+    if (!platforms.length) return toast(sc("pubPlatforms") + "?", true);
+    const body = { privacy: f.privacy.value, publish_at: later ? new Date(f.at.value).toISOString() : null, platforms };
+    try { await api(`/api/jobs/${jobId}/publish`, { method: "POST", body }); m.remove(); toast(platforms.join(" + ") + " ✓"); render(); }
     catch (err) { toast(err.message, true); }
+  });
+}
+
+async function manualInstagram(jobId) {
+  let pack;
+  try { pack = await api(`/api/jobs/${jobId}/instagram-pack`); } catch (err) { return toast(err.message, true); }
+  const m = modal(`<h1>◎ ${sc("igManualTitle")}</h1><p class="muted small">${sc("igManualHelp")}</p>
+    <ol style="line-height:1.9">
+      <li><button class="btn" id="igDl">⬇ ${sc("igM1")}</button></li>
+      <li><button class="btn" id="igCopy">⧉ ${sc("igM2")}</button><textarea readonly rows="6" style="width:100%;margin-top:6px">${esc(pack.caption)}</textarea></li>
+      <li>${sc("igM3")} <button class="btn" id="igWeb">${sc("igOpen")} ↗</button></li></ol>
+    <p class="muted small">${sc("igHelp")}</p>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="igDone">✓ ${sc("igMarkDone")}</button></div>`);
+  m.querySelector("#igDl").addEventListener("click", () => openExternal(location.origin + pack.video));
+  m.querySelector("#igWeb").addEventListener("click", () => openExternal("https://www.instagram.com/"));
+  m.querySelector("#igCopy").addEventListener("click", async () => {
+    const ta = m.querySelector("textarea");
+    try { await navigator.clipboard.writeText(pack.caption); } catch { ta.select(); document.execCommand("copy"); }
+    toast(sc("copied"));
+  });
+  m.querySelector("#igDone").addEventListener("click", async () => {
+    try { await api(`/api/jobs/${jobId}/instagram-manual`, { method: "POST" }); m.remove(); render(); } catch (err) { toast(err.message, true); }
   });
 }

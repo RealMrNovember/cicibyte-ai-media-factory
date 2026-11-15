@@ -56,13 +56,14 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
     status = "approved" if (ctx.job.payload or {}).get("auto_approve") and qc_ok else "needs_review"
     auto_publish = (ctx.job.payload or {}).get("auto_publish")
     if status == "approved" and auto_publish:
-        from mediafactory.youtube.publish import queue_upload
+        from mediafactory.publishing import publish_job
 
         ctx.job.status = "approved"
+        platforms = auto_publish.get("platforms") or ["youtube"]
         try:
-            queue_upload(ctx.session, ctx.job, privacy=auto_publish.get("privacy", "public"))
-            ctx.log("queued for YouTube (autopilot)")
-            status = "uploading"
+            publish_job(ctx.session, ctx.job, platforms=platforms, privacy=auto_publish.get("privacy", "public"))
+            ctx.log(f"queued for {' + '.join(platforms)} (autopilot)")
+            status = ctx.job.status
         except ValueError as exc:  # e.g. no channel connected: keep it approved for later
             ctx.log(f"not published automatically: {exc}")
     elif auto_publish and not qc_ok:
@@ -71,4 +72,5 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
 
 
 # Register the YouTube upload stage with the same worker.
+import mediafactory.instagram.publish  # noqa: E402,F401
 import mediafactory.youtube.publish  # noqa: E402,F401

@@ -24,6 +24,9 @@ def _seed(db):
     oauth.set_client(db, "cid-1234567890.apps.googleusercontent.com", "yt-secret")
     db.add(YouTubeChannel(channel_id="UC1", title="Night Tales", refresh_token_enc=encrypt("refresh-1"), is_default=True))
     set_reddit_credentials(db, "reddit-id", "reddit-secret")
+    from mediafactory.instagram.publish import save_account
+
+    save_account(db, "IG-secret-token-0123456789abcdef", info={"user_id": "17", "username": "cici", "account_type": "BUSINESS"})
     db.flush()
 
 
@@ -42,7 +45,7 @@ def test_export_without_password_has_no_secrets(db):
     _seed(db)
     data = export_settings(db, password=None)
     blob = json.dumps(data)
-    assert "sk-router-123" not in blob and "yt-secret" not in blob and "refresh-1" not in blob
+    assert "sk-router-123" not in blob and "yt-secret" not in blob and "refresh-1" not in blob and "IG-secret" not in blob
     assert data["secrets"] is None and data["data"]["providers"][0]["name"] == "router"
     assert data["data"]["routes"][0]["steps"] == [{"provider": "router", "model": "mf-senaryo"}]  # by name, not id
 
@@ -65,6 +68,9 @@ def test_round_trip_with_password_restores_everything(db):
     assert oauth.get_client(db)["client_secret"] == "yt-secret"
     assert decrypt(db.scalar(select(YouTubeChannel)).refresh_token_enc) == "refresh-1"
     assert get_reddit_credentials(db)["client_secret"] == "reddit-secret"
+    from mediafactory.instagram.publish import access_token
+
+    assert access_token(db)[0] == "IG-secret-token-0123456789abcdef" and summary["instagram"] == 1
 
 
 def test_wrong_password_is_refused(db):

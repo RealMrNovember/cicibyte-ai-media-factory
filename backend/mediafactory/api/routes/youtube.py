@@ -1,6 +1,6 @@
 """YouTube connection (Settings) and sending videos to YouTube (Ready videos)."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import escape
 from typing import Literal
 
@@ -14,9 +14,9 @@ from mediafactory.api.deps import client_ip, get_db, require_user
 from mediafactory.audit.service import record_audit
 from mediafactory.core.crypto import encrypt
 from mediafactory.db.models import ProductionJob, User, YouTubeChannel
+from mediafactory.publishing import publish_job
 from mediafactory.youtube import oauth
 from mediafactory.youtube.oauth import YouTubeError
-from mediafactory.youtube.publish import queue_upload
 
 router = APIRouter(prefix="/api", tags=["youtube"])
 
@@ -34,6 +34,7 @@ class PublishIn(BaseModel):
     privacy: Literal["public", "unlisted", "private"] = "public"
     publish_at: datetime | None = None
     channel_id: int | None = None
+    platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
 
 
 def channel_out(c: YouTubeChannel) -> dict:
@@ -126,12 +127,13 @@ def publish(
         raise HTTPException(status_code=404, detail="job not found")
     at = body.publish_at
     if at is not None and at.tzinfo is None:
-        at = at.replace(tzinfo=timezone.utc)
+        at = at.replace(tzinfo=UTC)
     chan = db.get(YouTubeChannel, body.channel_id) if body.channel_id else None
     try:
-        queue_upload(db, job, privacy=body.privacy, publish_at=at, channel=chan)
+        publish_job(db, job, platforms=body.platforms, privacy=body.privacy, publish_at=at, channel=chan)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from None
     record_audit(db, actor_id=user.id, action="job.publish", target_type="production_job", target_id=str(jid),
-                 details={"privacy": body.privacy, "publish_at": at.isoformat() if at else None}, ip=client_ip(request))  # fmt: skip
-    return {"ok": True, "youtube": job.payload.get("youtube")}
+                 details={"privacy": body.privacy, "publish_at": at.isoformat() if at else None, "platforms": body.platforms},
+                 ip=client_ip(request))  # fmt: skip
+    return {"ok": True, "youtube": job.payload.get("youtube"), "instagram": job.payload.get("instagram")}

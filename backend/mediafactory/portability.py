@@ -9,7 +9,7 @@ server has a different MF_SECRET_KEY. Import merges by name and never deletes an
 import base64
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
@@ -79,7 +79,12 @@ def export_settings(db: Session, *, password: str | None) -> dict:
     reddit = get_reddit_credentials(db)
     if reddit:
         secrets["reddit"] = reddit
-    out = {"format": FORMAT, "version": __version__, "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    from mediafactory.instagram.publish import get_account
+
+    if (acc := get_account(db)) and (tok := _safe_decrypt(acc.get("token_enc"))) is not None:
+        data["instagram"] = {k: acc.get(k) for k in ("user_id", "username", "account_type", "expires_at")}
+        secrets["instagram_token"] = tok
+    out = {"format": FORMAT, "version": __version__, "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
            "data": data, "secrets": None}  # fmt: skip
     if password:
         salt = os.urandom(16)
@@ -143,7 +148,7 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
         db.add(row)
         counts["sources"] += 1
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for s in data.get("schedules", []):
         row = db.scalar(select(Schedule).where(Schedule.name == s["name"])) or Schedule(name=s["name"])
         for k in ("kind", "enabled", "times", "weekdays", "timezone", "params"):
@@ -173,5 +178,13 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
         counts["channels"] += 1
     if sec.get("reddit"):
         set_reddit_credentials(db, sec["reddit"]["client_id"], sec["reddit"]["client_secret"])
+    ig = data.get("instagram") or {}
+    if ig.get("user_id") and sec.get("instagram_token"):
+        from mediafactory.instagram.publish import save_account
+
+        expires = datetime.fromisoformat(ig["expires_at"]) if ig.get("expires_at") else None
+        save_account(db, sec["instagram_token"], info={k: ig.get(k) for k in ("user_id", "username", "account_type")},
+                     expires_at=expires)  # fmt: skip
+        counts["instagram"] = 1
     db.flush()
     return counts

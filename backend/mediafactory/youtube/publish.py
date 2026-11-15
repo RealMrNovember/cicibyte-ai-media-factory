@@ -1,7 +1,7 @@
 """Send an approved video to YouTube: now, or scheduled (YouTube publishes it at the chosen time)."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import select
@@ -17,7 +17,7 @@ from mediafactory.youtube.upload import build_metadata, set_thumbnail, upload_vi
 
 UPLOAD_STAGE = "upload_youtube"
 PRIVACY = ("public", "unlisted", "private")
-PUBLISHABLE = ("needs_review", "approved", "failed")
+PUBLISHABLE = ("needs_review", "approved", "failed", "published", "scheduled")  # published: e.g. on Instagram only
 
 
 def default_channel(db: Session) -> YouTubeChannel | None:
@@ -34,7 +34,7 @@ def queue_upload(
         raise ValueError("only a finished, approved video can be sent to YouTube")
     if (job.payload or {}).get("youtube", {}).get("id"):
         raise ValueError("this video is already on YouTube")
-    if publish_at is not None and publish_at <= datetime.now(timezone.utc):
+    if publish_at is not None and publish_at <= datetime.now(UTC):
         raise ValueError("the publish time must be in the future")
     channel = channel or default_channel(db)
     if channel is None:
@@ -77,4 +77,7 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
         "privacy": meta["status"]["privacyStatus"], "publish_at": inputs.get("publish_at"),
     }}  # fmt: skip
     ctx.log(f"done: {url}")
-    return StageOutcome(next_status="scheduled" if publish_at else "published", outputs={"youtube_id": vid, "url": url})
+    from mediafactory.instagram.publish import after_youtube_stage
+
+    return StageOutcome(next_status="scheduled" if publish_at else "published", outputs={"youtube_id": vid, "url": url},
+                        next_stage=after_youtube_stage(job))  # fmt: skip

@@ -20,6 +20,9 @@ locally, and publish to multiple YouTube channels — only after you approve.
 - **Local-first:** runs on CPU, no paid API required.
 - **Multi-channel, multi-concept, multi-language** (English and Turkish).
 - **Human-approved publishing:** uploads are private by default; nothing is published without your approval.
+- **YouTube and Instagram:** publish a video to YouTube Shorts, Instagram Reels or both, now, at a set time or
+  on autopilot. Instagram publishing needs a professional (Creator/Business) account; personal accounts get a
+  one-click manual share (video + ready caption).
 - **Source- and rights-aware:** every item keeps its source, hash and rights status.
 
 ## Quick start
