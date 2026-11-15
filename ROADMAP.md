@@ -230,7 +230,7 @@
 | DL380 erişimi (DHCP watchdog, Tailscale) | ✅ | — |
 | 9router sunucuda (CT 171), Funnel kapalı, combo'lar kuruldu | ✅ | — |
 | Üretim sunucusu CT 175 `mediafactory` | ✅ | — |
-| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | 🟡 ilk deneme CCSE yükü yüzünden geçersiz (CT 120'nin 8 çekirdeğini paylaşıyorlar); test CCSE'nin boş olduğu gece saatlerine kuruldu | Ben |
+| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ✅ test edildi (15 Kasım, CCSE işçileri 20 dk duraklatılarak): **Gemma 4 26B-A4B** Türkçede açık ara en doğal ve hatasız; uzunluğa en iyi uyan da o. Hız ~6,6 token/sn (mevcut Qwen3-30B ~9,5). Qwen3-30B ve Qwen3.6 Türkçede dil bilgisi hataları yapıyor. 🟡 `local` sağlayıcıya bağlanması karar bekliyor (CCSE ile paylaşılan sunucu) | Ben + **Sen** |
 | Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
 | Meta uygulaması + Instagram erişim anahtarı (profesyonel hesap) | ⬜ | **Sen** |
 | Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
