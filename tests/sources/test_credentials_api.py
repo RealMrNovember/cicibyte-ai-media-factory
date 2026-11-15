@@ -15,14 +15,14 @@ def admin(client, make_user):
 
 def test_not_configured_initially(client, make_user):
     admin(client, make_user)
-    assert client.get("/api/source-credentials").json() == {"reddit": {"configured": False, "client_id": None}}
+    assert client.get("/api/source-credentials").json() == {"reddit": {"configured": False, "unreadable": False, "client_id": None}}
 
 
 def test_credentials_put_get_never_returns_secret(client, make_user, db):
     h = admin(client, make_user)
     assert client.put("/api/source-credentials/reddit", json=BODY, headers=h).status_code == 200
     body = client.get("/api/source-credentials").json()
-    assert body == {"reddit": {"configured": True, "client_id": "my-client"}}
+    assert body == {"reddit": {"configured": True, "unreadable": False, "client_id": "my-client"}}
     stored = db.get(SystemSetting, "credentials.reddit").value
     assert "super-secret-value" not in str(stored)
     assert get_reddit_credentials(db) == BODY

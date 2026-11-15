@@ -4,8 +4,13 @@ from sqlalchemy.orm import Session
 
 from mediafactory.api.deps import client_ip, get_db, require_admin
 from mediafactory.audit.service import record_audit
-from mediafactory.db.models import User
-from mediafactory.sources.credentials import delete_reddit_credentials, get_reddit_credentials, set_reddit_credentials
+from mediafactory.db.models import SystemSetting, User
+from mediafactory.sources.credentials import (
+    REDDIT_KEY,
+    delete_reddit_credentials,
+    get_reddit_credentials,
+    set_reddit_credentials,
+)  # fmt: skip
 
 router = APIRouter(prefix="/api/source-credentials", tags=["sources"])
 
@@ -17,7 +22,12 @@ class RedditCredentialsIn(BaseModel):
 
 def _status(db: Session) -> dict:
     creds = get_reddit_credentials(db)
-    return {"reddit": {"configured": creds is not None, "client_id": creds["client_id"] if creds else None}}
+    row = db.get(SystemSetting, REDDIT_KEY)
+    stored = row.value if row and isinstance(row.value, dict) else {}
+    # Stored but undecryptable (MF_SECRET_KEY changed): say so instead of pretending nothing is set.
+    unreadable = creds is None and bool(stored.get("client_secret_enc"))
+    return {"reddit": {"configured": creds is not None, "unreadable": unreadable,
+                       "client_id": creds["client_id"] if creds else stored.get("client_id")}}  # fmt: skip
 
 
 @router.get("")

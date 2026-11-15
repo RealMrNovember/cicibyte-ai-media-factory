@@ -10,6 +10,61 @@ def main() -> None:
     """CiciByte AI Media Factory command line."""
 
 
+def _load_settings():
+    """Settings, or a short readable message (not a traceback) when required ones are missing or invalid."""
+    from pydantic import ValidationError
+
+    from mediafactory.core.config import get_settings
+
+    try:
+        return get_settings()
+    except ValidationError as exc:
+        lines = []
+        for err in exc.errors():
+            name = "MF_" + str(err["loc"][0]).upper() if err.get("loc") else "settings"
+            lines.append(f"  {name}: {err['msg']}")
+        typer.echo("Settings problem (set these in .env or /etc/mediafactory/env):\n" + "\n".join(lines), err=True)
+        raise typer.Exit(2) from None
+
+
+def wait_for_database(check, *, timeout_s: float = 60, sleep=None) -> bool:
+    """Call check() until it stops raising (the database accepts connections) or timeout_s passes."""
+    import time
+
+    sleep = sleep or time.sleep
+    waited = 0.0
+    while True:
+        try:
+            check()
+            return True
+        except Exception:  # noqa: BLE001 - any connection problem means "not yet"
+            if waited + 2 > timeout_s:
+                return False
+            sleep(2)
+            waited += 2
+
+
+def health_host(allowed: list[str]) -> str:
+    """A host name the API accepts, for the container health check (wildcards are not names)."""
+    return next((h for h in allowed if h and "*" not in h), "localhost")
+
+
+@app.command("healthcheck")
+def healthcheck() -> None:
+    """Exit 0 when the API answers /api/health (used by Docker; sends an allowed Host name)."""
+    import urllib.request
+
+    settings = _load_settings()
+    req = urllib.request.Request(f"http://127.0.0.1:{settings.bind_port}/api/health",
+                                 headers={"Host": health_host(settings.allowed_hosts)})  # fmt: skip
+    try:
+        with urllib.request.urlopen(req, timeout=4) as r:  # noqa: S310 - our own API on loopback
+            ok = r.status == 200
+    except Exception:  # noqa: BLE001
+        ok = False
+    raise typer.Exit(0 if ok else 1)
+
+
 @app.command("migrate")
 def migrate(revision: str = typer.Argument("head", help="Target revision")) -> None:
     """Apply database migrations (works from an installed package, no repo checkout needed)."""
@@ -19,11 +74,25 @@ def migrate(revision: str = typer.Argument("head", help="Target revision")) -> N
     from alembic.config import Config
 
     import mediafactory.db as db_pkg
-    from mediafactory.core.config import get_settings
 
+    settings = _load_settings()
+
+    def _ping():
+        from sqlalchemy import create_engine, text
+
+        engine = create_engine(settings.database_url, connect_args={"connect_timeout": 3})
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+        finally:
+            engine.dispose()
+
+    if not wait_for_database(_ping, timeout_s=60):
+        typer.echo("the database did not accept connections within 60 seconds", err=True)
+        raise typer.Exit(1)
     cfg = Config()
     cfg.set_main_option("script_location", str(Path(db_pkg.__file__).parent / "migrations"))
-    cfg.set_main_option("sqlalchemy.url", get_settings().database_url)
+    cfg.set_main_option("sqlalchemy.url", settings.database_url)
     cfg.attributes["configure_logger"] = False
     command.upgrade(cfg, revision)
     typer.echo(f"database migrated to {revision}")
@@ -60,9 +129,8 @@ def api(
     import uvicorn
 
     from mediafactory.api.app import create_app
-    from mediafactory.core.config import get_settings
 
-    settings = get_settings()
+    settings = _load_settings()
     uvicorn.run(
         create_app(settings),
         host=host or settings.bind_host,

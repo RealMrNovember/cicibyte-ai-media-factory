@@ -162,7 +162,7 @@ class SafeFetcher:
                         current = nxt
                         continue
                     chunks, size = [], 0
-                    for chunk in response.iter_bytes():
+                    for chunk in response.iter_bytes(chunk_size=65536):  # small pieces: the size cap holds after gzip too
                         size += len(chunk)
                         if size > self.max_bytes:
                             raise FetchError(f"response too large (> {self.max_bytes} bytes)")

@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 481 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 488 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -252,7 +252,7 @@
 - **Plan 1–2'den ertelenen küçük maddeler:**
   - ✅ 15 Kasım'da kapatıldı: IPv6 içine gömülü özel IPv4 adresleri (6to4, Teredo, NAT64) engelleniyor; yönlendirmede `Authorization`/`Cookie` başka siteye taşınmıyor; adreslerdeki `kullanıcı:parola@` kayıtlarda maskeleniyor; ayar eksikliği hataları (görev rotası yok) boşuna yeniden denenmiyor; 2000 karakterden uzun besleme adresleri hata vermiyor; .txt/.md yüklemelerinde `<…>` metni korunuyor; Atom `xhtml` içerikleri okunuyor. RSS 1.0/RDF daha önce eklenmişti.
   - Artık geçersiz (giriş ekranı kaldırıldı): giriş süresinden hesap tahmini, giriş deneme sınırlayıcısının belleği, e-posta büyük/küçük harf.
-  - Açık kalanlar: veritabanı hazır değilken Docker'da API'nin birkaç kez yeniden başlaması; `MF_SECRET_KEY` eksikken anlaşılması zor hata; izinli host listesinden `localhost` çıkarılınca Docker sağlık kontrolünün bozulması; sağlık kontrolünün bağlantı bekleme süresi (5 sn sınırından uzun); sabitlenmemiş bağımlılık sürümleri; gzip'li yanıtın tek parçada 5 MB sınırını kısa süre aşabilmesi; bellekteki hız sınırlayıcının thread'ler arasında tam kesin olmaması; gizli anahtar değişince Reddit bilgisinin "okunamıyor" yerine "yapılandırılmamış" görünmesi.
+  - ✅ Kalanlar da kapatıldı: `mf migrate` veritabanını 60 sn bekliyor (Docker'da yeniden başlama döngüsü yok); eksik/yanlış `MF_SECRET_KEY` gibi ayarlar okunur bir mesajla bildiriliyor; Docker sağlık kontrolü `mf healthcheck` ile izinli host adını kullanıyor; sağlık kontrolünün bağlantı süresi 3 sn; bağımlılıklar ana sürümlerinde sabitlendi; indirmeler 64 KB parçalarla okunuyor (gzip'te de 5 MB sınırı kesin); bellekteki hız sınırlayıcı paralel istekleri sıraya koyuyor; okunamayan Reddit bilgisi Ayarlar'da "okunamıyor" diye görünüyor.
 
 ---
 

@@ -68,12 +68,13 @@ class MemoryHostThrottle:
             until = self._blocked.get(host)
             if until and until > utcnow():
                 raise _cooling(host, until)
-            last = self._last.get(host)
-            wait = 0.0 if last is None else self.interval_for(host) - (self._clock() - last)
+            # Reserve the next slot while holding the lock, so parallel callers queue up instead of all going at once.
+            now, last = self._clock(), self._last.get(host)
+            start = now if last is None else max(now, last + self.interval_for(host))
+            self._last[host] = start
+            wait = start - now
         if wait > 0:
             self._sleep(wait)
-        with self._lock:
-            self._last[host] = self._clock()
 
     def penalize(self, host: str, seconds: int) -> None:
         with self._lock:

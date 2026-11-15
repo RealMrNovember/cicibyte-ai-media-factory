@@ -4,7 +4,7 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
-    offTitle: "This computer can't reach your Media Factory server",
+    redditUnreadable: "Saved, but it can't be read (the server's secret key changed): enter the Reddit app again.", offTitle: "This computer can't reach your Media Factory server",
     offWhy: "Everything — AI keys, YouTube and Instagram, sources, schedules, videos — lives on the server, not on this computer. Once this computer reaches the same server you see it all as it is: no import needed. (Export/import is for moving to another server.)",
     offSteps: "If your server is on Tailscale: 1) install Tailscale on this computer, 2) sign in with the same account as your server, 3) press “Try again”. Otherwise enter the server's address below.",
     offGet: "Download Tailscale", offRetry: "Try again", offAddr: "Address tried",
@@ -25,7 +25,7 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
-    offTitle: "Bu bilgisayar Media Factory sunucuna ulaşamıyor",
+    redditUnreadable: "Kayıtlı ama okunamıyor (sunucunun gizli anahtarı değişmiş): Reddit uygulama bilgilerini yeniden gir.", offTitle: "Bu bilgisayar Media Factory sunucuna ulaşamıyor",
     offWhy: "Her şey — AI anahtarları, YouTube ve Instagram, kaynaklar, takvimler, videolar — bu bilgisayarda değil, sunucuda duruyor. Bu bilgisayar aynı sunucuya ulaşınca hepsini olduğu gibi görürsün: içe aktarmaya gerek yok. (Dışa/içe aktarma başka bir sunucuya taşımak içindir.)",
     offSteps: "Sunucun Tailscale üzerindeyse: 1) bu bilgisayara Tailscale kur, 2) sunucunla aynı hesapla giriş yap, 3) “Tekrar dene”ye bas. Değilse sunucunun adresini aşağıya yaz.",
     offGet: "Tailscale'i indir", offRetry: "Tekrar dene", offAddr: "Denenen adres",
@@ -582,7 +582,7 @@ async function settings(el) {
         <div><label>Provider</label><select name="pid">${prov.items.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select></div>
         <div><label>${t("model")}</label><input name="model" required placeholder="mf-senaryo"></div>
         <div><button class="btn primary">${t("save")}</button></div></form></div>
-    <div class="card"><h3>${t("reddit")}</h3><p class="muted small">${creds.reddit.configured ? "✓ " + esc(creds.reddit.client_id) : "—"}</p>
+    <div class="card"><h3>${t("reddit")}</h3><p class="muted small">${creds.reddit.configured ? "✓ " + esc(creds.reddit.client_id) : creds.reddit.unreadable ? "⚠ " + esc(t("redditUnreadable")) : "—"}</p>
       <form id="cred" class="grid g4" style="align-items:end">
         <div><label>${t("clientId")}</label><input name="client_id" required></div>
         <div><label>${t("clientSecret")}</label><input name="client_secret" type="password" required autocomplete="off"></div>

@@ -25,6 +25,6 @@ VOLUME ["/data"]
 EXPOSE 8080
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/api/health', timeout=4).status == 200 else 1)" || exit 1
+    CMD mf healthcheck
 
 CMD ["mf", "--help"]
