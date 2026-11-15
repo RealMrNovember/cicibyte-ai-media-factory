@@ -12,6 +12,7 @@ from mediafactory.pipeline.backgrounds import pick_background, resolve, story_ca
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
 from mediafactory.pipeline.doctor import summary as doctor_summary
 from mediafactory.pipeline.music import MusicSettings
+from mediafactory.pipeline.originality import with_originality
 from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
 from mediafactory.pipeline.script import generate_script
@@ -84,6 +85,8 @@ def make_short(
     except Exception as exc:  # a missing cover must not lose the video
         log(f"      cover image failed: {exc}")
     qc = check_video(video, captions=len(cues))
+    if item.rights_status != "user_owned":  # your own story may be read as it is
+        qc = with_originality(qc, script["narration"], item.normalized_text or "")
     failed = [f"{c['name']} ({c['value']})" for c in qc["checks"] if not c["ok"]]
     log("      QC passed" if qc["passed"] else f"      QC issues: {', '.join(failed)}")
     result = {

@@ -111,6 +111,13 @@ the job details. This costs up to three extra AI calls per script; to turn it of
 MF_SCRIPT_DOCTOR=false
 ```
 
+## Originality check
+
+After rendering, the narration is compared with the source story. If more than 15% of its 5-word phrases
+also appear in the source, or 12 or more words are copied in a row, the quality check fails: the video
+waits in Ready for a person even when a schedule auto-approves or auto-publishes. Your own stories (AI
+stories you add) are not checked. Copying through translation is not detected.
+
 ## Update / Güncelleme
 
 ```bash

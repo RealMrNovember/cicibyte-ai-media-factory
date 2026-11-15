@@ -34,7 +34,7 @@
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 354 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 361 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -182,7 +182,7 @@
 - [x] faster-whisper ile gerçek kelime hizalaması.
 - [x] Senaryo düzenleme ekranı (üretimden önce ve sonra).
 - [x] Script Doctor: AI her senaryoyu 1–10 puanlıyor; 7'nin altındaysa (ya da uzunluk hedeften çok saparsa) notlarla bir kez yeniden yazıp iyi olanı tutuyor. Puan iş detayında görünüyor; `MF_SCRIPT_DOCTOR=false` ile kapatılır.
-- [ ] Özgünlük kontrolü: kaynakla n-gram örtüşmesi, eşik aşılırsa incelemeye düşme.
+- [x] Özgünlük kontrolü: senaryonun 5 kelimelik dizilerinin kaynakla örtüşmesi (%15 üstü) ya da arka arkaya 12+ kelime kopya varsa kalite kontrolü başarısız olur; video otopilotta bile yayınlanmaz, incelemeye düşer. Kendi hikâyelerin (AI hikâyesi) kontrol edilmez. Çeviriyle kopyayı yakalamaz.
 - [x] Ses seçimi, hız ve ton ayarı (Stüdyo ve Takvim).
 - [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
 - [x] Chatterbox'ı hızlandırma (kalıcı model süreci) ve kendi sesinle klonlama (referans ses yükleme).
@@ -241,7 +241,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
-3. Özgünlük kontrolü (kaynakla n-gram örtüşmesi).
+3. classify / rights_review aşamaları, hassas içerik işaretleme.
 
 ---
 
