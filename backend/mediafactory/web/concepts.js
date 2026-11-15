@@ -77,7 +77,7 @@ async function conceptDialog(c) {
     <div class="grid g2"><div><label>${cc("stockTarget")}</label><input name="buffer" type="number" min="0" max="20" value="${v.ready_buffer}"><div class="muted small">${cc("stockOff")}</div></div></div>
     <label class="row" style="margin-top:8px"><input type="checkbox" name="auto" ${v.auto_approve ? "checked" : ""} style="width:auto"> ${cc("autoApproveC")}</label>
     <label class="row"><input type="checkbox" name="studio" ${c ? "" : "checked"} style="width:auto"> ${cc("saveStudio")}</label>
-    ${c ? `<p class="muted small">${cc("keepRecipe")}: ☐ → ${cc("saveStudio").toLowerCase()} ☑</p>` : ""}
+    ${c ? `<p class="muted small">${cc("keepRecipe")}: ☐</p>` : ""}
     <div class="row" style="margin-top:16px"><button class="btn primary">${t("save")}</button></div></form>`);
   m.querySelector("#cf").addEventListener("submit", async (e) => {
     e.preventDefault();
