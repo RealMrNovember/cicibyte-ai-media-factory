@@ -17,6 +17,18 @@ REPO = "RealMrNovember/cicibyte-ai-media-factory"
 LATEST_API = f"https://api.github.com/repos/{REPO}/releases/latest"
 DOWNLOAD_PREFIX = f"https://github.com/{REPO}/releases/download/"
 INSTALLER = re.compile(r"^CiciByteMediaFactory-Setup-[\d.]+\.exe$")
+# Mac and Linux packages are offered as a download (opened in the browser); only Windows installs itself.
+PACKAGES = {
+    "darwin": lambda arch: re.compile(rf"^CiciByteMediaFactory-[\d.]+-macOS-{arch}\.dmg$"),
+    "linux": lambda arch: re.compile(rf"^CiciByteMediaFactory-[\d.]+-{arch}\.AppImage$"),
+}
+
+
+def _machine() -> str:
+    import platform
+
+    m = platform.machine().lower()
+    return {"amd64": "x86_64", "aarch64": "arm64"}.get(m, m)
 
 
 class UpdateError(Exception):
@@ -33,19 +45,27 @@ def newer(candidate: str, current: str) -> bool:
     return bool(a and b and a > b)
 
 
-def pick_update(release: dict, *, current: str = __version__) -> dict | None:
+def pick_update(
+    release: dict, *, current: str = __version__, platform: str = sys.platform, machine: str | None = None
+) -> dict | None:
     """Update info from a GitHub release, or None when it is not newer / incomplete / not from our repository."""
     tag = str(release.get("tag_name", ""))
     if not newer(tag, current):
         return None
     assets = {a.get("name", ""): a.get("browser_download_url", "") for a in release.get("assets") or []}
-    exe = next((n for n in assets if INSTALLER.match(n)), None)
+    if platform == "win32":
+        pattern = INSTALLER
+    elif platform.startswith("linux") or platform == "darwin":
+        pattern = PACKAGES["linux" if platform.startswith("linux") else "darwin"](re.escape(machine or _machine()))
+    else:
+        return None
+    exe = next((n for n in assets if pattern.match(n)), None)
     if not exe or f"{exe}.sha256" not in assets:
         return None
     urls = (assets[exe], assets[f"{exe}.sha256"])
     if not all(u.startswith(DOWNLOAD_PREFIX) for u in urls):
         return None
-    return {"version": tag.lstrip("v"), "installer": urls[0], "sha256_url": urls[1],
+    return {"version": tag.lstrip("v"), "installer": urls[0], "sha256_url": urls[1], "manual": platform != "win32",
             "notes": str(release.get("body") or "")[:2000], "page": release.get("html_url")}  # fmt: skip
 
 

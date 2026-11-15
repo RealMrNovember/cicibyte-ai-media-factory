@@ -127,6 +127,11 @@ def make_handler(cfg: Config):
                 return self._json(403, {"detail": "missing X-MF-Client header"})
             if not cfg.update:
                 return self._json(409, {"detail": "no update available"})
+            if cfg.update.get("manual"):  # Mac/Linux: open the release page; the user replaces the app
+                import webbrowser
+
+                webbrowser.open(cfg.update.get("page") or cfg.update["installer"])
+                return self._json(200, {"ok": True, "manual": True, "version": cfg.update["version"]})
             try:
                 path = desktop_update.download(cfg.update, cfg.home / "updates")
                 desktop_update.launch_installer(path)
@@ -312,6 +317,9 @@ def main() -> None:
 
     icon = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent.parent / "packaging")) / "app.ico"
     Monitor(cfg, window, icon=str(icon) if icon.exists() else None).start()
+    smoke = float(os.environ.get("MF_DESKTOP_SMOKE", "0") or 0)
+    if smoke:  # CI check: open the window, let the panel load, then close and exit 0
+        threading.Timer(smoke, window.destroy).start()
     try:
         webview.start(private_mode=False, storage_path=str(app_home() / "webview"))
     finally:

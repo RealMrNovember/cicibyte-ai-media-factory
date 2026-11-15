@@ -34,7 +34,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "respx>=0.21", "ruff>=0.6"]
-desktop = ["pywebview>=5", "pyinstaller>=6", "winotify>=1.1"]
+desktop = [
+    "pywebview>=5", "pyinstaller>=6",
+    "winotify>=1.1; sys_platform == 'win32'",
+    "PyQt6>=6.6; sys_platform == 'linux'", "PyQt6-WebEngine>=6.6; sys_platform == 'linux'", "qtpy>=2.4; sys_platform == 'linux'",
+]
 
 [project.scripts]
 mf = "mediafactory.cli:app"

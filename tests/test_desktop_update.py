@@ -22,17 +22,17 @@ def test_version_compare():
 
 
 def test_pick_update_from_release():
-    info = du.pick_update(release(), current="0.2.0")
+    info = du.pick_update(release(), current="0.2.0", platform="win32")
     assert info["version"] == "0.3.0" and info["installer"].endswith(".exe") and info["sha256_url"].endswith(".sha256")
-    assert du.pick_update(release(tag="v0.2.0"), current="0.2.0") is None
-    assert du.pick_update(release(assets=("notes.txt",)), current="0.2.0") is None  # no installer
-    assert du.pick_update(release(assets=("CiciByteMediaFactory-Setup-0.3.0.exe",)), current="0.2.0") is None  # no checksum
+    assert du.pick_update(release(tag="v0.2.0"), current="0.2.0", platform="win32") is None
+    assert du.pick_update(release(assets=("notes.txt",)), current="0.2.0", platform="win32") is None  # no installer
+    assert du.pick_update(release(assets=("CiciByteMediaFactory-Setup-0.3.0.exe",)), current="0.2.0", platform="win32") is None  # no checksum
 
 
 def test_only_this_repositorys_release_urls_are_trusted():
     bad = release()
     bad["assets"][0]["browser_download_url"] = "https://evil.example/Setup.exe"
-    assert du.pick_update(bad, current="0.2.0") is None
+    assert du.pick_update(bad, current="0.2.0", platform="win32") is None
 
 
 def test_download_verifies_checksum(tmp_path, monkeypatch):
@@ -59,3 +59,27 @@ def test_desktop_config_reports_update(tmp_path, monkeypatch):
         assert data["app_version"] and data["update"]["version"] == "0.3.0"
     finally:
         srv.shutdown()
+
+
+ALL = ("CiciByteMediaFactory-Setup-0.4.0.exe", "CiciByteMediaFactory-Setup-0.4.0.exe.sha256",
+       "CiciByteMediaFactory-0.4.0-macOS-arm64.dmg", "CiciByteMediaFactory-0.4.0-macOS-arm64.dmg.sha256",
+       "CiciByteMediaFactory-0.4.0-macOS-x86_64.dmg", "CiciByteMediaFactory-0.4.0-macOS-x86_64.dmg.sha256",
+       "CiciByteMediaFactory-0.4.0-x86_64.AppImage", "CiciByteMediaFactory-0.4.0-x86_64.AppImage.sha256")  # fmt: skip
+
+
+def test_each_platform_gets_its_own_package():
+    rel = release(tag="v0.4.0", assets=ALL)
+    win = du.pick_update(rel, current="0.3.2", platform="win32")
+    assert win["installer"].endswith(".exe") and not win["manual"]
+    mac = du.pick_update(rel, current="0.3.2", platform="darwin", machine="arm64")
+    assert mac["installer"].endswith("macOS-arm64.dmg") and mac["manual"]
+    intel = du.pick_update(rel, current="0.3.2", platform="darwin", machine="x86_64")
+    assert intel["installer"].endswith("macOS-x86_64.dmg")
+    lin = du.pick_update(rel, current="0.3.2", platform="linux", machine="x86_64")
+    assert lin["installer"].endswith(".AppImage") and lin["manual"]
+
+
+def test_no_update_offered_when_the_platform_has_no_package():
+    rel = release(tag="v0.4.0", assets=ALL[:2])  # Windows only
+    assert du.pick_update(rel, current="0.3.2", platform="linux", machine="x86_64") is None
+    assert du.pick_update(rel, current="0.3.2", platform="darwin", machine="arm64") is None

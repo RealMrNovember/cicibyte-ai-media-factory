@@ -2,7 +2,7 @@
 ; Build: packaging\build_windows.ps1  (PyInstaller app folder in dist\CiciByteMediaFactory, then this script)
 
 #define AppName "CiciByte AI Media Factory"
-#define AppVersion "0.3.2"
+#define AppVersion "0.4.0"
 #define AppExe "CiciByteMediaFactory.exe"
 
 [Setup]
