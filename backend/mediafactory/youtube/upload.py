@@ -14,11 +14,11 @@ THUMBNAIL_URL = "https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
 CATEGORY_ENTERTAINMENT = "24"
 
 
-def build_metadata(script: dict, *, language: str, privacy: str, publish_at: datetime | None) -> dict:
+def build_metadata(script: dict, *, language: str, privacy: str, publish_at: datetime | None, short: bool = True) -> dict:
     title = re.sub(r"[<>]", "", script.get("title") or "Short").strip()[:95]
     tags = [re.sub(r"[<>,]", "", t).strip() for t in script.get("tags") or [] if t and t.strip()][:15]
     hashtags = " ".join("#" + re.sub(r"\W+", "", t) for t in tags[:3] if re.sub(r"\W+", "", t))
-    description = ((script.get("description") or "").strip() + f"\n\n#shorts {hashtags}").strip()[:4800]
+    description = ((script.get("description") or "").strip() + f"\n\n{'#shorts ' if short else ''}{hashtags}").strip()[:4800]
     status: dict = {"privacyStatus": privacy, "selfDeclaredMadeForKids": False, "containsSyntheticMedia": True}
     if publish_at is not None:  # YouTube publishes it at that moment; it must be private until then
         status["privacyStatus"] = "private"

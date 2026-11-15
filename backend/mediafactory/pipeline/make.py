@@ -17,7 +17,8 @@ from mediafactory.pipeline.originality import with_originality
 from mediafactory.pipeline.qc import check_video
 from mediafactory.pipeline.render import render_short
 from mediafactory.pipeline.script import generate_script
-from mediafactory.pipeline.style import CaptionStyle
+from mediafactory.pipeline.sfx import build_track, plan_cues
+from mediafactory.pipeline.style import CaptionStyle, frame_size
 from mediafactory.pipeline.thumbnail import make_thumbnail
 from mediafactory.pipeline.tts import shift_pitch, synthesize_voice, voice_for, wav_seconds
 from mediafactory.pipeline.voice import VoiceSettings
@@ -65,7 +66,8 @@ def make_short(
                              models_dir=data_dir / "models")  # fmt: skip
     log(f"      -> {note}")
     cues = cues_for(script["narration"], duration, words_per_cue=caption_style.words_per_cue, times=times)
-    (out / "captions.ass").write_text(to_ass(cues, language, style=caption_style), encoding="utf-8")
+    size = frame_size(caption_style.aspect)
+    (out / "captions.ass").write_text(to_ass(cues, language, style=caption_style, width=size[0], height=size[1]), encoding="utf-8")
     (out / "captions.srt").write_text(to_srt(cues), encoding="utf-8")
     (out / "captions.vtt").write_text(to_vtt(cues), encoding="utf-8")
 
@@ -77,8 +79,17 @@ def make_short(
     ms = MusicSettings(**(music or {}))
     if ms.track != "none":
         log(f"      music: {ms.track} at {ms.volume_db} dB{', ducked under the voice' if ms.ducking else ''}")
+    sfx_file = None
+    if ms.sfx:
+        try:
+            timed = [word for c in cues for word in c.words]  # (start, end, word)
+            plan = plan_cues([w for _, _, w in timed], [s for s, _, _ in timed])
+            sfx_file = build_track(out, plan, total=round(duration + 0.6, 2), data_dir=data_dir)
+            log(f"      sound effects: {', '.join(f'{e} @{t:.1f}s' for t, e in plan) or 'none'}")
+        except Exception as exc:  # effects are a garnish: never lose the video for them
+            log(f"      sound effects skipped: {exc}")
     video = render_short(out, audio="voice.wav", captions_ass="captions.ass", duration=duration, background=background,
-                         music=ms, data_dir=data_dir)  # fmt: skip
+                         music=ms, data_dir=data_dir, size=size, sfx=sfx_file.name if sfx_file else None)  # fmt: skip
 
     log("[+] cover image and quality check")
     thumb = None
@@ -87,7 +98,7 @@ def make_short(
                                duration=duration, language=language)  # fmt: skip
     except Exception as exc:  # a missing cover must not lose the video
         log(f"      cover image failed: {exc}")
-    qc = check_video(video, captions=len(cues))
+    qc = check_video(video, captions=len(cues), size=size)
     if item.rights_status != "user_owned":  # your own story may be read as it is
         qc = with_originality(qc, script["narration"], item.normalized_text or "")
     qc = with_checks(qc, content, item.rights_status)

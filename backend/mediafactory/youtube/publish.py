@@ -65,7 +65,9 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
     publish_at = datetime.fromisoformat(inputs["publish_at"]) if inputs.get("publish_at") else None
     ctx.log(f"uploading to '{channel.title}' ({inputs.get('privacy')}{', at ' + inputs['publish_at'] if publish_at else ''})")
     token = oauth.access_token(client, decrypt(channel.refresh_token_enc))
-    meta = build_metadata(script, language=job.language or "en", privacy=inputs.get("privacy", "public"), publish_at=publish_at)
+    aspect = ((((job.payload or {}).get("make") or {}).get("style")) or {}).get("aspect", "9:16")
+    meta = build_metadata(script, language=job.language or "en", privacy=inputs.get("privacy", "public"), publish_at=publish_at,
+                          short=aspect != "16:9")  # fmt: skip
     vid = upload_video(token, video, meta)
     url = f"https://youtube.com/shorts/{vid}"
     thumb = Path(result.get("thumbnail") or "")

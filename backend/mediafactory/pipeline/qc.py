@@ -49,7 +49,7 @@ def measure(video: Path) -> dict:
 def judge(m: dict) -> dict:
     L = LIMITS
     checks = [
-        ("resolution", m["width"] == 1080 and m["height"] == 1920, f"{m['width']}×{m['height']}"),
+        ("resolution", (m["width"], m["height"]) == tuple(m.get("expected_size") or (1080, 1920)), f"{m['width']}×{m['height']}"),
         ("duration", L["min_s"] <= m["duration"] <= L["max_s"], f"{m['duration']:.1f} s"),
         ("audio", bool(m["has_audio"]), "present" if m["has_audio"] else "missing"),
         ("loudness", m.get("lufs") is not None and L["lufs_min"] <= m["lufs"] <= L["lufs_max"],
@@ -66,9 +66,9 @@ def judge(m: dict) -> dict:
     return {"passed": all(ok for _, ok, _ in checks), "checks": [{"name": n, "ok": ok, "value": val} for n, ok, val in checks]}
 
 
-def check_video(video: Path, *, captions: int) -> dict:
+def check_video(video: Path, *, captions: int, size: tuple[int, int] = (1080, 1920)) -> dict:
     """Never raises: a failed measurement is itself a QC failure."""
     try:
-        return judge({**measure(video), "captions": captions})
+        return judge({**measure(video), "captions": captions, "expected_size": size})
     except Exception as exc:
         return {"passed": False, "checks": [{"name": "measure", "ok": False, "value": f"{type(exc).__name__}: {exc}"[:200]}]}

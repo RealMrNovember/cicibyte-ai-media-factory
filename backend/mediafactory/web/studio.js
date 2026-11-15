@@ -9,6 +9,8 @@ const ST = {
     uploading: "Uploading…", uploaded: "Clip added", captions: "Captions", font: "Font", size: "Size",
     textColor: "Text", highlight: "Highlight", outlineColor: "Outline", outline: "Outline width", shadow: "Shadow",
     uppercase: "UPPER CASE", words: "Words per line", position: "Position on screen", animation: "Animation",
+    aspect: "Format", aspect916: "9:16 vertical (Shorts, Reels)", aspect169: "16:9 horizontal (YouTube video)",
+    sfx: "Sound effects where the story mentions them (knocks, heartbeat, thunder…)", sfxVol: "Effects volume",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
     previewHint: "Click the preview to place the captions.", myVoices: "My voices (clone)", addClone: "Clone a voice", cloneName: "Name", cloneNamePh: "e.g. My voice",
@@ -24,6 +26,8 @@ const ST = {
     uploading: "Yükleniyor…", uploaded: "Klip eklendi", captions: "Altyazı", font: "Yazı tipi", size: "Boyut",
     textColor: "Yazı", highlight: "Vurgu", outlineColor: "Kontur", outline: "Kontur kalınlığı", shadow: "Gölge",
     uppercase: "BÜYÜK HARF", words: "Satır başına kelime", position: "Ekrandaki konum", animation: "Animasyon",
+    aspect: "Format", aspect916: "9:16 dikey (Shorts, Reels)", aspect169: "16:9 yatay (YouTube videosu)",
+    sfx: "Hikâyede geçen yerlere ses efekti (kapı vuruşu, kalp atışı, gök gürültüsü…)", sfxVol: "Efekt seviyesi",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
     previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", myVoices: "Kendi seslerim (klon)", addClone: "Ses klonla", cloneName: "Ad", cloneNamePh: "ör. Benim sesim",
@@ -46,7 +50,7 @@ const FONT_CSS = {
 };
 const DEFAULT_STYLE = {
   font: "montserrat_black", size: 92, color: "#FFFFFF", highlight_color: "#FFD84D", outline_color: "#000000",
-  outline: 7, shadow: 3, uppercase: true, words_per_cue: 3, position: 50, animation: "pop",
+  outline: 7, shadow: 3, uppercase: true, words_per_cue: 3, position: 50, animation: "pop", aspect: "9:16",
 };
 const PRESETS = {
   "Classic": { ...DEFAULT_STYLE },
@@ -135,7 +139,7 @@ async function drawVoice() {
   }));
 }
 
-const DEFAULT_MUSIC = { track: "none", volume_db: -18, ducking: true };
+const DEFAULT_MUSIC = { track: "none", volume_db: -18, ducking: true, sfx: false, sfx_volume_db: -8 };
 function loadMusic() {
   try { return { ...DEFAULT_MUSIC, ...JSON.parse(localStorage.getItem("mf_music") || "{}") }; } catch { return { ...DEFAULT_MUSIC }; }
 }
@@ -160,12 +164,16 @@ async function drawMusic(refresh = false) {
     <div class="grid g2" style="margin-top:6px">
       <div><label>${st("musicVol")} <b class="val">${m.volume_db} dB</b></label><input type="range" data-mk="volume_db" min="-35" max="-6" step="1" value="${m.volume_db}"></div>
       <div style="align-self:end"><label class="row"><input type="checkbox" data-mk="ducking" ${m.ducking ? "checked" : ""} style="width:auto"> ${st("ducking")}</label></div>
-    </div><p class="muted small" style="margin:6px 0 0">${st("musicHint")}</p>`;
+    </div><p class="muted small" style="margin:6px 0 0">${st("musicHint")}</p>
+    <div class="grid g2" style="margin-top:10px">
+      <div style="align-self:end"><label class="row"><input type="checkbox" data-mk="sfx" ${m.sfx ? "checked" : ""} style="width:auto"> 🔊 ${st("sfx")}</label></div>
+      <div><label>${st("sfxVol")} <b class="val">${m.sfx_volume_db} dB</b></label><input type="range" data-mk="sfx_volume_db" min="-24" max="0" step="1" value="${m.sfx_volume_db}"></div>
+    </div>`;
   box.querySelectorAll("[data-mk]").forEach((n) => n.addEventListener("input", () => {
     const k = n.dataset.mk;
     m[k] = n.type === "checkbox" ? n.checked : n.type === "range" ? Number(n.value) : n.value;
     saveMusic(m);
-    if (k === "volume_db") n.parentElement.querySelector(".val").textContent = `${m.volume_db} dB`;
+    if (k === "volume_db" || k === "sfx_volume_db") n.parentElement.querySelector(".val").textContent = `${m[k]} dB`;
     if (k === "track") drawMusic();
   }));
   box.querySelector("#musicPlay").addEventListener("click", () => {
@@ -464,6 +472,7 @@ function drawCaptions() {
   box.innerHTML = `<label>${st("presets")}</label><div class="row">${Object.keys(PRESETS).map((p) => `<button class="btn small-btn" data-preset="${esc(p)}">${esc(p)}</button>`).join("")}</div>
     <div class="grid g2">
       <div><label>${st("font")}</label><select data-k="font">${Object.entries(FONT_CSS).map(([k, v]) => `<option value="${k}" ${y.font === k ? "selected" : ""}>${esc(v[0])}</option>`).join("")}</select></div>
+      <div><label>${st("aspect")}</label><select data-k="aspect"><option value="9:16" ${y.aspect !== "16:9" ? "selected" : ""}>${st("aspect916")}</option><option value="16:9" ${y.aspect === "16:9" ? "selected" : ""}>${st("aspect169")}</option></select></div>
       <div><label>${st("animation")}</label><select data-k="animation">${["none", "fade", "pop", "slide_up", "karaoke"].map((a) => `<option value="${a}" ${y.animation === a ? "selected" : ""}>${st("anim_" + a)}</option>`).join("")}</select></div>
       ${range("size", 36, 180, st("size"))}${range("words_per_cue", 1, 7, st("words"))}
       ${range("outline", 0, 14, st("outline"))}${range("shadow", 0, 10, st("shadow"))}
@@ -478,7 +487,7 @@ function drawCaptions() {
     setStyle({ [k]: v });
     const lab = n.parentElement.querySelector(".val"); if (lab) lab.textContent = v;
   }));
-  box.querySelectorAll("[data-preset]").forEach((n) => n.addEventListener("click", () => { studioState.style = { ...PRESETS[n.dataset.preset] }; saveStyle(studioState.style); drawCaptions(); drawPreview(); }));
+  box.querySelectorAll("[data-preset]").forEach((n) => n.addEventListener("click", () => { studioState.style = { ...PRESETS[n.dataset.preset], aspect: studioState.style.aspect || "9:16" }; saveStyle(studioState.style); drawCaptions(); drawPreview(); }));
   box.querySelectorAll("[data-pos]").forEach((n) => n.addEventListener("click", () => { setStyle({ position: Number(n.dataset.pos) }); drawCaptions(); }));
 }
 
@@ -554,7 +563,9 @@ function drawPreview() {
     bg.dataset.src = want;
     bg.innerHTML = clip ? `<video src="${want}" poster="/api/backgrounds/${encodeURIComponent(clip)}/thumb" muted autoplay loop playsinline></video>` : `<div class="grad-bg"></div>`;
   }
-  const scale = phone.clientWidth / 1080;
+  const wide = y.aspect === "16:9";
+  phone.classList.toggle("wide", wide);
+  const scale = wide ? (phone.clientWidth / 1920) * 0.72 : phone.clientWidth / 1080;
   const [, family, weight] = FONT_CSS[y.font];
   Object.assign(cap.style, {
     top: `${y.position}%`, fontFamily: family, fontWeight: weight, fontSize: `${y.size * scale}px`, color: y.color,

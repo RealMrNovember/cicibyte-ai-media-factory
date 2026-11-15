@@ -30,6 +30,8 @@ class MusicSettings(BaseModel):
     track: str = Field(default="none", max_length=120, description='"none", "random", "gen:…" or a library file')
     volume_db: int = Field(default=-18, ge=-35, le=-6)
     ducking: bool = True
+    sfx: bool = False  # sound effects where the story mentions them (see pipeline/sfx.py)
+    sfx_volume_db: int = Field(default=-8, ge=-24, le=0)
 
     @field_validator("track")
     @classmethod
@@ -104,8 +106,13 @@ def source_for(data_dir: Path, settings: MusicSettings, *, seconds: float) -> li
 MASTER = "loudnorm=I=-14:TP=-2:LRA=11,alimiter=limit=0.75:level=false"
 
 
-def audio_graph(settings: MusicSettings, *, total: float, music_input: int | None) -> str:
-    """filter_complex chain producing [a]: narration (input 1), optionally mixed with music, then mastered."""
+def audio_graph(settings: MusicSettings, *, total: float, music_input: int | None, sfx_input: int | None = None) -> str:
+    """filter_complex chain producing [a]: narration (input 1), optionally mixed with music and effects, then mastered."""
+    if sfx_input is not None:  # effects sit on top of everything, never ducked
+        base = audio_graph(settings, total=total, music_input=music_input).replace(f",{MASTER}[a]", "[pre]").replace(
+            f"[1:a]{MASTER}[a]", "[1:a]anull[pre]")
+        return (f"{base};[{sfx_input}:a]aformat=channel_layouts=mono,volume={settings.sfx_volume_db}dB[fx];"
+                f"[pre][fx]amix=inputs=2:duration=first:normalize=0,{MASTER}[a]")  # fmt: skip
     if music_input is None:
         return f"[1:a]{MASTER}[a]"
     fade_out = max(0.0, total - 2.0)

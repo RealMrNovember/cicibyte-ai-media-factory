@@ -82,6 +82,7 @@ pre { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line
 .bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .bg-tile { position: relative; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--bg); }
 .bg-tile.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(201,169,110,.25); }
+.phone.wide { aspect-ratio: 16 / 9; border-radius: 12px; }
 .bg-tile img, .bg-icon { display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: cover; }
 .bg-icon { display: grid; place-items: center; font-size: 28px; }
 .bg-tile span { display: block; font-size: 11px; padding: 5px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }

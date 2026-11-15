@@ -88,4 +88,4 @@ def test_make_stores_music_settings(client, db):
     body = {"languages": ["en"], "music": {"track": "gen:dark", "volume_db": -20, "ducking": False}}
     assert client.post(f"/api/items/{it.id}/make", json=body, headers=H).status_code == 201
     run = db.scalar(select(JobStageRun).order_by(JobStageRun.id.desc()).limit(1))
-    assert run.inputs["music"] == {"track": "gen:dark", "volume_db": -20, "ducking": False}
+    assert run.inputs["music"] == {"track": "gen:dark", "volume_db": -20, "ducking": False, "sfx": False, "sfx_volume_db": -8}

@@ -3,7 +3,7 @@
 import re
 from dataclasses import dataclass, field
 
-from mediafactory.pipeline.style import FONTS, CaptionStyle, ass_colour
+from mediafactory.pipeline.style import FONTS, LANDSCAPE_TEXT, CaptionStyle, ass_colour
 
 WORDS_PER_CAPTION = 3
 
@@ -80,6 +80,9 @@ def to_ass(
     cues: list[Cue], language: str, *, style: CaptionStyle | None = None, width: int = 1080, height: int = 1920
 ) -> str:
     st = style or CaptionStyle()
+    if width > height:  # landscape: same look, scaled to the shorter frame
+        st = st.model_copy(update={"size": round(st.size * LANDSCAPE_TEXT), "outline": max(1, round(st.outline * LANDSCAPE_TEXT)),
+                                   "shadow": round(st.shadow * LANDSCAPE_TEXT)})  # fmt: skip
     x, y = width // 2, round(height * st.position / 100)
     primary, hi = ass_colour(st.color), ass_colour(st.highlight_color)
     header = (

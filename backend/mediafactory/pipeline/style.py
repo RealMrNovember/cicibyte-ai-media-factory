@@ -31,6 +31,7 @@ class CaptionStyle(BaseModel):
     words_per_cue: int = Field(default=3, ge=1, le=7)
     position: int = Field(default=50, ge=8, le=92, description="vertical centre of the caption, % from top")
     animation: Literal["none", "fade", "pop", "slide_up", "karaoke"] = "pop"
+    aspect: Literal["9:16", "16:9"] = "9:16"  # vertical Short/Reel or a horizontal YouTube video
 
     @field_validator("color", "highlight_color", "outline_color")
     @classmethod
@@ -38,6 +39,14 @@ class CaptionStyle(BaseModel):
         if not HEX.match(v):
             raise ValueError("colour must look like #RRGGBB")
         return v.upper()
+
+
+SIZES = {"9:16": (1080, 1920), "16:9": (1920, 1080)}
+LANDSCAPE_TEXT = 0.72  # captions are sized for 1920-high video; on 1080-high landscape they are scaled down
+
+
+def frame_size(aspect: str) -> tuple[int, int]:
+    return SIZES.get(aspect, SIZES["9:16"])
 
 
 def ass_colour(hex_rgb: str, alpha: int = 0) -> str:

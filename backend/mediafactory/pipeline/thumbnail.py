@@ -7,7 +7,6 @@ import textwrap
 from pathlib import Path
 
 from mediafactory.pipeline.captions import upper
-from mediafactory.pipeline.render import HEIGHT, WIDTH
 from mediafactory.pipeline.style import FONTS, CaptionStyle, ass_colour
 
 SAMPLES = 8
@@ -53,16 +52,21 @@ def best_time(clip: Path, duration: float) -> float:
     return best_t
 
 
-def title_ass(title: str, *, font: str, color: str, upper_case: bool = True, upper_lang: str = "en", **kw) -> str:
+def title_ass(title: str, *, font: str, color: str, upper_case: bool = True, upper_lang: str = "en",
+              size_px: tuple[int, int] = (1080, 1920), **kw) -> str:  # fmt: skip
     upper_case = kw.pop("upper", upper_case)
+    WIDTH, HEIGHT = size_px  # noqa: N806
+    landscape = WIDTH > HEIGHT
     text = (upper(title, upper_lang) if upper_case else title).replace("{", "(").replace("}", ")").replace("\\", "/")
-    # Shrink the type for longer titles so the whole title fits in at most 5 lines.
-    for width, size in ((14, 150), (16, 132), (19, 112), (22, 96), (26, 82)):
+    # Shrink the type for longer titles so the whole title fits (5 lines tall, 3 lines wide).
+    steps = ((20, 130), (24, 112), (30, 92), (36, 78)) if landscape else ((14, 150), (16, 132), (19, 112), (22, 96), (26, 82))
+    max_lines = 3 if landscape else 5
+    for width, size in steps:
         lines = textwrap.wrap(text, width=width)
-        if len(lines) <= 5:
+        if len(lines) <= max_lines:
             break
-    if len(lines) > 5:
-        lines = lines[:5]
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
         lines[-1] = lines[-1].rstrip(".,;:!? ") + "…"
     return (
         "[Script Info]\nScriptType: v4.00+\n"
@@ -72,7 +76,8 @@ def title_ass(title: str, *, font: str, color: str, upper_case: bool = True, upp
         "MarginR, MarginV, Encoding\n"
         f"Style: T,{font},{size},{ass_colour(color)},&H000000FF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,10,6,5,60,60,0,1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-        f"Dialogue: 0,0:00:00.00,0:00:10.00,T,,0,0,0,,{{\\pos({WIDTH // 2},{int(HEIGHT * 0.36)})}}" + "\\N".join(lines) + "\n"
+        f"Dialogue: 0,0:00:00.00,0:00:10.00,T,,0,0,0,,{{\\pos({WIDTH // 2},{int(HEIGHT * (0.5 if landscape else 0.36))})}}"
+        + "\\N".join(lines) + "\n"
     )
 
 
@@ -80,8 +85,10 @@ def make_thumbnail(
     out_dir: Path, *, background: Path | None, title: str, style: CaptionStyle, duration: float, language: str = "en",
     output: str = "thumbnail.jpg",
 ) -> Path:  # fmt: skip
+    WIDTH, HEIGHT = (1280, 720) if style.aspect == "16:9" else (1080, 1920)  # noqa: N806 - YouTube's landscape cover size
     (out_dir / "title.ass").write_text(
-        title_ass(title, font=FONTS[style.font], color=style.highlight_color, upper_case=style.uppercase, upper_lang=language),
+        title_ass(title, font=FONTS[style.font], color=style.highlight_color, upper_case=style.uppercase, upper_lang=language,
+                  size_px=(WIDTH, HEIGHT)),
         encoding="utf-8",
     )
     fit = f"scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=increase,crop={WIDTH}:{HEIGHT}"

@@ -34,10 +34,11 @@
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
 | 10 | Script Doctor, özgünlük kontrolü, hassas içerik ve hak kontrolü | ✅ |
 | 12 | Kanallar ve konseptler, hazır video stoku | ✅ |
+| 13 | Ses efektleri ve 16:9 format | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 404 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 415 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -203,7 +204,8 @@
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [x] Kapak görseli ve kalite kontrolü.
 - [x] Arka plan müziği (kütüphane + telifsiz ambiyanslar, kısma).
-- [ ] Ses efektleri (kapı gıcırtısı, kalp atışı…) ve 16:9 format (v0.2).
+- [x] Ses efektleri: hikâyede geçen yerlere (kapı vuruşu, gıcırtı, kalp atışı, saat, fısıltı, gök gürültüsü, çığlık/çarpma) ve açılış cümlesine efekt; Türkçe ve İngilizce kelimelerle, en az 3 sn arayla, en fazla 6 tane. Efektler ffmpeg ile sentezleniyor (telif yok); `media/sfx` klasörüne kendi kayıtların konabiliyor. Stüdyo → Müzik'ten açılıp kapanıyor, seviyesi ayarlanıyor.
+- [x] 16:9 format: Stüdyo → Altyazı → Format. 1920×1080 render, ölçeklenmiş altyazı, 1280×720 kapak, kalite kontrolü ve YouTube'da `#shorts` etiketsiz yükleme.
 - [x] Kanallar ve konseptler: Takvim → Kanallar ve konseptler'de kanal başına tarif (dil, konu, süre, Stüdyo'dan stil/ses/müzik, YouTube kanalı, platformlar, görünürlük). "Şimdi bir tane üret", otopilot ve yayın zamanlamaları konsepti izleyebiliyor. **Stok hedefi:** sunucu 10 dakikada bir, hedefin altındaki konseptler için (her seferinde en fazla 2) yeni video üretiyor; isteğe bağlı otomatik onay. Ayar yedeğine dahil.
 
 ### YouTube (Plan 5'in devamı)
@@ -254,7 +256,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
-3. Ses efektleri (kapı gıcırtısı, kalp atışı…) ve 16:9 format.
+3. YouTube: kanal başına günlük yükleme sınırı ve kota takibi; kapak, oynatma listesi ve altyazı dosyasının da yüklenmesi.
 
 ---
 

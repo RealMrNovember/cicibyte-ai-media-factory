@@ -1,4 +1,4 @@
-"""Render a 9:16 Short with ffmpeg: background (clip or generated), narration audio, burned-in captions."""
+"""Render the video with ffmpeg (9:16 Short/Reel or 16:9): background, narration, music, effects, captions."""
 
 import shutil
 import subprocess
@@ -19,8 +19,10 @@ def ffmpeg_bin() -> str:
 def render_short(
     out_dir: Path, *, audio: str, captions_ass: str, duration: float, background: Path | None = None,
     output: str = "short.mp4", music: "MusicSettings | None" = None, data_dir: Path | None = None,
+    size: tuple[int, int] = (WIDTH, HEIGHT), sfx: str | None = None,
 ) -> Path:  # fmt: skip
     """All file names are relative to out_dir (ffmpeg runs there, so paths need no filter escaping)."""
+    WIDTH, HEIGHT = size  # noqa: N806 - same names as the module defaults
     total = round(duration + 0.6, 2)
     if background is not None:
         bg_in = ["-stream_loop", "-1", "-i", str(background)]
@@ -36,11 +38,13 @@ def render_short(
     music = music or MusicSettings()
     music_in = source_for(data_dir or out_dir, music, seconds=total) if music.track != "none" else None
     # Audio: narration (+ music ducked under it), mastered to -14 LUFS with a limiter (no clipping after AAC).
-    agraph = audio_graph(music, total=total, music_input=2 if music_in else None)
+    sfx_in = ["-i", sfx] if sfx else []
+    agraph = audio_graph(music, total=total, music_input=2 if music_in else None,
+                         sfx_input=(3 if music_in else 2) if sfx else None)  # fmt: skip
     graph = f"{bg},ass={captions_ass}[v];{agraph}"
     cmd = [
         ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
-        *bg_in, "-i", audio, *(music_in or []),
+        *bg_in, "-i", audio, *(music_in or []), *sfx_in,
         "-filter_complex", graph, "-map", "[v]", "-map", "[a]", "-ar", "48000",
         "-t", str(total), "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", output,

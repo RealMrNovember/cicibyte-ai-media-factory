@@ -138,6 +138,19 @@ also appear in the source, or 12 or more words are copied in a row, the quality 
 waits in Ready for a person even when a schedule auto-approves or auto-publishes. Your own stories (AI
 stories you add) are not checked. Copying through translation is not detected.
 
+## Sound effects and video format
+
+**Studio → Music → Sound effects** adds short effects where the story mentions them: knocks, creaks,
+heartbeat, clock ticks, whispers, thunder and an impact on screams or slams (English and Turkish words), plus
+a whoosh under the opening line. Effects are at least 3 seconds apart, at most 6 per video, and sit on top of
+the narration and music at their own volume. They are synthesised by ffmpeg, so there is no copyright in them.
+To use your own recordings, put audio files in `DATA_DIR/media/sfx` with the effect's name in the file name
+(`knock`, `creak`, `heartbeat`, `tick`, `whisper`, `thunder`, `hit`, `whoosh`, e.g. `old-door-knock.wav`).
+
+**Studio → Captions → Format** switches between 9:16 (1080×1920, Shorts and Reels) and 16:9 (1920×1080,
+a regular YouTube video). Captions are scaled for the wide frame, the cover becomes 1280×720, the quality
+check expects the chosen size and YouTube uploads of 16:9 videos are not tagged `#shorts`.
+
 ## Channels & concepts
 
 **Schedule → Channels & concepts** stores one recipe per channel: language, topic, length, caption style,
