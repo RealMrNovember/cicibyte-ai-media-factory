@@ -75,7 +75,7 @@ def make_short(
         background = resolve(data_dir, background_choice)
     if background is None and background_choice != "none":
         background = pick_background(data_dir, category=category or story_category(session, item))
-    log(f"[4/4] render 1080x1920 over {background.name if background else 'generated gradient'}")
+    log(f"[4/4] render {size[0]}x{size[1]} over {background.name if background else 'generated gradient'}")
     ms = MusicSettings(**(music or {}))
     if ms.track != "none":
         log(f"      music: {ms.track} at {ms.volume_db} dB{', ducked under the voice' if ms.ducking else ''}")
