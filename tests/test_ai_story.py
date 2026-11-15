@@ -25,3 +25,19 @@ def test_ai_story_is_added_as_turkish_user_owned_item(client, monkeypatch):
 def test_ai_story_reports_unusable_output(client, monkeypatch):
     monkeypatch.setattr(story, "run_task", lambda *a, **k: SimpleNamespace(text='{"title":"x","story":"too short"}', model="m"))
     assert client.post("/api/items/ai-story", json={"topic": "x"}, headers=H).status_code == 502
+
+
+def test_story_under_another_key_is_still_used(monkeypatch):
+    from mediafactory.pipeline.story import write_story
+
+    reply = json.dumps({"title": "Sis", "content": TEXT})
+    monkeypatch.setattr(story, "run_task", lambda *a, **k: SimpleNamespace(text=reply, model="m"))
+    assert write_story(None, "sis", language="tr")["story"] == TEXT
+
+
+def test_plain_text_reply_without_json_is_used_as_the_story(monkeypatch):
+    from mediafactory.pipeline.story import write_story
+
+    monkeypatch.setattr(story, "run_task", lambda *a, **k: SimpleNamespace(text="Başlık: Sis\n\n" + TEXT, model="m"))
+    out = write_story(None, "sis", language="tr")
+    assert TEXT in out["story"] and out["title"] == "sis"

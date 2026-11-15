@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 425 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 427 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -230,7 +230,7 @@
 | DL380 erişimi (DHCP watchdog, Tailscale) | ✅ | — |
 | 9router sunucuda (CT 171), Funnel kapalı, combo'lar kuruldu | ✅ | — |
 | Üretim sunucusu CT 175 `mediafactory` | ✅ | — |
-| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ✅ test edildi (15 Kasım, CCSE işçileri 20 dk duraklatılarak): **Gemma 4 26B-A4B** Türkçede açık ara en doğal ve hatasız; uzunluğa en iyi uyan da o. Hız ~6,6 token/sn (mevcut Qwen3-30B ~9,5). Qwen3-30B ve Qwen3.6 Türkçede dil bilgisi hataları yapıyor. 🟡 `local` sağlayıcıya bağlanması karar bekliyor (CCSE ile paylaşılan sunucu) | Ben + **Sen** |
+| Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ✅ test edildi (15 Kasım, CCSE işçileri 20 dk duraklatılarak): **Gemma 4 26B-A4B** Türkçede açık ara en doğal ve hatasız; uzunluğa en iyi uyan da o. Hız ~6,6 token/sn (mevcut Qwen3-30B ~9,5). Qwen3-30B ve Qwen3.6 Türkçede dil bilgisi hataları yapıyor. ✅ Media Factory'ye ayrı servis olarak bağlandı: CT 120'de `llama-gemma` (port 8081, 4 çekirdek, düşük öncelik); 9router'da `localg/gemma-4-26b-a4b`, `mf-senaryo` ve `mf-siniflandir` combo'larının son yedeği. CCSE kendi Qwen3-30B'sinde (8080) kaldı | — |
 | Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
 | Meta uygulaması + Instagram erişim anahtarı (profesyonel hesap) | ⬜ | **Sen** |
 | Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
@@ -256,7 +256,7 @@
 ## Sıradaki adım
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
-2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
+2. Yerel yedek (Gemma 4) gündüz CCSE ile aynı işlemciyi paylaşıyor; ikisi aynı anda çalışırsa yavaşlar. Gerekirse CT 120'ye çekirdek eklemek.
 3. Video açıklamasında isteğe bağlı CiciByte satırı; `OPERATIONS.md` ve `SECURITY.md`.
 
 ---
