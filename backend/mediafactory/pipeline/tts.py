@@ -225,8 +225,10 @@ class _ChatterboxServer:
                 err.append(ln)
                 del err[:-40]
 
-        for fn in (pump_out, pump_err):
-            threading.Thread(target=fn, daemon=True).start()
+        threads = [threading.Thread(target=fn, daemon=True) for fn in (pump_out, pump_err)]
+        for th in threads:
+            th.start()
+        self.err_thread = threads[1]
         threading.Thread(target=self._reaper, args=(proc,), daemon=True).start()
 
     def _reaper(self, proc: subprocess.Popen) -> None:
@@ -255,11 +257,15 @@ class _ChatterboxServer:
             self.last_used = time.monotonic()
             deadline = time.monotonic() + timeout
             try:
-                self.proc.stdin.write(json.dumps({**req, "threads": os.cpu_count() or 4}) + "\n")
-                self.proc.stdin.flush()
+                try:
+                    self.proc.stdin.write(json.dumps({**req, "threads": os.cpu_count() or 4}) + "\n")
+                    self.proc.stdin.flush()
+                except OSError:  # the process already died (e.g. a broken install): report why below
+                    self.lines.put(None)
                 while True:
                     ln = self.lines.get(timeout=max(0.1, deadline - time.monotonic()))
                     if ln is None:
+                        self.err_thread.join(timeout=3)  # let its error output arrive before quoting it
                         raise RuntimeError(("".join(self.stderr) or "the Chatterbox process exited")[-400:])
                     if ln.startswith("{"):
                         result = json.loads(ln)
