@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 432 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 462 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -200,9 +200,10 @@
 - [x] Ses seçimi, hız ve ton ayarı (Stüdyo ve Takvim).
 - [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
 - [x] Chatterbox'ı hızlandırma (kalıcı model süreci) ve kendi sesinle klonlama (referans ses yükleme).
-- [ ] Telaffuz sözlüğü; Chatterbox için GPU.
+- [x] Telaffuz sözlüğü: Stüdyo → Ses → 📖 Telaffuz sözlüğü. Yalnızca seslendirilen metin değişir; altyazı, başlık ve açıklama orijinal yazımı korur. Satır satır dinleme.
+- [ ] Chatterbox için GPU: Doku2'deki RTX 5060'ta ses sunucusu (kod hazır: `pipeline/tts_server.py`, MF_CHATTERBOX_URL/TOKEN; ulaşılamazsa sunucudaki CPU kopyasına düşer). Kurulum sürüyor.
 - [x] Hassas içerik ve hak kontrolü: AI (`classify` rotası, yoksa `script`) senaryoda platformların kısıtladığı içeriği işaretliyor (çocuklara zarar, cinsellik, kendine zarar, nefret, tehlikeli talimat, aşırı vahşet, gerçek yakın trajedi). Korku türü sorun sayılmıyor. İşaretlenen ya da hakları "kısıtlı" olan video kalite kontrolünden geçemez; otopilotta bile yayınlanmaz, incelemeye düşer. AI kontrol yapamazsa da incelemeye düşer.
-- [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
+- [x] Coverr API ile arama (Ayarlar → Stok klipler'e kendi anahtarın) ve Mixkit bağlantısından içe aktarma; lisans ve kaynak her klibin yanında saklanıyor. İlk 4 Mixkit parkur klibi kütüphanede.
 - [x] Kapak görseli ve kalite kontrolü.
 - [x] Arka plan müziği (kütüphane + telifsiz ambiyanslar, kısma).
 - [x] Ses efektleri: hikâyede geçen yerlere (kapı vuruşu, gıcırtı, kalp atışı, saat, fısıltı, gök gürültüsü, çığlık/çarpma) ve açılış cümlesine efekt; Türkçe ve İngilizce kelimelerle, en az 3 sn arayla, en fazla 6 tane. Efektler ffmpeg ile sentezleniyor (telif yok); `media/sfx` klasörüne kendi kayıtların konabiliyor. Stüdyo → Müzik'ten açılıp kapanıyor, seviyesi ayarlanıyor.
@@ -247,7 +248,6 @@
 - **Ağ güvenliği:** Giriş olmadığı için sunucu portu internete açılmamalı (Tailscale veya `localhost` + reverse proxy kimlik doğrulaması).
 - **Stüdyo önizlemesi:** Yazı tiplerini Google Fonts'tan yüklüyor; internet yoksa önizleme yedek yazı tipine düşer (videoyu etkilemez).
 - **Önizleme ve video farkı:** Önizleme CSS ile yapılıyor; konturda ve satır kırılmasında videodan küçük farklar olabilir.
-- **YouTube:** Yükleme yarıda kesilip tekrar denenirse aynı video iki kez yüklenebilir (idempotency yok).
 - **Kurulum dosyası imzasız:** Windows ilk açılışta SmartScreen uyarısı gösterebilir.
 - Plan 1–2'den ertelenen küçük maddeler (sağlık kontrolü süreleri, RSS 1.0 desteği, IPv6 gömülü adresler vb.) git geçmişindeki önceki ROADMAP sürümünde listeli.
 
