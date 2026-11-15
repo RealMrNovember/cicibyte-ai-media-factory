@@ -13,6 +13,8 @@ const ST = {
     sfx: "Sound effects where the story mentions them (knocks, heartbeat, thunder…)", sfxVol: "Effects volume",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
+    pron: "Pronunciation", pronTitle: "Pronunciation dictionary", pronHelp: "Words the voice reads wrongly: write them the way they should sound. Only the voice changes — captions, titles and descriptions keep the original spelling. Whole words only; suffixes after an apostrophe stay (YouTube'da → Yu tüb'da).",
+    pronWord: "Written", pronSay: "Say it as", pronLang: "Language", pronAny: "All", pronAdd: "Add a word", pronTry: "Listen with the English/Turkish voice above",
     previewHint: "Click the preview to place the captions.", myVoices: "My voices (clone)", addClone: "Clone a voice", cloneName: "Name", cloneNamePh: "e.g. My voice",
     cloneHint: "Upload 5–30 seconds of clear speech by one person, without music or background noise. The clone speaks both English and Turkish.",
     cloneConsent: "This is my voice, or I have the speaker's permission to clone it.", cloneAdded: "Voice added — choose it in the lists above", deleteClone: "Delete this voice",
@@ -30,6 +32,8 @@ const ST = {
     sfx: "Hikâyede geçen yerlere ses efekti (kapı vuruşu, kalp atışı, gök gürültüsü…)", sfxVol: "Efekt seviyesi",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
+    pron: "Telaffuz", pronTitle: "Telaffuz sözlüğü", pronHelp: "Sesin yanlış okuduğu kelimeleri nasıl okunması gerekiyorsa öyle yaz. Yalnızca ses değişir — altyazı, başlık ve açıklama orijinal yazımı korur. Yalnızca tam kelimeler; kesme işaretinden sonraki ek korunur (YouTube'da → Yu tüb'da).",
+    pronWord: "Yazılışı", pronSay: "Böyle oku", pronLang: "Dil", pronAny: "Hepsi", pronAdd: "Kelime ekle", pronTry: "Yukarıda seçili İngilizce/Türkçe sesle dinle",
     previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", myVoices: "Kendi seslerim (klon)", addClone: "Ses klonla", cloneName: "Ad", cloneNamePh: "ör. Benim sesim",
     cloneHint: "Tek kişinin 5–30 saniyelik net konuşmasını yükle; müzik ya da arka plan gürültüsü olmasın. Klon hem Türkçe hem İngilizce konuşur.",
     cloneConsent: "Bu ses benim ya da sahibinden klonlamak için izin aldım.", cloneAdded: "Ses eklendi — yukarıdaki listelerden seçebilirsin", deleteClone: "Bu sesi sil",
@@ -107,7 +111,8 @@ async function drawVoice() {
       <div><label>${st("voiceTr")}</label><div class="row" style="flex-wrap:nowrap"><select data-vk="tr">${opts("tr")}</select><button class="btn" data-listen="tr">▶</button></div></div>
       <div><label>${st("speed")} <b class="val">${v.speed.toFixed(2)}×</b></label><input type="range" data-vk="speed" min="0.8" max="1.3" step="0.05" value="${v.speed}"></div>
       <div><label>${st("pitch")} <b class="val">${v.pitch > 0 ? "+" : ""}${v.pitch}</b></label><input type="range" data-vk="pitch" min="-4" max="4" step="1" value="${v.pitch}"></div>
-    </div>${cloneRow}`;
+    </div>${cloneRow}<div class="row" style="margin-top:8px"><button class="btn" id="pronOpen">📖 ${st("pronTitle")}</button></div>`;
+  box.querySelector("#pronOpen").addEventListener("click", pronunciationDialog);
   const add = box.querySelector("#cloneAdd");
   add && add.addEventListener("click", cloneDialog);
   box.querySelectorAll("[data-clonedel]").forEach((b) => b.addEventListener("click", async () => {
@@ -188,6 +193,44 @@ async function drawMusic(refresh = false) {
   del && del.addEventListener("click", async () => {
     if (!confirm(st("sure"))) return;
     try { await api(`/api/music/${encodeURIComponent(m.track)}`, { method: "DELETE" }); m.track = "none"; saveMusic(m); drawMusic(true); }
+    catch (err) { toast(err.message, true); }
+  });
+}
+
+async function pronunciationDialog() {
+  let items;
+  try { items = (await api("/api/pronunciations")).items; } catch (err) { return toast(err.message, true); }
+  if (!items.length) items = [{ word: "", say: "", language: "any" }];
+  const v = studioState.voice || loadVoice();
+  const row = (r, i) => `<tr data-i="${i}"><td><input data-f="word" value="${esc(r.word)}" placeholder="CiciByte"></td>
+      <td><input data-f="say" value="${esc(r.say)}" placeholder="Çiçi bayt"></td>
+      <td><select data-f="language">${[["any", st("pronAny")], ["tr", "Türkçe"], ["en", "English"]].map(([k, l]) => `<option value="${k}" ${r.language === k ? "selected" : ""}>${l}</option>`).join("")}</select></td>
+      <td><button class="btn small-btn" data-try="${i}" title="${esc(st("pronTry"))}">▶</button> <button class="btn danger small-btn" data-del="${i}">×</button></td></tr>`;
+  const md = modal(`<h1>📖 ${st("pronTitle")}</h1><p class="muted small">${st("pronHelp")}</p>
+    <table id="pronT"><tr><th>${st("pronWord")}</th><th>${st("pronSay")}</th><th>${st("pronLang")}</th><th></th></tr>${items.map(row).join("")}</table>
+    <div class="row" style="margin-top:10px"><button class="btn" id="pronAdd">＋ ${st("pronAdd")}</button><span class="spacer"></span><button class="btn primary" id="pronSave">${t("save")}</button></div>`);
+  const read = () => [...md.querySelectorAll("#pronT tr[data-i]")].map((tr) => Object.fromEntries([...tr.querySelectorAll("[data-f]")].map((n) => [n.dataset.f, n.value.trim()])));
+  const redraw = (list) => { md.querySelector("#pronT").innerHTML = `<tr><th>${st("pronWord")}</th><th>${st("pronSay")}</th><th>${st("pronLang")}</th><th></th></tr>${list.map(row).join("")}`; bind(); };
+  const bind = () => {
+    md.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", () => { const l = read(); l.splice(Number(b.dataset.del), 1); redraw(l.length ? l : [{ word: "", say: "", language: "any" }]); }));
+    md.querySelectorAll("[data-try]").forEach((b) => b.addEventListener("click", async () => {
+      const r = read()[Number(b.dataset.try)];
+      if (!r.say) return;
+      const lng = r.language === "en" ? "en" : r.language === "tr" ? "tr" : (studioState.languages || ["tr"])[0];
+      b.disabled = true; b.textContent = "…";
+      try {
+        const res = await fetch("/api/voices/preview", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
+          body: JSON.stringify({ voice: v[lng], speed: v.speed, pitch: v.pitch, language: lng, text: r.say }) });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+        new Audio(URL.createObjectURL(await res.blob())).play();
+      } catch (err) { toast(err.message, true); }
+      b.disabled = false; b.textContent = "▶";
+    }));
+  };
+  bind();
+  md.querySelector("#pronAdd").addEventListener("click", () => redraw([...read(), { word: "", say: "", language: "any" }]));
+  md.querySelector("#pronSave").addEventListener("click", async () => {
+    try { await api("/api/pronunciations", { method: "PUT", body: { items: read().filter((r) => r.word && r.say) } }); md.remove(); toast(t("saved")); }
     catch (err) { toast(err.message, true); }
   });
 }

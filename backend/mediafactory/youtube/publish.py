@@ -42,6 +42,8 @@ def queue_upload(
     job.payload = {**(job.payload or {}), "youtube": {
         "state": "queued", "privacy": privacy, "publish_at": publish_at.isoformat() if publish_at else None,
         "channel": channel.title,
+        # a session left by an interrupted upload is kept, so sending again finishes that upload instead of a second one
+        "session": ((job.payload or {}).get("youtube") or {}).get("session"),
     }}  # fmt: skip
     job.status = "uploading"
     enqueue_stage(db, job.id, UPLOAD_STAGE, "io", inputs={
@@ -85,8 +87,19 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
 
     meta = build_metadata(script, language=job.language or "en", privacy=inputs.get("privacy", "public"), publish_at=publish_at,
                           short=aspect != "16:9", credit=credit.line(db, job.language))  # fmt: skip
-    vid = upload_video(token, video, meta)
-    quota.spend(db, "upload", channel=channel)
+    earlier = (job.payload or {}).get("youtube") or {}
+    if earlier.get("id"):  # an earlier attempt uploaded it; only the extras are left
+        vid = earlier["id"]
+        ctx.log(f"already on YouTube ({vid}) from an earlier attempt, not uploading again")
+    else:
+        def remember(session: str) -> None:  # kept at once: a retry finishes this upload instead of starting another
+            job.payload = {**(job.payload or {}), "youtube": {**earlier, "state": "uploading", "session": session}}
+            db.commit()
+
+        vid = upload_video(token, video, meta, session_url=earlier.get("session"), on_session=remember)
+        job.payload = {**(job.payload or {}), "youtube": {**(job.payload or {}).get("youtube", {}), "state": "uploaded", "id": vid}}
+        quota.spend(db, "upload", channel=channel)
+        db.commit()
     url = f"https://youtube.com/shorts/{vid}" if aspect != "16:9" else f"https://youtu.be/{vid}"
     thumb = Path(result.get("thumbnail") or "")
     if thumb.is_file():
@@ -105,6 +118,7 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
     job.payload = {**(job.payload or {}), "youtube": {
         "state": "scheduled" if publish_at else "published", "id": vid, "url": url, "channel": channel.title,
         "privacy": meta["status"]["privacyStatus"], "publish_at": inputs.get("publish_at"),
+        "session": ((job.payload or {}).get("youtube") or {}).get("session"),
     }}  # fmt: skip
     ctx.log(f"done: {url}")
     from mediafactory.instagram.publish import after_youtube_stage

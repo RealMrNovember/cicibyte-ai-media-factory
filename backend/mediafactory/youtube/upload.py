@@ -35,21 +35,44 @@ def build_metadata(
     }  # fmt: skip
 
 
-def upload_video(token: str, video: Path, metadata: dict, *, http: httpx.Client | None = None) -> str:
-    """Returns the YouTube video id."""
+def upload_video(
+    token: str, video: Path, metadata: dict, *, http: httpx.Client | None = None, session_url: str | None = None,
+    on_session=None,
+) -> str:  # fmt: skip
+    """Returns the YouTube video id. With `session_url` from an earlier attempt, that upload is finished or resumed
+    instead of starting a new one, so a retried upload never creates the video twice. `on_session(url)` is called
+    with a new session address before any byte is sent, so the caller can keep it."""
     client = http or httpx.Client(timeout=httpx.Timeout(60, write=600, read=600))
     size = video.stat().st_size
+    auth = {"Authorization": f"Bearer {token}"}
+    if session_url:
+        r = client.put(session_url, headers={**auth, "Content-Range": f"bytes */{size}", "Content-Length": "0"})
+        if r.status_code in (200, 201):
+            return r.json()["id"]  # the earlier attempt had in fact finished
+        if r.status_code == 308:
+            m = re.match(r"bytes=0-(\d+)", r.headers.get("range", ""))
+            start = int(m.group(1)) + 1 if m else 0
+            with video.open("rb") as f:
+                f.seek(start)
+                r = client.put(session_url, content=f.read(), headers={
+                    **auth, "Content-Type": "video/mp4", "Content-Range": f"bytes {start}-{size - 1}/{size}"})  # fmt: skip
+            if r.status_code in (200, 201):
+                return r.json()["id"]
+            raise YouTubeError(f"YouTube upload failed while resuming: {r.text[:400]}")
+        # 404/410: the session expired without a video, so a fresh upload is safe
     r = client.post(
         UPLOAD_URL, params={"uploadType": "resumable", "part": "snippet,status"},
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=UTF-8",
+        headers={**auth, "Content-Type": "application/json; charset=UTF-8",
                  "X-Upload-Content-Type": "video/mp4", "X-Upload-Content-Length": str(size)},
         content=json.dumps(metadata).encode(),
     )  # fmt: skip
     if r.status_code != 200 or "location" not in r.headers:
         raise YouTubeError(f"YouTube refused the upload: {r.text[:400]}")
+    location = r.headers["location"]
+    if on_session:
+        on_session(location)
     with video.open("rb") as f:
-        r = client.put(r.headers["location"], content=f.read(),
-                       headers={"Authorization": f"Bearer {token}", "Content-Type": "video/mp4"})  # fmt: skip
+        r = client.put(location, content=f.read(), headers={**auth, "Content-Type": "video/mp4"})
     if r.status_code not in (200, 201):
         raise YouTubeError(f"YouTube upload failed: {r.text[:400]}")
     return r.json()["id"]

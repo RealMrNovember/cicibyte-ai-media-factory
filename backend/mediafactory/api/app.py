@@ -67,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(youtube.router)
     app.include_router(instagram.router)
     app.include_router(voices.router)
+    app.include_router(voices.dictionary)
     app.include_router(music.router)
     app.include_router(system.router)
     app.include_router(settings_io.router)

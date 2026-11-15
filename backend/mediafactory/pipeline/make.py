@@ -7,6 +7,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from mediafactory.db.models import SourceItem
+from mediafactory.pipeline import pronounce
 from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve, story_category
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
@@ -54,7 +55,10 @@ def make_short(
     vs = VoiceSettings(**(voice or {}))
     voice_id = voice_for(language, getattr(vs, language, None))
     log(f"[2/4] voice ({voice_id}, speed {vs.speed:g}x, pitch {vs.pitch:+d})")
-    duration = synthesize_voice(voice_id, language, script["narration"], out / "voice.wav", models_dir=data_dir / "models",
+    spoken = pronounce.spoken(session, script["narration"], language)  # captions keep the original spelling
+    if spoken != script["narration"]:
+        log("      pronunciation dictionary applied")
+    duration = synthesize_voice(voice_id, language, spoken, out / "voice.wav", models_dir=data_dir / "models",
                                 speed=vs.speed)  # fmt: skip
     if vs.pitch:
         shift_pitch(out / "voice.wav", vs.pitch)
