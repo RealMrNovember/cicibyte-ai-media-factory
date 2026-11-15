@@ -19,6 +19,7 @@ const ST = {
     stockMore: "More", stockLicence: "Coverr: free for commercial use, do not register in Content ID. Mixkit: free, no attribution needed.",
     pron: "Pronunciation", pronTitle: "Pronunciation dictionary", pronHelp: "Words the voice reads wrongly: write them the way they should sound. Only the voice changes — captions, titles and descriptions keep the original spelling. Whole words only; suffixes after an apostrophe stay (YouTube'da → Yu tüb'da).",
     pronWord: "Written", pronSay: "Say it as", pronLang: "Language", pronAny: "All", pronAdd: "Add a word", pronTry: "Listen with the English/Turkish voice above",
+    realFrame: "Show the real frame", realFrameHelp: "This is rendered on the server with the same caption engine as the video, so outline and line breaks are exact.",
     previewHint: "Click the preview to place the captions.", myVoices: "My voices (clone)", addClone: "Clone a voice", cloneName: "Name", cloneNamePh: "e.g. My voice",
     cloneHint: "Upload 5–30 seconds of clear speech by one person, without music or background noise. The clone speaks both English and Turkish.",
     cloneConsent: "This is my voice, or I have the speaker's permission to clone it.", cloneAdded: "Voice added — choose it in the lists above", deleteClone: "Delete this voice",
@@ -42,6 +43,7 @@ const ST = {
     stockMore: "Daha fazla", stockLicence: "Coverr: ticari kullanım serbest, Content ID'ye kaydedilemez. Mixkit: ücretsiz, atıf gerekmez.",
     pron: "Telaffuz", pronTitle: "Telaffuz sözlüğü", pronHelp: "Sesin yanlış okuduğu kelimeleri nasıl okunması gerekiyorsa öyle yaz. Yalnızca ses değişir — altyazı, başlık ve açıklama orijinal yazımı korur. Yalnızca tam kelimeler; kesme işaretinden sonraki ek korunur (YouTube'da → Yu tüb'da).",
     pronWord: "Yazılışı", pronSay: "Böyle oku", pronLang: "Dil", pronAny: "Hepsi", pronAdd: "Kelime ekle", pronTry: "Yukarıda seçili İngilizce/Türkçe sesle dinle",
+    realFrame: "Gerçek kareyi göster", realFrameHelp: "Bu kare sunucuda, videoyla aynı altyazı motoruyla çizildi; kontur ve satır kırılması birebir aynıdır.",
     previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", myVoices: "Kendi seslerim (klon)", addClone: "Ses klonla", cloneName: "Ad", cloneNamePh: "ör. Benim sesim",
     cloneHint: "Tek kişinin 5–30 saniyelik net konuşmasını yükle; müzik ya da arka plan gürültüsü olmasın. Klon hem Türkçe hem İngilizce konuşur.",
     cloneConsent: "Bu ses benim ya da sahibinden klonlamak için izin aldım.", cloneAdded: "Ses eklendi — yukarıdaki listelerden seçebilirsin", deleteClone: "Bu sesi sil",
@@ -326,12 +328,14 @@ async function studio(el) {
         <div class="card"><h3>6 · ${st("output")}</h3><div id="outBox"></div></div>
       </div>
       <div class="studio-preview"><div class="phone" id="phone"><div class="phone-bg" id="phoneBg"></div>
-        <div class="cap" id="cap"></div></div><p class="muted small" style="text-align:center">${st("previewHint")}</p></div>
+        <div class="cap" id="cap"></div></div><p class="muted small" style="text-align:center">${st("previewHint")}</p>
+        <div style="text-align:center"><button class="btn" id="realFrame">🎯 ${st("realFrame")}</button></div></div>
     </div>`;
   drawStory(); drawBackgrounds(); drawCaptions(); drawVoice(); drawMusic(); drawOutput(); drawPreview();
   document.getElementById("upMusic").addEventListener("click", uploadMusicDialog);
   document.getElementById("upBtn").addEventListener("click", uploadDialog);
   document.getElementById("stockBtn").addEventListener("click", stockDialog);
+  document.getElementById("realFrame").addEventListener("click", showRealFrame);
   document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(async (item) => {
     Object.assign(studioState, { itemId: item.id, langFilter: item.language || "", topic: "", sourceFilter: "" }); await reloadStories();
   }));
@@ -691,4 +695,19 @@ function drawPreview() {
   };
   step();
   previewTimer = setInterval(() => { if (!document.getElementById("cap")) return clearInterval(previewTimer); step(); }, y.animation === "karaoke" ? 380 : 900);
+}
+
+async function showRealFrame() {
+  const s = studioState, b = document.getElementById("realFrame");
+  b.disabled = true; b.textContent = "…";
+  try {
+    const res = await fetch("/api/studio/frame", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
+      body: JSON.stringify({ style: s.style, text: sampleWords().join(" "), language: (s.languages || ["en"])[0], background: s.background || "random" }) });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+    const url = URL.createObjectURL(await res.blob());
+    const wide = s.style.aspect === "16:9";
+    modal(`<h1>🎯 ${st("realFrame")}</h1><p class="muted small">${st("realFrameHelp")}</p>
+      <img src="${url}" style="display:block;margin:0 auto;max-width:100%;max-height:70vh;${wide ? "" : "aspect-ratio:9/16;"}border-radius:10px">`);
+  } catch (err) { toast(err.message, true); }
+  b.disabled = false; b.textContent = "🎯 " + st("realFrame");
 }

@@ -88,3 +88,43 @@ def update_tags(name: str, body: TagsIn, user: User = Depends(require_user)) -> 
     if tags is None:
         raise HTTPException(status_code=404, detail="clip not found")
     return {"name": name, "tags": tags}
+
+
+studio = APIRouter(prefix="/api/studio", tags=["studio"])
+
+
+class FrameIn(BaseModel):
+    style: dict = Field(default_factory=dict)
+    text: str = Field(default="It was three in the morning when I heard the attic door open", max_length=300)
+    language: str = Field(default="en", pattern=r"^(en|tr)$")
+    background: str = Field(default="random", max_length=200)
+
+
+@studio.post("/frame")
+def preview_frame(body: FrameIn, user: User = Depends(require_user)):
+    """One exact frame of the video (same caption renderer as the final video)."""
+    import tempfile
+
+    from fastapi.responses import Response
+
+    from mediafactory.pipeline.framepreview import render_frame
+    from mediafactory.pipeline.style import CaptionStyle
+
+    try:
+        style = CaptionStyle(**body.style)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    if body.background == "none":
+        bg = None
+    elif body.background == "random":
+        clips = lib.clips(_data())
+        bg = clips[0] if clips else None
+    else:
+        bg = _clip(body.background)
+    with tempfile.TemporaryDirectory() as td:
+        try:
+            frame = render_frame(Path(td), style=style, text=body.text, language=body.language, background=bg)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from None
+        data = frame.read_bytes()
+    return Response(content=data, media_type="image/jpeg", headers={"Cache-Control": "no-store"})

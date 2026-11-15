@@ -62,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(sources.router)
     app.include_router(jobs.router)
     app.include_router(backgrounds.router)
+    app.include_router(backgrounds.studio)
     app.include_router(stock.router)
     app.include_router(schedules.router)
     app.include_router(concepts.router)
