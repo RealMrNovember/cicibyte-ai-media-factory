@@ -57,6 +57,8 @@ def store_items(
             result.skipped += 1
             continue
         url = canonical_url(raw.url) if raw.url else None
+        if url and len(url) > 2000:  # longer than the column allows: keep the story, drop the link
+            url = None
         digest = content_hash(text)
 
         existing = _find(session, url=url) if url else None

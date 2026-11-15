@@ -58,13 +58,25 @@ class FetchedResponse:
             return self.content.decode("utf-8", errors="replace")
 
 
+NAT64 = ipaddress.ip_network("64:ff9b::/96")
+NAT64_LOCAL = ipaddress.ip_network("64:ff9b:1::/48")
+
+
 def is_public_ip(value: str) -> bool:
     try:
         ip = ipaddress.ip_address(value.split("%", 1)[0])
     except ValueError:
         return False
-    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
-        ip = ip.ipv4_mapped
+    if isinstance(ip, ipaddress.IPv6Address):
+        # IPv4 addresses carried inside IPv6 (mapped, 6to4, Teredo, NAT64) are judged by the IPv4 inside.
+        if ip.ipv4_mapped is not None:
+            ip = ip.ipv4_mapped
+        elif ip.sixtofour is not None:
+            ip = ip.sixtofour
+        elif ip.teredo is not None:
+            return all(is_public_ip(str(v4)) for v4 in ip.teredo)
+        elif ip in NAT64 or ip in NAT64_LOCAL:
+            ip = ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)
     return ip.is_global and not ip.is_multicast
 
 
@@ -143,7 +155,11 @@ class SafeFetcher:
                     if response.status_code in REDIRECT_CODES and response.headers.get("location"):
                         if method != "GET":
                             raise FetchError(f"unexpected redirect on {method} to {host}")
-                        current = urljoin(current, response.headers["location"])
+                        nxt = urljoin(current, response.headers["location"])
+                        if urlsplit(nxt).hostname != urlsplit(current).hostname:  # never hand credentials to another site
+                            request_headers = {k: v for k, v in request_headers.items()
+                                               if k.lower() not in ("authorization", "cookie", "proxy-authorization")}  # fmt: skip
+                        current = nxt
                         continue
                     chunks, size = [], 0
                     for chunk in response.iter_bytes():

@@ -33,7 +33,14 @@ def _text(el: Element | None, path: str) -> str:
     if el is None:
         return ""
     found = el.find(path)
-    return (found.text or "").strip() if found is not None else ""
+    if found is None:
+        return ""
+    if found.get("type") == "xhtml" or (not (found.text or "").strip() and len(found)):
+        # Atom type="xhtml": the content is child elements (a <div>), not text. Give it back as markup.
+        from xml.etree.ElementTree import tostring
+
+        return "".join(tostring(child, encoding="unicode") for child in found).strip()
+    return (found.text or "").strip()
 
 
 def _date(value: str) -> datetime | None:

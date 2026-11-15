@@ -1,3 +1,5 @@
+import dataclasses
+import html
 from collections.abc import Iterator
 from typing import Literal
 
@@ -218,6 +220,8 @@ def _store_manual(
     db: Session, raw: RawItem, *, user: User, rights: str, attribution: bool, note: str | None, ip: str | None,
     response: Response,
 ) -> dict:  # fmt: skip
+    # Typed or uploaded text is plain text, not HTML: escape it so the HTML clean-up keeps "<…>" as written.
+    raw = dataclasses.replace(raw, text=html.escape(raw.text, quote=False))
     result = store_items(
         db, None, [raw], source_type="manual", rights_status=rights, actor_id=user.id, attribution_required=attribution
     )

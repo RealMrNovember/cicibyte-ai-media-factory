@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 
 
 class TaskNotConfigured(Exception):
+    retryable = False  # a missing route will not appear by retrying: the worker fails the stage at once
+
     def __init__(self, task: str):
         super().__init__(f"no AI route configured for task '{task}'")
         self.task = task

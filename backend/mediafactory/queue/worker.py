@@ -96,6 +96,7 @@ def process_one(
     stop = threading.Event()
     beat = threading.Thread(target=_heartbeat, args=(factory, run_id, heartbeat_s, stop, base_log, lines), daemon=True)
     beat.start()
+    retryable = True
     try:
         with factory() as work:
             job = work.get(ProductionJob, job_id)
@@ -117,6 +118,7 @@ def process_one(
             except Exception as exc:  # handler failures are recorded, never crash the worker
                 work.rollback()
                 outcome, error = None, f"{type(exc).__name__}: {exc}"
+                retryable = getattr(exc, "retryable", True)
                 log.warning("stage %s of job %s failed: %s", stage, job_id, redact(error))
     finally:
         stop.set()
@@ -136,7 +138,7 @@ def process_one(
             if outcome.next_stage:
                 enqueue_stage(s, job_id, *outcome.next_stage)
         else:
-            _fail(s, run, job, error or "unknown error", retry=handler is not None)
+            _fail(s, run, job, error or "unknown error", retry=handler is not None and retryable)
         s.commit()
     return True
 

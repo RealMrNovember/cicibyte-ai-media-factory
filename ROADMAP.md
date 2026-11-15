@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 465 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 481 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -247,9 +247,12 @@
 ## 🐞 Bilinen eksikler
 
 - **Ağ güvenliği:** Giriş olmadığı için sunucu portu internete açılmamalı (Tailscale veya `localhost` + reverse proxy kimlik doğrulaması).
-- **Önizleme ve video farkı:** Önizleme CSS ile yapılıyor; konturda ve satır kırılmasında videodan küçük farklar olabilir.
+- **Önizleme ve video farkı:** Canlı önizleme CSS ile yapılıyor; konturda ve satır kırılmasında küçük farklar olabilir. Birebir görmek için Stüdyo'da **🎯 Gerçek kareyi göster** (sunucuda videoyla aynı altyazı motoruyla çizilir).
 - **Kurulum dosyası imzasız:** Windows ilk açılışta SmartScreen uyarısı gösterebilir.
-- Plan 1–2'den ertelenen küçük maddeler (sağlık kontrolü süreleri, RSS 1.0 desteği, IPv6 gömülü adresler vb.) git geçmişindeki önceki ROADMAP sürümünde listeli.
+- **Plan 1–2'den ertelenen küçük maddeler:**
+  - ✅ 15 Kasım'da kapatıldı: IPv6 içine gömülü özel IPv4 adresleri (6to4, Teredo, NAT64) engelleniyor; yönlendirmede `Authorization`/`Cookie` başka siteye taşınmıyor; adreslerdeki `kullanıcı:parola@` kayıtlarda maskeleniyor; ayar eksikliği hataları (görev rotası yok) boşuna yeniden denenmiyor; 2000 karakterden uzun besleme adresleri hata vermiyor; .txt/.md yüklemelerinde `<…>` metni korunuyor; Atom `xhtml` içerikleri okunuyor. RSS 1.0/RDF daha önce eklenmişti.
+  - Artık geçersiz (giriş ekranı kaldırıldı): giriş süresinden hesap tahmini, giriş deneme sınırlayıcısının belleği, e-posta büyük/küçük harf.
+  - Açık kalanlar: veritabanı hazır değilken Docker'da API'nin birkaç kez yeniden başlaması; `MF_SECRET_KEY` eksikken anlaşılması zor hata; izinli host listesinden `localhost` çıkarılınca Docker sağlık kontrolünün bozulması; sağlık kontrolünün bağlantı bekleme süresi (5 sn sınırından uzun); sabitlenmemiş bağımlılık sürümleri; gzip'li yanıtın tek parçada 5 MB sınırını kısa süre aşabilmesi; bellekteki hız sınırlayıcının thread'ler arasında tam kesin olmaması; gizli anahtar değişince Reddit bilgisinin "okunamıyor" yerine "yapılandırılmamış" görünmesi.
 
 ---
 
