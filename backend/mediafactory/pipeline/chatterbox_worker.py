@@ -29,13 +29,15 @@ def _chunks(text: str) -> list[str]:
 
 
 class Engine:
-    def __init__(self, threads: int) -> None:
+    def __init__(self, threads: int, device: str = "cpu") -> None:
         import torch
         from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
         torch.set_num_threads(threads)
-        self.torch = torch
-        self.model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.torch, self.device = torch, device
+        self.model = ChatterboxMultilingualTTS.from_pretrained(device=device)
         self.default_conds = self.model.conds
         self.refs: dict[tuple[str, float], object] = {}
 
@@ -59,8 +61,9 @@ class Engine:
         pieces = []
         with torch.inference_mode():
             for c in _chunks(req["text"]):
-                pieces += [model.generate(c, language_id=req.get("language", "en"), exaggeration=exaggeration,
-                                          cfg_weight=float(req.get("cfg_weight", 0.5))), gap]  # fmt: skip
+                wav = model.generate(c, language_id=req.get("language", "en"), exaggeration=exaggeration,
+                                     cfg_weight=float(req.get("cfg_weight", 0.5)))  # fmt: skip
+                pieces += [wav.detach().cpu(), gap]  # on the GPU the audio comes back as a CUDA tensor
         if not pieces:
             raise ValueError("no text to speak")
         wav = torch.cat(pieces[:-1], dim=-1)

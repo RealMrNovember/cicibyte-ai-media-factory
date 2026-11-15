@@ -1,7 +1,9 @@
 """Local text-to-speech with Piper (ONNX, CPU-friendly), a catalog of English and Turkish voices,
 speed (Piper length scale) and pitch (ffmpeg, duration kept)."""
 
+import base64
 import json
+import logging
 import os
 import queue
 import shutil
@@ -13,6 +15,8 @@ import wave
 from pathlib import Path
 
 import httpx
+
+log = logging.getLogger(__name__)
 
 BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main/"
 
@@ -63,8 +67,18 @@ def chatterbox_python() -> str | None:
     return path if path and Path(path).exists() else None
 
 
+def chatterbox_remote() -> tuple[str, str] | None:
+    """(url, token) of a Chatterbox voice server on a GPU machine (MF_CHATTERBOX_URL / MF_CHATTERBOX_TOKEN)."""
+    url, token = os.environ.get("MF_CHATTERBOX_URL", "").rstrip("/"), os.environ.get("MF_CHATTERBOX_TOKEN", "")
+    return (url, token) if url and token else None
+
+
+def chatterbox_ready() -> bool:
+    return chatterbox_remote() is not None or chatterbox_python() is not None
+
+
 def available(voice: dict) -> bool:
-    return voice["engine"] != "chatterbox" or chatterbox_python() is not None
+    return voice["engine"] != "chatterbox" or chatterbox_ready()
 DEFAULT_VOICE = {"en": "en_US-ryan-high", "tr": "tr_TR-dfki-medium"}  # Piper voices: always available
 PREFERRED_VOICE = {"tr": "tr-chatterbox"}  # used as the default when its engine is installed
 VOICES = {lang: VOICE_CATALOG[vid]["path"] for lang, vid in DEFAULT_VOICE.items()}  # backwards compatibility
@@ -289,7 +303,28 @@ def low_memory() -> bool:
 def chatterbox_request(req: dict, *, timeout: float = 1800, keep_s: float | None = None) -> dict:
     """Synthesise one request with the shared Chatterbox server (started on first use). It stays loaded for
     keep_s seconds afterwards (default IDLE_S), or until memory runs low."""
+    remote = chatterbox_remote()
+    if remote is not None:
+        try:
+            return _remote_request(remote, req, timeout)
+        except (httpx.HTTPError, OSError) as exc:  # GPU machine off or unreachable: use this server's own copy
+            if chatterbox_python() is None:
+                raise RuntimeError(f"the GPU voice server is unreachable ({exc}) and Chatterbox is not installed here") from None
+            log.warning("GPU voice server unreachable (%s): using the local Chatterbox", exc)
     return _SERVER.request(req, timeout, keep_s)
+
+
+def _remote_request(remote: tuple[str, str], req: dict, timeout: float) -> dict:
+    url, token = remote
+    body = {k: v for k, v in req.items() if k not in ("out", "reference", "threads")}
+    if req.get("reference"):
+        body["reference_b64"] = base64.b64encode(Path(req["reference"]).read_bytes()).decode()
+    r = httpx.post(f"{url}/synthesize", json=body, headers={"Authorization": f"Bearer {token}"},
+                   timeout=httpx.Timeout(30, read=timeout))  # fmt: skip
+    if r.status_code != 200:
+        raise RuntimeError(f"GPU voice server error {r.status_code}: {r.text[:300]}")
+    Path(req["out"]).write_bytes(r.content)
+    return {"ok": True, "seconds": wav_seconds(Path(req["out"])), "remote": True}
 
 
 def chatterbox_shutdown() -> None:

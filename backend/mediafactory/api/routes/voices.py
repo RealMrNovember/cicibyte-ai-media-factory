@@ -16,7 +16,7 @@ from mediafactory.pipeline import clones, pronounce
 from mediafactory.pipeline.tts import (
     VOICE_CATALOG,
     available,
-    chatterbox_python,
+    chatterbox_ready,
     default_voice,
     lookup,
     shift_pitch,
@@ -38,7 +38,7 @@ def list_voices(user: User = Depends(require_user)) -> dict:
     data = Path(get_settings().data_dir) / "models" / "piper"
     voices = [{k: v for k, v in voice.items() if k != "path"} | {"downloaded": (data / f"{voice['id']}.onnx").exists()}
               for voice in VOICE_CATALOG.values() if available(voice)]  # fmt: skip
-    cloning = chatterbox_python() is not None
+    cloning = chatterbox_ready()
     if cloning:
         voices += [{k: v for k, v in c.items() if k != "path"} | {"downloaded": True} for c in clones.list_clones(clones.data_dir())]
     return {"voices": voices, "defaults": {lang: default_voice(lang) for lang in ("en", "tr")}, "cloning": cloning,
@@ -50,7 +50,7 @@ def add_clone(
     request: Request, file: UploadFile = File(...), label: str = Form("", max_length=60), consent: bool = Form(False),
     db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user),
 ) -> dict:  # fmt: skip
-    if chatterbox_python() is None:
+    if not chatterbox_ready():
         raise HTTPException(status_code=409, detail="voice cloning needs Chatterbox installed on the server")
     try:
         voice = clones.add_clone(clones.data_dir(), file.filename or "", file.file, label=label, consent=consent)
