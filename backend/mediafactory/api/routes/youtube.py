@@ -15,8 +15,9 @@ from mediafactory.audit.service import record_audit
 from mediafactory.core.crypto import encrypt
 from mediafactory.db.models import ProductionJob, User, YouTubeChannel
 from mediafactory.publishing import publish_job
-from mediafactory.youtube import oauth
+from mediafactory.youtube import oauth, quota
 from mediafactory.youtube.oauth import YouTubeError
+from mediafactory.youtube.upload import playlist_id_from
 
 router = APIRouter(prefix="/api", tags=["youtube"])
 
@@ -37,15 +38,48 @@ class PublishIn(BaseModel):
     platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
 
 
-def channel_out(c: YouTubeChannel) -> dict:
-    return {"id": c.id, "channel_id": c.channel_id, "title": c.title, "thumbnail": c.thumbnail, "is_default": c.is_default}
+class ChannelIn(BaseModel):
+    daily_limit: int = Field(default=6, ge=0, le=50, description="uploads per day, 0 = no limit of our own")
+    playlist: str = Field(default="", max_length=300, description="playlist id or link; empty = none")
+    is_default: bool | None = None
+
+
+def channel_out(c: YouTubeChannel, uploads_today: int = 0) -> dict:
+    return {"id": c.id, "channel_id": c.channel_id, "title": c.title, "thumbnail": c.thumbnail, "is_default": c.is_default,
+            "daily_limit": c.daily_limit, "playlist_id": c.playlist_id, "needs_reconnect": c.needs_reconnect,
+            "last_error": c.last_error, "uploads_today": uploads_today}  # fmt: skip
 
 
 @router.get("/youtube")
 def status(db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)) -> dict:
     client = oauth.get_client(db)
     chans = db.scalars(select(YouTubeChannel).order_by(YouTubeChannel.id))
-    return {"client_id": client["client_id"] if client else None, "channels": [channel_out(c) for c in chans]}
+    used = quota.usage(db)
+    return {"client_id": client["client_id"] if client else None,
+            "channels": [channel_out(c, used["uploads"].get(c.channel_id, 0)) for c in chans],
+            "quota": {"units": used["units"], "limit": used["limit"], "resets_at": quota.next_reset().isoformat()}}  # fmt: skip
+
+
+@router.put("/youtube/channels/{cid}")
+def update_channel(
+    cid: int, body: ChannelIn, request: Request, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    chan = db.get(YouTubeChannel, cid)
+    if chan is None:
+        raise HTTPException(status_code=404, detail="channel not found")
+    playlist = None
+    if body.playlist.strip():
+        playlist = playlist_id_from(body.playlist)
+        if playlist is None:
+            raise HTTPException(status_code=422, detail="paste a playlist link (…?list=PL…) or its id")
+    chan.daily_limit, chan.playlist_id = body.daily_limit, playlist
+    if body.is_default:
+        for other in db.scalars(select(YouTubeChannel)):
+            other.is_default = other.id == chan.id
+    record_audit(db, actor_id=user.id, action="youtube.channel", details={"channel": chan.title, "daily_limit": body.daily_limit,
+                 "playlist": playlist}, ip=client_ip(request))  # fmt: skip
+    return channel_out(chan, quota.usage(db)["uploads"].get(chan.channel_id, 0))
 
 
 @router.put("/youtube/client")
@@ -101,6 +135,7 @@ def callback(
         chan = YouTubeChannel(channel_id=info["channel_id"], is_default=first)
         db.add(chan)
     chan.title, chan.thumbnail, chan.refresh_token_enc = info["title"], info["thumbnail"], encrypt(tokens["refresh_token"])
+    chan.needs_reconnect, chan.last_error = False, None
     record_audit(db, actor_id=user.id, action="youtube.connect", details={"channel": info["title"]}, ip=client_ip(request))
     return _page("YouTube connected ✓", f"Channel “{info['title']}” is ready. You can close this tab and return to the app.", True)
 

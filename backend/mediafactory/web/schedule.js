@@ -16,6 +16,9 @@ const SC = {
     disconnect: "Disconnect", sendYt: "Send to YouTube", now: "Upload now", later: "Schedule for", when: "Publish at",
     queuedYt: "Queued for YouTube", onYt: "On YouTube", scheduledYt: "Scheduled", noChannel: "Connect a YouTube channel in Settings first.",
     publishedList: "Published / scheduled", watch: "Open",
+    dailyLimit: "Uploads per day (0 = no limit)", playlistField: "Add every upload to playlist (link or id)", today: "today",
+    quotaLine: "YouTube API quota today", quotaReset: "resets", reconnect: "Reconnect", reconnectNeeded: "Access was withdrawn — reconnect this channel to upload again.",
+    makeDefault: "Make default", waitingYt: "Waiting for YouTube's daily limit", extrasNote: "Each upload also adds the subtitle file and, if set, the playlist entry. Channels connected before this version need one reconnect for those two.",
     publish: "Publish", platforms: "Where", ytOnly: "only for YouTube", instagram: "Instagram",
     igHelp: "Reels are published through the official Instagram API. This needs a professional account (Creator or Business) — switching is free in Instagram → Settings → Account type. A personal account can't publish through the API: use “Share manually” on each video instead.",
     igSteps: "1) At developers.facebook.com create an app (type: Business) and add the product “Instagram” → “API setup with Instagram login”. 2) Add your Instagram account there and press “Generate token”. 3) Paste the token below. The server renews it by itself before it expires (60 days).",
@@ -41,6 +44,9 @@ const SC = {
     disconnect: "Bağlantıyı kes", sendYt: "YouTube'a gönder", now: "Hemen yükle", later: "Zamanla", when: "Yayın zamanı",
     queuedYt: "YouTube sırasında", onYt: "YouTube'da", scheduledYt: "Zamanlandı", noChannel: "Önce Ayarlar'dan bir YouTube kanalı bağla.",
     publishedList: "Yayınlanan / zamanlanmış", watch: "Aç",
+    dailyLimit: "Günlük yükleme (0 = sınırsız)", playlistField: "Her yüklemeyi bu oynatma listesine ekle (link ya da kimlik)", today: "bugün",
+    quotaLine: "Bugünkü YouTube API kotası", quotaReset: "sıfırlanma", reconnect: "Yeniden bağlan", reconnectNeeded: "Erişim geri alınmış — yeniden yükleme yapabilmek için bu kanalı yeniden bağla.",
+    makeDefault: "Varsayılan yap", waitingYt: "YouTube'un günlük sınırı bekleniyor", extrasNote: "Her yüklemede altyazı dosyası ve (seçildiyse) oynatma listesi de eklenir. Bu sürümden önce bağlanan kanallar bunlar için bir kez yeniden bağlanmalı.",
     publish: "Yayınla", platforms: "Nerede", ytOnly: "yalnızca YouTube için", instagram: "Instagram",
     igHelp: "Reels videoları resmî Instagram API'siyle yayınlanır. Bunun için profesyonel hesap (Creator ya da İşletme) gerekir — Instagram → Ayarlar → Hesap türü'nden ücretsiz geçebilirsin. Kişisel hesaplar API ile paylaşamaz: onlar için her videoda “Elle paylaş” kullan.",
     igSteps: "1) developers.facebook.com'da bir uygulama oluştur (tür: Business) ve “Instagram” → “Instagram girişiyle API kurulumu” ürününü ekle. 2) Instagram hesabını orada ekleyip “Generate token”a bas. 3) Anahtarı aşağıya yapıştır. Sunucu, süresi (60 gün) dolmadan kendisi yeniler.",
@@ -182,16 +188,27 @@ function scheduleDialog(s, sources) {
 async function youtubeCard() {
   let y;
   try { y = await api("/api/youtube"); } catch { return ""; }
-  const chans = y.channels.map((c) => `<div class="row" style="margin:6px 0">${c.thumbnail ? `<img src="${esc(c.thumbnail)}" style="width:28px;height:28px;border-radius:50%">` : "▶"}
-      <b>${esc(c.title)}</b>${c.is_default ? ' <span class="pill ok">default</span>' : ""}<span class="spacer"></span>
-      <button class="btn danger small-btn" data-ytdel="${c.id}">${sc("disconnect")}</button></div>`).join("");
+  const chans = y.channels.map((c) => `<div class="card" style="margin:8px 0;padding:10px">
+      <div class="row">${c.thumbnail ? `<img src="${esc(c.thumbnail)}" style="width:28px;height:28px;border-radius:50%">` : "▶"}
+      <b>${esc(c.title)}</b>${c.is_default ? ' <span class="pill ok">default</span>' : ""}
+      <span class="muted small">${c.uploads_today}${c.daily_limit ? "/" + c.daily_limit : ""} ${sc("today")}</span><span class="spacer"></span>
+      ${c.is_default ? "" : `<button class="btn small-btn" data-ytdef="${c.id}">${sc("makeDefault")}</button>`}
+      <button class="btn danger small-btn" data-ytdel="${c.id}">${sc("disconnect")}</button></div>
+      ${c.needs_reconnect ? `<div class="row" style="margin-top:6px"><span class="pill warn" title="${esc(c.last_error || "")}">⚠ ${sc("reconnectNeeded")}</span>
+        <button class="btn primary small-btn" data-ytre="1">${sc("reconnect")}</button></div>` : ""}
+      <form class="grid g3" data-ytch="${c.id}" style="align-items:end;margin-top:6px">
+        <div><label>${sc("dailyLimit")}</label><input name="daily_limit" type="number" min="0" max="50" value="${c.daily_limit}"></div>
+        <div><label>${sc("playlistField")}</label><input name="playlist" value="${esc(c.playlist_id || "")}" placeholder="https://www.youtube.com/playlist?list=PL…"></div>
+        <div><button class="btn">${t("save")}</button></div></form></div>`).join("");
+  const q = y.quota;
+  const quotaLine = q ? `<p class="muted small">${sc("quotaLine")}: <b>${q.units}</b> / ${q.limit} · ${sc("quotaReset")} ${when(q.resets_at)}</p>` : "";
   return `<div class="card" style="margin-bottom:16px" id="ytCard"><h3>${sc("youtube")}</h3>
     <p class="muted small">${sc("ytHelp")} <a href="#" id="ytGuide">${sc("ytGuide")} ↗</a></p>
     <form id="ytc" class="grid g3" style="align-items:end">
       <div><label>${sc("clientId")}</label><input name="client_id" required value="${esc(y.client_id || "")}" placeholder="…apps.googleusercontent.com"></div>
       <div><label>${sc("clientSecret")}</label><input name="client_secret" type="password" required placeholder="${y.client_id ? "••••••••" : ""}"></div>
       <div><button class="btn">${t("save")}</button></div></form>
-    ${chans ? `<label>${sc("channels")}</label>${chans}` : ""}
+    ${chans ? `<label>${sc("channels")}</label>${chans}<p class="muted small">${sc("extrasNote")}</p>${quotaLine}` : ""}
     <div class="row" style="margin-top:12px"><button class="btn primary" id="ytConnect" ${y.client_id ? "" : "disabled"}>▶ ${sc("connect")}</button></div></div>`;
 }
 
@@ -204,11 +221,22 @@ function bindYoutubeCard() {
     try { await api("/api/youtube/client", { method: "PUT", body: { client_id: f.client_id.value.trim(), client_secret: f.client_secret.value.trim() } }); toast(t("saved")); render(); }
     catch (err) { toast(err.message, true); }
   });
+  document.querySelectorAll("[data-ytch]").forEach((cf) => cf.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try { await api(`/api/youtube/channels/${cf.dataset.ytch}`, { method: "PUT", body: { daily_limit: Number(cf.daily_limit.value || 0), playlist: cf.playlist.value.trim() } }); toast(t("saved")); render(); }
+    catch (err) { toast(err.message, true); }
+  }));
+  on("[data-ytdef]", "click", async (e) => {
+    const card = e.target.closest(".card"), cf = card.querySelector("[data-ytch]");
+    try { await api(`/api/youtube/channels/${e.target.dataset.ytdef}`, { method: "PUT", body: { daily_limit: Number(cf.daily_limit.value || 0), playlist: cf.playlist.value.trim(), is_default: true } }); render(); }
+    catch (err) { toast(err.message, true); }
+  });
+  on("[data-ytre]", "click", () => { const b = document.getElementById("ytConnect"); b && b.click(); });
   on("[data-ytdel]", "click", async (e) => { if (!confirm("?")) return; await api(`/api/youtube/channels/${e.target.dataset.ytdel}`, { method: "DELETE" }).catch((err) => toast(err.message, true)); render(); });
   const btn = document.getElementById("ytConnect");
   btn && btn.addEventListener("click", async () => {
     try {
-      const before = (await api("/api/youtube")).channels.length;
+      const was = (await api("/api/youtube")).channels, before = was.length, beforeBroken = was.some((c) => c.needs_reconnect);
       const r = await api("/api/youtube/auth", { method: "POST", body: { redirect_uri: location.origin + "/api/youtube/callback" } });
       openExternal(r.url); toast(sc("connectWait"));
       let n = 0;
@@ -216,7 +244,8 @@ function bindYoutubeCard() {
         n += 1;
         if (n > 100 || route() !== "settings") return clearInterval(timer);
         const y = await api("/api/youtube").catch(() => null);
-        if (y && y.channels.length > before) { clearInterval(timer); toast("YouTube ✓"); render(); }
+        const fixed = beforeBroken && y && !y.channels.some((c) => c.needs_reconnect);
+        if (y && (y.channels.length > before || fixed)) { clearInterval(timer); toast("YouTube ✓"); render(); }
       }, 3000);
     } catch (err) { toast(err.message, true); }
   });
@@ -261,6 +290,7 @@ function ytBadge(j) {
   const y = j.youtube, g = j.instagram;
   let out = "";
   if (y && y.url) out += `<a class="pill ok" href="#" data-ext="${esc(y.url)}">${y.state === "scheduled" ? sc("scheduledYt") + " · " + when(y.publish_at) : sc("onYt")} ↗</a>`;
+  else if (y && y.state === "waiting") out += `<span class="pill warn" title="${esc(y.reason || "")}">${sc("waitingYt")} · ${when(y.retry_at)}</span>`;
   else if (y) out += `<span class="pill warn">${sc("queuedYt")}${y.publish_at ? " · " + when(y.publish_at) : ""}</span>`;
   if (g) {
     if (g.state === "published") out += `<a class="pill ok" href="#" data-ext="${esc(g.url)}">${sc("igOn")} ↗</a>`;
@@ -272,7 +302,7 @@ function ytBadge(j) {
 }
 
 // What can still be done with this video, per platform.
-const ytOpen = (j) => !(j.youtube && (j.youtube.id || j.youtube.state === "queued"));
+const ytOpen = (j) => !(j.youtube && (j.youtube.id || ["queued", "waiting"].includes(j.youtube.state)));
 const igOpen = (j) => !j.instagram || j.instagram.state === "failed";
 
 function publishButtons(j) {

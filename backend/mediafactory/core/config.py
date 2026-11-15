@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     fetch_allowlist: list[str] = Field(default_factory=list)
     # Script Doctor: the AI grades each new script and rewrites weak ones once (up to 3 extra AI calls).
     script_doctor: bool = True
+    # YouTube Data API quota of your Google project (units per day; 10,000 unless Google raised it).
+    youtube_daily_quota: int = 10_000
 
     @field_validator("secret_key")
     @classmethod

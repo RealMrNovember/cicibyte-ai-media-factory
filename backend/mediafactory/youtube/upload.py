@@ -11,6 +11,8 @@ from mediafactory.youtube.oauth import YouTubeError
 
 UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos"
 THUMBNAIL_URL = "https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
+CAPTIONS_URL = "https://www.googleapis.com/upload/youtube/v3/captions"
+PLAYLIST_ITEMS_URL = "https://www.googleapis.com/youtube/v3/playlistItems"
 CATEGORY_ENTERTAINMENT = "24"
 
 
@@ -57,3 +59,31 @@ def set_thumbnail(token: str, video_id: str, image: Path, *, http: httpx.Client 
     r = client.post(THUMBNAIL_URL, params={"videoId": video_id}, content=image.read_bytes(),
                     headers={"Authorization": f"Bearer {token}", "Content-Type": "image/jpeg"})  # fmt: skip
     return None if r.status_code == 200 else f"HTTP {r.status_code}: {r.text[:200]}"
+
+
+def upload_captions(token: str, video_id: str, srt: Path, *, language: str, http: httpx.Client | None = None) -> str | None:
+    """Add the subtitle file as a caption track. Returns an error text instead of raising."""
+    client = http or httpx.Client(timeout=120)
+    meta = json.dumps({"snippet": {"videoId": video_id, "language": language, "name": "", "isDraft": False}})
+    boundary = "mfcaptions"
+    body = (f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{meta}\r\n"
+            f"--{boundary}\r\nContent-Type: application/octet-stream\r\n\r\n").encode() + srt.read_bytes() + f"\r\n--{boundary}--".encode()
+    r = client.post(CAPTIONS_URL, params={"uploadType": "multipart", "part": "snippet"}, content=body,
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": f"multipart/related; boundary={boundary}"})  # fmt: skip
+    return None if r.status_code in (200, 201) else f"HTTP {r.status_code}: {r.text[:200]}"
+
+
+def add_to_playlist(token: str, video_id: str, playlist_id: str, *, http: httpx.Client | None = None) -> str | None:
+    client = http or httpx.Client(timeout=60)
+    body = {"snippet": {"playlistId": playlist_id, "resourceId": {"kind": "youtube#video", "videoId": video_id}}}
+    r = client.post(PLAYLIST_ITEMS_URL, params={"part": "snippet"}, json=body, headers={"Authorization": f"Bearer {token}"})
+    return None if r.status_code in (200, 201) else f"HTTP {r.status_code}: {r.text[:200]}"
+
+
+def playlist_id_from(text: str) -> str | None:
+    """A playlist id from an id or a YouTube link (…?list=PL…)."""
+    text = (text or "").strip()
+    m = re.search(r"[?&]list=([A-Za-z0-9_-]{10,64})", text)
+    if m:
+        return m.group(1)
+    return text if re.fullmatch(r"[A-Za-z0-9_-]{10,64}", text) else None

@@ -61,6 +61,14 @@ Videos can be sent from **Ready videos** (now or at a chosen time; YouTube publi
 or by a publishing schedule under **Schedule**. Google may keep videos uploaded by an unverified app private
 until the app passes Google's audit.
 
+**Limits and extras.** Each channel in Settings → YouTube has an *uploads per day* limit (default 6, 0 = none)
+and an optional playlist (paste its link) that every upload is added to. Each upload also sends the subtitle
+file as a caption track. The server counts the YouTube API quota it spends (upload 1,600 units, captions 400,
+cover and playlist 50 each; 10,000 per day unless Google raised yours — set `MF_YOUTUBE_DAILY_QUOTA`). When a
+channel's limit or the quota is reached, uploads wait and go out automatically after midnight Pacific time,
+when Google resets the quota. If Google withdraws a channel's access, the channel shows a warning with a
+**Reconnect** button. Channels connected before captions and playlists were added need one reconnect for them.
+
 ## Instagram
 
 Reels are published with the official **Instagram API with Instagram Login**. It works only for a

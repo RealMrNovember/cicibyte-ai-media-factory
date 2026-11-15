@@ -41,6 +41,10 @@ class YouTubeChannel(Base):
     refresh_token_enc: Mapped[str] = mapped_column(Text)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     connected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    daily_limit: Mapped[int] = mapped_column(Integer, default=6, server_default="6")  # uploads per (Pacific) day
+    playlist_id: Mapped[str | None] = mapped_column(String(64), nullable=True)  # every upload is added to it
+    needs_reconnect: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Concept(Base):

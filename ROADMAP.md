@@ -35,10 +35,11 @@
 | 10 | Script Doctor, özgünlük kontrolü, hassas içerik ve hak kontrolü | ✅ |
 | 12 | Kanallar ve konseptler, hazır video stoku | ✅ |
 | 13 | Ses efektleri ve 16:9 format | ✅ |
+| 14 | YouTube: günlük sınır, kota takibi, altyazı dosyası, oynatma listesi, yeniden bağlanma uyarısı | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 415 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 425 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -209,9 +210,9 @@
 - [x] Kanallar ve konseptler: Takvim → Kanallar ve konseptler'de kanal başına tarif (dil, konu, süre, Stüdyo'dan stil/ses/müzik, YouTube kanalı, platformlar, görünürlük). "Şimdi bir tane üret", otopilot ve yayın zamanlamaları konsepti izleyebiliyor. **Stok hedefi:** sunucu 10 dakikada bir, hedefin altındaki konseptler için (her seferinde en fazla 2) yeni video üretiyor; isteğe bağlı otomatik onay. Ayar yedeğine dahil.
 
 ### YouTube (Plan 5'in devamı)
-- [ ] Kanal başına günlük yükleme sınırı ve kota takibi.
-- [ ] Kapak görseli, oynatma listesi ve altyazı dosyasının da yüklenmesi.
-- [ ] Bağlantısı düşen kanal için uyarı ve "Yeniden bağlan".
+- [x] Kanal başına günlük yükleme sınırı (varsayılan 6) ve API kota takibi: sınır ya da kota dolunca yükleme bekliyor, Pasifik gece yarısı kota sıfırlanınca kendiliğinden gidiyor.
+- [x] Kapak görseli, oynatma listesi (kanal başına) ve altyazı dosyasının (SRT, altyazı kanalı olarak) yüklenmesi; reddedilirse yükleme yine tamamlanıyor.
+- [x] Erişimi geri alınan kanal için uyarı ve "Yeniden bağlan".
 - [ ] Video açıklamasında isteğe bağlı CiciByte satırı.
 
 ### Dağıtım ve paketleme
@@ -256,7 +257,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
-3. YouTube: kanal başına günlük yükleme sınırı ve kota takibi; kapak, oynatma listesi ve altyazı dosyasının da yüklenmesi.
+3. Video açıklamasında isteğe bağlı CiciByte satırı; `OPERATIONS.md` ve `SECURITY.md`.
 
 ---
 

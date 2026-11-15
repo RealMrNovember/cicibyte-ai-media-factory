@@ -15,14 +15,18 @@ from mediafactory.db.models import SystemSetting
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 (endpoint, not a secret)
 CHANNELS_URL = "https://www.googleapis.com/youtube/v3/channels"
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube.readonly"]
+# force-ssl adds captions and playlists; channels connected before it keep uploading and are asked to reconnect for those.
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube.readonly",
+          "https://www.googleapis.com/auth/youtube.force-ssl"]  # fmt: skip
 CLIENT_KEY = "youtube_client"
 PENDING_PREFIX = "youtube_pending:"
 PENDING_TTL_S = 15 * 60
 
 
 class YouTubeError(Exception):
-    pass
+    def __init__(self, message: str, *, revoked: bool = False):
+        super().__init__(message)
+        self.revoked = revoked  # the channel's access was withdrawn: it must be reconnected
 
 
 def get_client(db: Session) -> dict | None:
@@ -85,7 +89,8 @@ def access_token(client: dict, refresh_token: str, *, http: httpx.Client | None 
             "refresh_token": refresh_token, "grant_type": "refresh_token"}  # fmt: skip
     r = (http or httpx).post(TOKEN_URL, data=data, timeout=30)
     if r.status_code != 200:
-        raise YouTubeError(f"could not refresh YouTube access (reconnect the channel): {r.text[:300]}")
+        revoked = r.status_code in (400, 401) and "invalid_grant" in r.text
+        raise YouTubeError(f"could not refresh YouTube access (reconnect the channel): {r.text[:300]}", revoked=revoked)
     return r.json()["access_token"]
 
 
