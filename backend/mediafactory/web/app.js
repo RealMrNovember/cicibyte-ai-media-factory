@@ -4,6 +4,10 @@
 const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
+    offTitle: "This computer can't reach your Media Factory server",
+    offWhy: "Everything — AI keys, YouTube and Instagram, sources, schedules, videos — lives on the server, not on this computer. Once this computer reaches the same server you see it all as it is: no import needed. (Export/import is for moving to another server.)",
+    offSteps: "If your server is on Tailscale: 1) install Tailscale on this computer, 2) sign in with the same account as your server, 3) press “Try again”. Otherwise enter the server's address below.",
+    offGet: "Download Tailscale", offRetry: "Try again", offAddr: "Address tried",
     settings: "Settings", notifLabel: "Windows notifications (video ready, published, failed, new version)", backup: "Backup & move", backupHelp: "Export all settings — AI providers and keys, task routes, sources, schedules, YouTube and Reddit — to a file, and import it on another computer or server. Import adds and updates; it never deletes. Keys are only included if you set a password (they are encrypted with it). Videos, clips and music are not included.", expPassword: "Password for the keys (optional)", expPasswordPh: "leave empty to export without keys", export: "Export settings", impFile: "Settings file", impPassword: "Password (if the file has keys)", import: "Import", exportedWithKeys: "Exported with encrypted keys", exportedNoKeys: "Exported without keys", imported: "Imported", schedulesN: "schedules", appUpdate: "A new version of the app is available:", appUpdateNow: "Update now", appUpdating: "Downloading…", appRestarting: "Installing — the app will reopen in a moment", updates: "Updates", updHelp: "The server checks GitHub every 30 minutes and installs new versions by itself. It waits while a video is being made and goes back automatically if a new version does not start.", updAuto: "Automatic", updVersion: "Running", updLatest: "Latest on GitHub", updState: "Status", updChecked: "Last check", updLast: "last update", updLog: "Update log", updNow: "Check & update now", updPending: "Update requested…", updRequested: "Update requested — the panel reloads when the server is back", updMissing: "Automatic updates are not installed on this server yet. Run once on the server:", upd_up_to_date: "Up to date", upd_available: "Update available", upd_updating: "Updating…", upd_updated: "Updated", upd_deferred: "Waiting for running jobs", upd_rolled_back: "Rolled back", upd_failed: "Failed", upd_error: "Can't reach GitHub", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_originality: "Originality (copied from source)", qc_content: "Sensitive content (YouTube/Instagram rules)", qc_rights: "Rights status", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
@@ -21,6 +25,10 @@ const I18N = {
   },
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
+    offTitle: "Bu bilgisayar Media Factory sunucuna ulaşamıyor",
+    offWhy: "Her şey — AI anahtarları, YouTube ve Instagram, kaynaklar, takvimler, videolar — bu bilgisayarda değil, sunucuda duruyor. Bu bilgisayar aynı sunucuya ulaşınca hepsini olduğu gibi görürsün: içe aktarmaya gerek yok. (Dışa/içe aktarma başka bir sunucuya taşımak içindir.)",
+    offSteps: "Sunucun Tailscale üzerindeyse: 1) bu bilgisayara Tailscale kur, 2) sunucunla aynı hesapla giriş yap, 3) “Tekrar dene”ye bas. Değilse sunucunun adresini aşağıya yaz.",
+    offGet: "Tailscale'i indir", offRetry: "Tekrar dene", offAddr: "Denenen adres",
     settings: "Ayarlar", notifLabel: "Windows bildirimleri (video hazır, yayınlandı, başarısız, yeni sürüm)", backup: "Yedekle ve taşı", backupHelp: "Bütün ayarları — AI sağlayıcıları ve anahtarları, görev rotaları, kaynaklar, takvimler, YouTube ve Reddit — bir dosyaya aktar, başka bir bilgisayarda ya da sunucuda içe al. İçe aktarma ekler ve günceller, hiçbir şeyi silmez. Anahtarlar yalnızca parola verirsen dahil edilir ve o parolayla şifrelenir. Videolar, klipler ve müzikler dahil değildir.", expPassword: "Anahtarlar için parola (isteğe bağlı)", expPasswordPh: "boş bırakırsan anahtarsız aktarılır", export: "Ayarları dışa aktar", impFile: "Ayar dosyası", impPassword: "Parola (dosyada anahtar varsa)", import: "İçe aktar", exportedWithKeys: "Şifreli anahtarlarla dışa aktarıldı", exportedNoKeys: "Anahtarsız dışa aktarıldı", imported: "İçe aktarıldı", schedulesN: "takvim", appUpdate: "Uygulamanın yeni sürümü hazır:", appUpdateNow: "Şimdi güncelle", appUpdating: "İndiriliyor…", appRestarting: "Kuruluyor — uygulama birazdan yeniden açılacak", updates: "Güncellemeler", updHelp: "Sunucu 30 dakikada bir GitHub'ı kontrol eder ve yeni sürümleri kendisi kurar. Video üretilirken bekler; yeni sürüm açılmazsa otomatik olarak eskisine döner.", updAuto: "Otomatik", updVersion: "Çalışan sürüm", updLatest: "GitHub'daki son sürüm", updState: "Durum", updChecked: "Son kontrol", updLast: "son güncelleme", updLog: "Güncelleme kaydı", updNow: "Şimdi kontrol et ve güncelle", updPending: "Güncelleme istendi…", updRequested: "Güncelleme istendi — sunucu geri gelince panel yenilenecek", updMissing: "Bu sunucuda otomatik güncelleme henüz kurulu değil. Sunucuda bir kez çalıştır:", upd_up_to_date: "Güncel", upd_available: "Yeni sürüm var", upd_updating: "Güncelleniyor…", upd_updated: "Güncellendi", upd_deferred: "Çalışan işler bekleniyor", upd_rolled_back: "Geri alındı", upd_failed: "Başarısız", upd_error: "GitHub'a ulaşılamıyor", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_originality: "Özgünlük (kaynaktan kopya)", qc_content: "Hassas içerik (YouTube/Instagram kuralları)", qc_rights: "Hak durumu", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
@@ -425,6 +433,18 @@ async function ready(el) {
   }
 }
 
+function offlineCard() {
+  if (!desktop) return "";
+  return `<div class="card" style="margin-bottom:16px;border-color:#E0A800"><h3>⚠ ${t("offTitle")}</h3>
+    <p>${t("offWhy")}</p><p>${t("offSteps")}</p>
+    <p class="muted small">${t("offAddr")}: <code>${esc(desktop.server_url)}</code></p>
+    <div class="row"><button class="btn primary" id="offRetry">↻ ${t("offRetry")}</button><button class="btn" id="offGet">⬇ ${t("offGet")}</button></div></div>`;
+}
+function bindOfflineCard() {
+  const r = document.getElementById("offRetry"), g = document.getElementById("offGet");
+  r && r.addEventListener("click", () => { desktop = null; render(); });
+  g && g.addEventListener("click", () => openExternal("https://tailscale.com/download/windows"));
+}
 function serverCard() {
   if (!desktop) return "";
   return `<div class="card" style="margin-bottom:16px"><h3>${t("server")}</h3><p class="muted small">${t("serverHelp")}</p>
@@ -539,7 +559,8 @@ async function settings(el) {
   try {
     [prov, routes, creds] = await Promise.all([api("/api/providers"), api("/api/task-routes"), api("/api/source-credentials")]);
   } catch (err) {
-    el.innerHTML = `<h1>${t("settings")}</h1>${serverCard()}<p class="muted">${esc(err.message)}</p>`;
+    el.innerHTML = `<h1>${t("settings")}</h1>${offlineCard()}${serverCard()}`;
+    bindOfflineCard();
     return bindServerCard();
   }
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>

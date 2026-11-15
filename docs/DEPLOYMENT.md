@@ -146,6 +146,23 @@ also appear in the source, or 12 or more words are copied in a row, the quality 
 waits in Ready for a person even when a schedule auto-approves or auto-publishes. Your own stories (AI
 stories you add) are not checked. Copying through translation is not detected.
 
+## Chatterbox on a GPU machine (optional)
+
+Chatterbox (the natural Turkish voice and voice cloning) is slow on a CPU. If another machine on your network
+has an NVIDIA GPU, run the voice server there and let the factory call it:
+
+1. On the GPU machine: create a virtualenv with a CUDA build of PyTorch (RTX 50-series needs CUDA 12.8 wheels:
+   `pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu128`), then
+   `pip install --no-deps chatterbox-tts==0.1.7` and its other requirements.
+2. Copy `backend/mediafactory/pipeline/tts_server.py` and `chatterbox_worker.py` into one folder there and run
+   `MF_TTS_TOKEN=<long random secret> python tts_server.py --host <tailscale-ip> --port 8765` (a systemd service
+   is best). Bind it to a private address only.
+3. On the factory server add to `.env`: `MF_CHATTERBOX_URL=http://<gpu-machine>:8765` and
+   `MF_CHATTERBOX_TOKEN=<the same secret>`, then restart `api` and `worker`.
+
+Voices then come from the GPU. If the GPU machine is off or unreachable, the factory uses its own CPU copy of
+Chatterbox when installed (`MF_CHATTERBOX_PYTHON`), otherwise the voice step fails with a clear message.
+
 ## Sound effects and video format
 
 **Studio → Music → Sound effects** adds short effects where the story mentions them: knocks, creaks,
