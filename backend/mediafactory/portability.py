@@ -87,6 +87,10 @@ def export_settings(db: Session, *, password: str | None) -> dict:
         secrets["reddit"] = reddit
     from mediafactory.instagram.publish import get_account
 
+    from mediafactory.pipeline.stock import coverr_key
+
+    if ck := coverr_key(db):
+        secrets["coverr_key"] = ck
     if (acc := get_account(db)) and (tok := _safe_decrypt(acc.get("token_enc"))) is not None:
         data["instagram"] = {k: acc.get(k) for k in ("user_id", "username", "account_type", "expires_at")}
         secrets["instagram_token"] = tok
@@ -195,6 +199,10 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
         row.youtube_channel_id = chan.id if chan else None
         db.add(row)
         counts["concepts"] = counts.get("concepts", 0) + 1
+    if sec.get("coverr_key"):
+        from mediafactory.pipeline.stock import set_coverr_key
+
+        set_coverr_key(db, sec["coverr_key"])
     ig = data.get("instagram") or {}
     if ig.get("user_id") and sec.get("instagram_token"):
         from mediafactory.instagram.publish import save_account

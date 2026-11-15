@@ -13,6 +13,10 @@ const ST = {
     sfx: "Sound effects where the story mentions them (knocks, heartbeat, thunder…)", sfxVol: "Effects volume",
     anim_none: "None", anim_fade: "Fade", anim_pop: "Pop", anim_slide_up: "Slide up", anim_karaoke: "Word highlight (karaoke)",
     presets: "Presets", output: "Output", produce: "Produce", top: "Top", middle: "Middle", bottom: "Bottom",
+    stockFind: "Find stock clips", stockTitle: "Free stock clips", stockSearch: "Search Coverr (e.g. parkour, foggy forest, rain window)",
+    stockNoKey: "Add your free Coverr API key in Settings → Stock clips to search here. You can still import Mixkit links.",
+    stockMixkit: "Or paste a Mixkit video link", stockImport: "Add to library", stockTopic: "Topic of the clip", stockAdded: "Clip added",
+    stockMore: "More", stockLicence: "Coverr: free for commercial use, do not register in Content ID. Mixkit: free, no attribution needed.",
     pron: "Pronunciation", pronTitle: "Pronunciation dictionary", pronHelp: "Words the voice reads wrongly: write them the way they should sound. Only the voice changes — captions, titles and descriptions keep the original spelling. Whole words only; suffixes after an apostrophe stay (YouTube'da → Yu tüb'da).",
     pronWord: "Written", pronSay: "Say it as", pronLang: "Language", pronAny: "All", pronAdd: "Add a word", pronTry: "Listen with the English/Turkish voice above",
     previewHint: "Click the preview to place the captions.", myVoices: "My voices (clone)", addClone: "Clone a voice", cloneName: "Name", cloneNamePh: "e.g. My voice",
@@ -32,6 +36,10 @@ const ST = {
     sfx: "Hikâyede geçen yerlere ses efekti (kapı vuruşu, kalp atışı, gök gürültüsü…)", sfxVol: "Efekt seviyesi",
     anim_none: "Yok", anim_fade: "Belirme", anim_pop: "Zıplama", anim_slide_up: "Aşağıdan kayma", anim_karaoke: "Kelime vurgusu (karaoke)",
     presets: "Hazır stiller", output: "Çıktı", produce: "Üret", top: "Üst", middle: "Orta", bottom: "Alt",
+    stockFind: "Stok klip bul", stockTitle: "Ücretsiz stok klipler", stockSearch: "Coverr'da ara (ör. parkour, sisli orman, yağmurlu pencere)",
+    stockNoKey: "Burada arama yapmak için ücretsiz Coverr API anahtarını Ayarlar → Stok klipler'e ekle. Mixkit bağlantılarını yine de içe aktarabilirsin.",
+    stockMixkit: "Ya da bir Mixkit video bağlantısı yapıştır", stockImport: "Kütüphaneye ekle", stockTopic: "Klibin konusu", stockAdded: "Klip eklendi",
+    stockMore: "Daha fazla", stockLicence: "Coverr: ticari kullanım serbest, Content ID'ye kaydedilemez. Mixkit: ücretsiz, atıf gerekmez.",
     pron: "Telaffuz", pronTitle: "Telaffuz sözlüğü", pronHelp: "Sesin yanlış okuduğu kelimeleri nasıl okunması gerekiyorsa öyle yaz. Yalnızca ses değişir — altyazı, başlık ve açıklama orijinal yazımı korur. Yalnızca tam kelimeler; kesme işaretinden sonraki ek korunur (YouTube'da → Yu tüb'da).",
     pronWord: "Yazılışı", pronSay: "Böyle oku", pronLang: "Dil", pronAny: "Hepsi", pronAdd: "Kelime ekle", pronTry: "Yukarıda seçili İngilizce/Türkçe sesle dinle",
     previewHint: "Altyazıyı yerleştirmek için önizlemeye tıkla.", myVoices: "Kendi seslerim (klon)", addClone: "Ses klonla", cloneName: "Ad", cloneNamePh: "ör. Benim sesim",
@@ -310,7 +318,7 @@ async function studio(el) {
         <div class="card"><div class="row"><h3>1 · ${st("story")}</h3><span class="spacer"></span>
           <button class="btn" id="aiStory">✨ ${st("aiStory")}</button><button class="btn" id="addStory">＋ ${st("addStory")}</button></div><div id="storyBox"></div></div>
         <div class="card"><div class="row"><h3>2 · ${st("background")}</h3><span class="spacer"></span>
-          <button class="btn" id="upBtn">＋ ${st("upload")}</button></div><div id="bgBox"></div></div>
+          <button class="btn" id="upBtn">＋ ${st("upload")}</button><button class="btn" id="stockBtn">🔎 ${st("stockFind")}</button></div><div id="bgBox"></div></div>
         <div class="card"><h3>3 · ${st("captions")}</h3><div id="capBox"></div></div>
         <div class="card"><h3>4 · ${st("voice")}</h3><div id="voiceBox"></div></div>
         <div class="card"><div class="row"><h3>5 · ${st("music")}</h3><span class="spacer"></span>
@@ -323,6 +331,7 @@ async function studio(el) {
   drawStory(); drawBackgrounds(); drawCaptions(); drawVoice(); drawMusic(); drawOutput(); drawPreview();
   document.getElementById("upMusic").addEventListener("click", uploadMusicDialog);
   document.getElementById("upBtn").addEventListener("click", uploadDialog);
+  document.getElementById("stockBtn").addEventListener("click", stockDialog);
   document.getElementById("aiStory").addEventListener("click", () => aiStoryDialog(async (item) => {
     Object.assign(studioState, { itemId: item.id, langFilter: item.language || "", topic: "", sourceFilter: "" }); await reloadStories();
   }));
@@ -478,6 +487,53 @@ function tagDialog(selected, onSave, title) {
     const tags = [...e.target.querySelectorAll("[name=tag]:checked")].map((x) => x.value);
     try { await onSave(tags); m.remove(); toast(t("saved")); } catch (err) { toast(err.message, true); }
   });
+}
+
+async function stockDialog() {
+  const status = await api("/api/stock").catch(() => ({ coverr: false }));
+  const topicSel = `<select name="topic">${Object.keys(TOPICS).filter((k) => k !== "other").map((k) => `<option value="${k}" ${k === "horror" ? "selected" : ""}>${esc(topicLabel(k))}</option>`).join("")}</select>`;
+  const m = modal(`<h1>🔎 ${st("stockTitle")}</h1>
+    <div class="grid g2" style="align-items:end"><div><label>${st("stockTopic")}</label>${topicSel}</div><div class="muted small">${st("stockLicence")}</div></div>
+    ${status.coverr ? `<form id="sq" class="row" style="margin-top:10px;flex-wrap:nowrap"><input name="q" placeholder="${esc(st("stockSearch"))}" required><button class="btn primary">🔎</button></form>
+      <div id="sres" class="bg-grid" style="margin-top:10px"></div><div class="row"><button class="btn" id="smore" hidden>${st("stockMore")}</button><span class="spacer"></span>
+      <a href="#" id="coverrLink" class="muted small">Videos by Coverr ↗</a></div>` : `<p class="muted small">${st("stockNoKey")}</p>`}
+    <form id="mk" style="margin-top:14px"><label>${st("stockMixkit")}</label><div class="row" style="flex-wrap:nowrap">
+      <input name="url" placeholder="https://mixkit.co/free-stock-video/…-12345/" required><button class="btn">${st("stockImport")}</button></div></form>`);
+  const tags = () => [m.querySelector("[name=topic]").value];
+  const added = async (d) => { toast(`${st("stockAdded")}: ${d.name}`); studioState.clips = (await api("/api/backgrounds")).items; drawBackgrounds(); };
+  m.querySelector("#mk").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const b = e.target.querySelector("button"); b.disabled = true; b.textContent = "…";
+    try { await added(await api("/api/stock/mixkit", { method: "POST", body: { url: e.target.url.value.trim(), tags: tags() } })); e.target.reset(); }
+    catch (err) { toast(err.message, true); }
+    b.disabled = false; b.textContent = st("stockImport");
+  });
+  if (!status.coverr) return;
+  m.querySelector("#coverrLink").addEventListener("click", (e) => { e.preventDefault(); openExternal("https://coverr.co"); });
+  let q = "", page = 0;
+  const res = m.querySelector("#sres"), more = m.querySelector("#smore");
+  const load = async (append) => {
+    try {
+      const r = await api(`/api/stock/coverr?q=${encodeURIComponent(q)}&page=${page}`);
+      const html = r.items.map((c) => `<div class="bg-tile" title="${esc(c.title)}"><img loading="lazy" src="${esc(c.thumbnail || "")}"
+          data-prev="${esc(c.preview || "")}"><span>${esc(c.title)} · ${Math.round(c.duration || 0)}s${c.vertical ? " · 9:16" : ""}</span>
+          <button class="btn small-btn" data-imp="${esc(c.id)}" style="position:absolute;right:6px;bottom:28px">＋</button></div>`).join("");
+      res.innerHTML = (append ? res.innerHTML : "") + (html || `<p class="muted">${t("noData")}</p>`);
+      more.hidden = page + 1 >= (r.pages || 1);
+      res.querySelectorAll("[data-imp]").forEach((b) => { b.onclick = async () => {
+        b.disabled = true; b.textContent = "…";
+        try { await added(await api(`/api/stock/coverr/${encodeURIComponent(b.dataset.imp)}/import`, { method: "POST", body: { tags: tags() } })); b.textContent = "✓"; }
+        catch (err) { toast(err.message, true); b.disabled = false; b.textContent = "＋"; }
+      }; });
+      res.querySelectorAll("img[data-prev]").forEach((img) => { img.onmouseenter = () => {
+        if (!img.dataset.prev) return;
+        const v = document.createElement("video"); v.src = img.dataset.prev; v.muted = true; v.autoplay = true; v.loop = true; v.style.cssText = img.style.cssText;
+        v.className = img.className; v.setAttribute("style", "width:100%;aspect-ratio:9/16;object-fit:cover"); img.replaceWith(v);
+      }; });
+    } catch (err) { toast(err.message, true); }
+  };
+  m.querySelector("#sq").addEventListener("submit", (e) => { e.preventDefault(); q = e.target.q.value.trim(); page = 0; load(false); });
+  more.addEventListener("click", () => { page += 1; load(true); });
 }
 
 function uploadDialog() {

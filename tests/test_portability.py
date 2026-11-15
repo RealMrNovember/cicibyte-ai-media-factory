@@ -32,6 +32,9 @@ def _seed(db):
                    platforms=["youtube", "instagram"], privacy="public", ready_buffer=3, auto_approve=True,
                    youtube_channel_id=db.scalar(select(YouTubeChannel)).id))  # fmt: skip
     db.flush()
+    from mediafactory.pipeline.stock import set_coverr_key
+
+    set_coverr_key(db, "coverr-secret-123")
     save_account(db, "IG-secret-token-0123456789abcdef", info={"user_id": "17", "username": "cici", "account_type": "BUSINESS"})
     db.flush()
 
@@ -53,7 +56,7 @@ def test_export_without_password_has_no_secrets(db):
     _seed(db)
     data = export_settings(db, password=None)
     blob = json.dumps(data)
-    assert "sk-router-123" not in blob and "yt-secret" not in blob and "refresh-1" not in blob and "IG-secret" not in blob
+    assert "sk-router-123" not in blob and "yt-secret" not in blob and "refresh-1" not in blob and "IG-secret" not in blob and "coverr-secret" not in blob
     assert data["secrets"] is None and data["data"]["providers"][0]["name"] == "router"
     assert data["data"]["routes"][0]["steps"] == [{"provider": "router", "model": "mf-senaryo"}]  # by name, not id
 
@@ -84,6 +87,9 @@ def test_round_trip_with_password_restores_everything(db):
     concept = db.scalar(select(Concept))
     assert concept.name == "Gece TR" and concept.ready_buffer == 3 and concept.voice == {"speed": 1.1}
     assert concept.youtube_channel_id == db.scalar(select(YouTubeChannel)).id and summary["concepts"] == 1
+    from mediafactory.pipeline.stock import coverr_key
+
+    assert coverr_key(db) == "coverr-secret-123"
 
 
 def test_wrong_password_is_refused(db):

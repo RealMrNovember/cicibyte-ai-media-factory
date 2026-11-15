@@ -28,6 +28,7 @@ const SC = {
     igManualHelp: "Your account isn't connected for automatic publishing (personal accounts can't use the Instagram API). Post it yourself in three steps:",
     igM1: "Download the video", igM2: "Copy the caption", igM3: "Open Instagram (web or phone), create a Reel, choose the video and paste the caption.",
     igOpen: "Open instagram.com", copied: "Copied", igMarkDone: "I've shared it", igNeedsConnect: "Connect an Instagram professional account in Settings to publish automatically.",
+    stockCard: "Stock clips (Coverr)", stockHelp: "Search Coverr's free stock videos from the Studio. Create a free API key at coverr.co (Developers → API) and paste it here; it is stored encrypted. Mixkit links work without a key.", stockKey: "Coverr API key", stockSaved: "Key saved", stockRemove: "Remove key",
     pubPlatforms: "Publish to", creditTitle: "Description line",
     creditLabel: "Add “Made with CiciByte AI Media Factory — cicibyte.com” to YouTube descriptions and Instagram captions (in the video's language)",
   },
@@ -57,6 +58,7 @@ const SC = {
     igManualHelp: "Hesabın otomatik yayın için bağlı değil (kişisel hesaplar Instagram API'sini kullanamaz). Üç adımda kendin paylaş:",
     igM1: "Videoyu indir", igM2: "Açıklamayı kopyala", igM3: "Instagram'ı aç (web ya da telefon), yeni Reels oluştur, videoyu seç ve açıklamayı yapıştır.",
     igOpen: "instagram.com'u aç", copied: "Kopyalandı", igMarkDone: "Paylaştım", igNeedsConnect: "Otomatik yayın için Ayarlar'dan bir Instagram profesyonel hesabı bağla.",
+    stockCard: "Stok klipler (Coverr)", stockHelp: "Stüdyo'dan Coverr'ın ücretsiz stok videolarında ara. coverr.co'da (Developers → API) ücretsiz bir API anahtarı oluştur ve buraya yapıştır; şifreli saklanır. Mixkit bağlantıları anahtarsız çalışır.", stockKey: "Coverr API anahtarı", stockSaved: "Anahtar kaydedildi", stockRemove: "Anahtarı kaldır",
     pubPlatforms: "Nerede yayınlansın", creditTitle: "Açıklama satırı",
     creditLabel: "YouTube açıklamalarına ve Instagram metinlerine “CiciByte AI Media Factory ile üretildi — cicibyte.com” satırını ekle (videonun dilinde)",
   },
@@ -285,6 +287,27 @@ function bindInstagramCard() {
   });
   const del = document.getElementById("igDel");
   del && del.addEventListener("click", async () => { if (!confirm("?")) return; await api("/api/instagram", { method: "DELETE" }).catch((err) => toast(err.message, true)); render(); });
+}
+
+async function stockKeyCard() {
+  let s;
+  try { s = await api("/api/stock"); } catch { return ""; }
+  return `<div class="card" style="margin-bottom:16px"><h3>${sc("stockCard")}</h3><p class="muted small">${sc("stockHelp")}</p>
+    <form id="ckf" class="grid g3" style="align-items:end"><div style="grid-column:span 2"><label>${sc("stockKey")}</label>
+      <input name="key" type="password" autocomplete="off" placeholder="${s.coverr ? "••••••••" : ""}"></div>
+      <div class="row"><button class="btn primary">${t("save")}</button>${s.coverr ? `<button class="btn danger" type="button" id="ckDel">${sc("stockRemove")}</button>` : ""}</div></form></div>`;
+}
+
+function bindStockKeyCard() {
+  const f = document.getElementById("ckf");
+  if (!f) return;
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!f.key.value.trim()) return;
+    try { await api("/api/stock/coverr-key", { method: "PUT", body: { key: f.key.value.trim() } }); toast(sc("stockSaved")); render(); } catch (err) { toast(err.message, true); }
+  });
+  const del = document.getElementById("ckDel");
+  del && del.addEventListener("click", async () => { try { await api("/api/stock/coverr-key", { method: "PUT", body: { key: "" } }); render(); } catch (err) { toast(err.message, true); } });
 }
 
 async function creditCard() {
