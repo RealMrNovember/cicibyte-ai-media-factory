@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 462 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 465 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -217,9 +217,10 @@
 - [x] Video açıklamasında isteğe bağlı CiciByte satırı (Ayarlar → Açıklama satırı; varsayılan kapalı; YouTube ve Instagram, videonun dilinde).
 
 ### Dağıtım ve paketleme
-- [ ] Mac (`.dmg`) ve Linux (`.AppImage`) paketleri GitHub Releases'ta.
+- [x] Mac (`.dmg`, Apple Silicon ve Intel) ve Linux (`.AppImage`) paketleri: her sürümde GitHub Actions derliyor, açılış testinden geçiriyor ve sürüme ekliyor (v0.4.0). Mac/Linux'ta güncelleme indirme sayfasını açar.
+- [x] Stüdyo yazı tipleri panelin içinde (Google Fonts'a bağlı değil; internetsiz de doğru önizleme).
 - [ ] Windows kurulum dosyasının kod imzası (SmartScreen uyarısını kaldırmak için).
-- [ ] Docker kurulumunda Tailscale adı için `MF_ALLOWED_HOSTS` adımının kurulum script'ine eklenmesi.
+- [x] Docker kurulumunda Tailscale adı için `MF_ALLOWED_HOSTS` adımı (`deploy/install.sh` Tailscale adresini ve adını kendisi ekliyor).
 - [x] `docs/OPERATIONS.md` (neler nerede çalışır, rutin bakım, sık sorunlar) ve `SECURITY.md` (güvenlik açığı bildirimi, güvenlik modeli).
 
 ---
@@ -246,7 +247,6 @@
 ## 🐞 Bilinen eksikler
 
 - **Ağ güvenliği:** Giriş olmadığı için sunucu portu internete açılmamalı (Tailscale veya `localhost` + reverse proxy kimlik doğrulaması).
-- **Stüdyo önizlemesi:** Yazı tiplerini Google Fonts'tan yüklüyor; internet yoksa önizleme yedek yazı tipine düşer (videoyu etkilemez).
 - **Önizleme ve video farkı:** Önizleme CSS ile yapılıyor; konturda ve satır kırılmasında videodan küçük farklar olabilir.
 - **Kurulum dosyası imzasız:** Windows ilk açılışta SmartScreen uyarısı gösterebilir.
 - Plan 1–2'den ertelenen küçük maddeler (sağlık kontrolü süreleri, RSS 1.0 desteği, IPv6 gömülü adresler vb.) git geçmişindeki önceki ROADMAP sürümünde listeli.

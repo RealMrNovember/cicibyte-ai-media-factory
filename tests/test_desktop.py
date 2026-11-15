@@ -68,3 +68,14 @@ def test_js_api_exposes_only_its_methods():
     public_attrs = [k for k, v in vars(api).items() if not k.startswith("_")]
     assert public_attrs == []
     assert {"minimize", "toggle_maximize", "close", "size", "resize", "open_url"} <= {n for n in dir(api) if not n.startswith("_")}
+
+
+def test_studio_fonts_are_bundled_with_the_panel():
+    from mediafactory.desktop import WEB_DIR
+
+    css = (WEB_DIR / "fonts" / "fonts.css").read_text(encoding="utf-8")
+    assert "googleapis" not in (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    for family in ("Montserrat", "Bebas Neue", "Lato", "Open Sans", "Roboto"):
+        assert f"font-family: '{family}'" in css
+    for name in __import__("re").findall(r"url\(([^)]+\.woff2)\)", css):
+        assert (WEB_DIR / "fonts" / name).stat().st_size > 1000

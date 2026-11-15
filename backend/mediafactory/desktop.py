@@ -20,6 +20,7 @@ from pathlib import Path
 APP_NAME = "CiciByte AI Media Factory"
 DEFAULT_SERVER = "http://mediafactory:8080"
 WEB_DIR = Path(__file__).resolve().parent / "web"
+mimetypes.add_type("font/woff2", ".woff2")  # not known to Windows' registry
 HOP_HEADERS = {"connection", "keep-alive", "transfer-encoding", "upgrade", "host", "proxy-connection", "te", "trailer"}
 
 
@@ -196,7 +197,7 @@ def make_handler(cfg: Config):
             except Exception:
                 return False
             ctype = resp.getheader("Content-Type", "")
-            if resp.status != 200 or not (ctype.startswith(("text/", "image/")) or "javascript" in ctype):
+            if resp.status != 200 or not (ctype.startswith(("text/", "image/", "font/")) or "javascript" in ctype):
                 return False
             self._send(200, body, ctype)
             return True
