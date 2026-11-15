@@ -81,8 +81,10 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
         raise
     channel.needs_reconnect, channel.last_error = False, None
     aspect = ((((job.payload or {}).get("make") or {}).get("style")) or {}).get("aspect", "9:16")
+    from mediafactory import credit
+
     meta = build_metadata(script, language=job.language or "en", privacy=inputs.get("privacy", "public"), publish_at=publish_at,
-                          short=aspect != "16:9")  # fmt: skip
+                          short=aspect != "16:9", credit=credit.line(db, job.language))  # fmt: skip
     vid = upload_video(token, video, meta)
     quota.spend(db, "upload", channel=channel)
     url = f"https://youtube.com/shorts/{vid}" if aspect != "16:9" else f"https://youtu.be/{vid}"

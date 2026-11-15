@@ -54,7 +54,9 @@ def share_pack(jid: int, db: Session = Depends(get_db, scope="function"), user: 
         raise HTTPException(status_code=404, detail="no finished video")
     script_file = Path(result.get("folder", "")) / "script.json"
     script = json.loads(script_file.read_text(encoding="utf-8")) if script_file.is_file() else {"title": result.get("title")}
-    return {"caption": build_caption(script), "video": f"/api/jobs/{jid}/video"}
+    from mediafactory import credit
+
+    return {"caption": build_caption(script, credit=credit.line(db, job.language)), "video": f"/api/jobs/{jid}/video"}
 
 
 @router.post("/jobs/{jid}/instagram-manual")

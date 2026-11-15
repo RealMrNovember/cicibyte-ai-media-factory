@@ -144,7 +144,10 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
         token, acc = access_token(db)
         _set(job, state="uploading", account=acc.get("username"))
         ctx.log(f"publishing the Reel on @{acc.get('username')}")
-        media_id, url = ig.publish_reel(token, acc["user_id"], video, ig.build_caption(script), log=ctx.log)
+        from mediafactory import credit
+
+        caption = ig.build_caption(script, credit=credit.line(db, job.language))
+        media_id, url = ig.publish_reel(token, acc["user_id"], video, caption, log=ctx.log)
     except InstagramError as exc:
         attempt = int(inputs.get("attempt", 1))
         if exc.transient and attempt < MAX_ATTEMPTS:

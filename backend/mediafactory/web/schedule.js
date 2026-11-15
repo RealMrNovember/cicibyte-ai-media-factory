@@ -28,7 +28,8 @@ const SC = {
     igManualHelp: "Your account isn't connected for automatic publishing (personal accounts can't use the Instagram API). Post it yourself in three steps:",
     igM1: "Download the video", igM2: "Copy the caption", igM3: "Open Instagram (web or phone), create a Reel, choose the video and paste the caption.",
     igOpen: "Open instagram.com", copied: "Copied", igMarkDone: "I've shared it", igNeedsConnect: "Connect an Instagram professional account in Settings to publish automatically.",
-    pubPlatforms: "Publish to",
+    pubPlatforms: "Publish to", creditTitle: "Description line",
+    creditLabel: "Add “Made with CiciByte AI Media Factory — cicibyte.com” to YouTube descriptions and Instagram captions (in the video's language)",
   },
   tr: {
     schedule: "Takvim", scheduleSub: "Seçtiğin saatlerde otomatik video üret ve onaylı videoları YouTube'a gönder.",
@@ -56,7 +57,8 @@ const SC = {
     igManualHelp: "Hesabın otomatik yayın için bağlı değil (kişisel hesaplar Instagram API'sini kullanamaz). Üç adımda kendin paylaş:",
     igM1: "Videoyu indir", igM2: "Açıklamayı kopyala", igM3: "Instagram'ı aç (web ya da telefon), yeni Reels oluştur, videoyu seç ve açıklamayı yapıştır.",
     igOpen: "instagram.com'u aç", copied: "Kopyalandı", igMarkDone: "Paylaştım", igNeedsConnect: "Otomatik yayın için Ayarlar'dan bir Instagram profesyonel hesabı bağla.",
-    pubPlatforms: "Nerede yayınlansın",
+    pubPlatforms: "Nerede yayınlansın", creditTitle: "Açıklama satırı",
+    creditLabel: "YouTube açıklamalarına ve Instagram metinlerine “CiciByte AI Media Factory ile üretildi — cicibyte.com” satırını ekle (videonun dilinde)",
   },
 };
 const sc = (k) => (SC[lang] && SC[lang][k]) || st(k);
@@ -283,6 +285,21 @@ function bindInstagramCard() {
   });
   const del = document.getElementById("igDel");
   del && del.addEventListener("click", async () => { if (!confirm("?")) return; await api("/api/instagram", { method: "DELETE" }).catch((err) => toast(err.message, true)); render(); });
+}
+
+async function creditCard() {
+  let s;
+  try { s = await api("/api/publish-settings"); } catch { return ""; }
+  return `<div class="card" style="margin-bottom:16px"><h3>${sc("creditTitle")}</h3>
+    <label class="row" style="font-weight:400"><input type="checkbox" id="creditOn" ${s.credit_line ? "checked" : ""} style="width:auto"> ${sc("creditLabel")}</label></div>`;
+}
+
+function bindCreditCard() {
+  const box = document.getElementById("creditOn");
+  box && box.addEventListener("change", async () => {
+    try { await api("/api/publish-settings", { method: "PUT", body: { credit_line: box.checked } }); toast(t("saved")); }
+    catch (err) { toast(err.message, true); box.checked = !box.checked; }
+  });
 }
 
 // ---------- Ready videos: publish to YouTube / Instagram ----------

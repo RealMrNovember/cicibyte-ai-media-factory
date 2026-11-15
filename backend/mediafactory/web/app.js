@@ -545,8 +545,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  const [yt, ig, upd] = await Promise.all([youtubeCard(), instagramCard(), updatesCard()]);
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · Reddit</p>${serverCard()}${upd}${yt}${ig}${backupCard()}
+  const [yt, ig, upd, cr] = await Promise.all([youtubeCard(), instagramCard(), updatesCard(), creditCard()]);
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · Reddit</p>${serverCard()}${upd}${yt}${ig}${cr}${backupCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -568,6 +568,7 @@ async function settings(el) {
   bindServerCard();
   bindYoutubeCard();
   bindInstagramCard();
+  bindCreditCard();
   bindUpdatesCard();
   bindBackupCard();
   on("[data-test]", "click", async (e) => { const r = await api(`/api/providers/${e.target.dataset.test}/test`, { method: "POST" }); toast(r.ok ? `OK · ${r.models.length} models` : r.error, !r.ok); });

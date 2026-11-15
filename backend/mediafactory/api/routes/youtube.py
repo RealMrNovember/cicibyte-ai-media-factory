@@ -60,6 +60,29 @@ def status(db: Session = Depends(get_db, scope="function"), user: User = Depends
             "quota": {"units": used["units"], "limit": used["limit"], "resets_at": quota.next_reset().isoformat()}}  # fmt: skip
 
 
+class PublishSettingsIn(BaseModel):
+    credit_line: bool = False
+
+
+@router.get("/publish-settings")
+def get_publish_settings(db: Session = Depends(get_db, scope="function"), user: User = Depends(require_user)) -> dict:
+    from mediafactory import credit
+
+    return {"credit_line": credit.enabled(db)}
+
+
+@router.put("/publish-settings")
+def put_publish_settings(
+    body: PublishSettingsIn, request: Request, db: Session = Depends(get_db, scope="function"),
+    user: User = Depends(require_user),
+) -> dict:  # fmt: skip
+    from mediafactory import credit
+
+    credit.set_enabled(db, body.credit_line)
+    record_audit(db, actor_id=user.id, action="publish.settings", details={"credit_line": body.credit_line}, ip=client_ip(request))
+    return {"credit_line": body.credit_line}
+
+
 @router.put("/youtube/channels/{cid}")
 def update_channel(
     cid: int, body: ChannelIn, request: Request, db: Session = Depends(get_db, scope="function"),

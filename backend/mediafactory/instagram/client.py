@@ -45,7 +45,7 @@ def _check(r: httpx.Response) -> dict:
     return data
 
 
-def build_caption(script: dict) -> str:
+def build_caption(script: dict, *, credit: str | None = None) -> str:
     tags = []
     for t in script.get("tags") or []:
         word = re.sub(r"[\W_]+", "", str(t))
@@ -53,8 +53,9 @@ def build_caption(script: dict) -> str:
             tags.append(word)
     hashtags = " ".join("#" + t for t in tags[:HASHTAG_MAX])
     head = "\n\n".join(x for x in ((script.get("title") or "").strip(), (script.get("description") or "").strip()) if x)
-    room = CAPTION_MAX - len(hashtags) - 2
-    return (head[:room].rstrip() + ("\n\n" + hashtags if hashtags else "")).strip()
+    tail = "\n\n".join(x for x in (credit or "", hashtags) if x)
+    room = CAPTION_MAX - len(tail) - 2
+    return (head[:room].rstrip() + ("\n\n" + tail if tail else "")).strip()
 
 
 def account_info(token: str, *, http: httpx.Client | None = None) -> dict:

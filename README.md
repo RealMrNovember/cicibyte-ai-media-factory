@@ -53,8 +53,13 @@ See [docs/SOURCE_RIGHTS.md](docs/SOURCE_RIGHTS.md).
 
 ## Status
 
-Under active development (v0.1): the foundation (auth, AI provider routing, job queue, Docker install)
-and source collection are in place; the production pipeline, the panel and YouTube publishing are next.
+v0.3: the full pipeline runs — sources, AI script with self-review, originality and sensitive-content checks,
+voice (Piper, Chatterbox and voice cloning), captions, music and sound effects, 9:16 or 16:9 rendering,
+cover and quality check — plus YouTube and Instagram publishing, schedules, autopilot, channel concepts and the
+Windows app. See [ROADMAP.md](ROADMAP.md).
+
+Docs: [Deployment](docs/DEPLOYMENT.md) · [Operations](docs/OPERATIONS.md) · [Security](SECURITY.md) ·
+[Source rights](docs/SOURCE_RIGHTS.md)
 
 ## Development
 

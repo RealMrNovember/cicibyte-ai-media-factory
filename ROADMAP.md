@@ -39,7 +39,7 @@
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 427 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 432 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -213,13 +213,13 @@
 - [x] Kanal başına günlük yükleme sınırı (varsayılan 6) ve API kota takibi: sınır ya da kota dolunca yükleme bekliyor, Pasifik gece yarısı kota sıfırlanınca kendiliğinden gidiyor.
 - [x] Kapak görseli, oynatma listesi (kanal başına) ve altyazı dosyasının (SRT, altyazı kanalı olarak) yüklenmesi; reddedilirse yükleme yine tamamlanıyor.
 - [x] Erişimi geri alınan kanal için uyarı ve "Yeniden bağlan".
-- [ ] Video açıklamasında isteğe bağlı CiciByte satırı.
+- [x] Video açıklamasında isteğe bağlı CiciByte satırı (Ayarlar → Açıklama satırı; varsayılan kapalı; YouTube ve Instagram, videonun dilinde).
 
 ### Dağıtım ve paketleme
 - [ ] Mac (`.dmg`) ve Linux (`.AppImage`) paketleri GitHub Releases'ta.
 - [ ] Windows kurulum dosyasının kod imzası (SmartScreen uyarısını kaldırmak için).
 - [ ] Docker kurulumunda Tailscale adı için `MF_ALLOWED_HOSTS` adımının kurulum script'ine eklenmesi.
-- [ ] `OPERATIONS.md` (bakım, güncelleme, hata giderme) ve `SECURITY.md`.
+- [x] `docs/OPERATIONS.md` (neler nerede çalışır, rutin bakım, sık sorunlar) ve `SECURITY.md` (güvenlik açığı bildirimi, güvenlik modeli).
 
 ---
 
@@ -257,7 +257,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel yedek (Gemma 4) gündüz CCSE ile aynı işlemciyi paylaşıyor; ikisi aynı anda çalışırsa yavaşlar. Gerekirse CT 120'ye çekirdek eklemek.
-3. Video açıklamasında isteğe bağlı CiciByte satırı; `OPERATIONS.md` ve `SECURITY.md`.
+3. Telaffuz sözlüğü (TTS'in yanlış okuduğu kelimeler için).
 
 ---
 
