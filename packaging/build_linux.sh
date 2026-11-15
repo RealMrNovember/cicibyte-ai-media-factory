@@ -3,15 +3,16 @@
 # Needs: Python with ".[desktop]" and Pillow, and appimagetool on PATH (or APPIMAGETOOL=/path).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+ROOT="$PWD"
 VER=$(python -c "import sys; sys.path.insert(0, 'backend'); import mediafactory; print(mediafactory.__version__)")
 ARCH=x86_64
 NAME=CiciByteMediaFactory
 
 python packaging/make_icons.py
 pyinstaller --noconfirm --clean --onedir --name "$NAME" \
-  --paths backend --add-data "backend/mediafactory/web:mediafactory/web" --add-data "build/icons/app.png:." \
+  --paths "$ROOT/backend" --add-data "$ROOT/backend/mediafactory/web:mediafactory/web" --add-data "$ROOT/build/icons/app.png:." \
   --hidden-import qtpy --collect-submodules webview.platforms \
-  --distpath dist/linux --workpath build/pyi-linux --specpath build packaging/desktop_entry.py
+  --distpath dist/linux --workpath build/pyi-linux --specpath "$ROOT/build" "$ROOT/packaging/desktop_entry.py"
 grep -rqs "pywebview-drag-region" "dist/linux/$NAME" --include=app.js || { echo "the bundled panel is missing"; exit 1; }
 
 APPDIR=dist/linux/AppDir

@@ -22,9 +22,7 @@ jobs:
         runner: [macos-14, macos-15-intel]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/checkout@v4  # a manual run builds the selected branch and attaches to the given release
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -40,9 +38,7 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/checkout@v4  # a manual run builds the selected branch and attaches to the given release
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

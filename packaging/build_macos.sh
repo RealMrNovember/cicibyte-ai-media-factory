@@ -2,15 +2,16 @@
 # Builds dist/CiciByteMediaFactory-<version>-macOS-<arch>.dmg (+ .sha256). Needs: Python with ".[desktop]" and Pillow.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+ROOT="$PWD"
 VER=$(python -c "import sys; sys.path.insert(0, 'backend'); import mediafactory; print(mediafactory.__version__)")
 ARCH=$(uname -m)
 APP="CiciByte Media Factory"
 
 python packaging/make_icons.py
 pyinstaller --noconfirm --clean --windowed --onedir --name "$APP" \
-  --icon build/icons/app.icns --osx-bundle-identifier com.cicibyte.mediafactory \
-  --paths backend --add-data "backend/mediafactory/web:mediafactory/web" --add-data "build/icons/app.png:." \
-  --distpath dist/mac --workpath build/pyi-mac --specpath build packaging/desktop_entry.py
+  --icon "$ROOT/build/icons/app.icns" --osx-bundle-identifier com.cicibyte.mediafactory \
+  --paths "$ROOT/backend" --add-data "$ROOT/backend/mediafactory/web:mediafactory/web" --add-data "$ROOT/build/icons/app.png:." \
+  --distpath dist/mac --workpath build/pyi-mac --specpath "$ROOT/build" "$ROOT/packaging/desktop_entry.py"
 grep -rqs "pywebview-drag-region" "dist/mac/$APP.app/Contents" --include=app.js || { echo "the bundled panel is missing"; exit 1; }
 
 # Smoke test: the window must open, load the panel and close by itself.
