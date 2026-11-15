@@ -240,26 +240,31 @@ class JsApi:
     """Called from the panel: window controls for the custom title bar, and opening pages (Google sign-in
     refuses embedded windows) in the real browser."""
 
+    # Only methods may be public: pywebview exposes every public attribute to the page and walks it
+    # recursively, and a public window reference sent it into the native window forever (frozen black window).
     def __init__(self):
-        self.window = None
-        self.maximized = False
+        self._window = None
+        self._maximized = False
+
+    def set_window(self, window) -> None:
+        self._window = window
 
     def minimize(self) -> None:
-        self.window.minimize()
+        self._window.minimize()
 
     def toggle_maximize(self) -> bool:
-        if self.maximized:
-            self.window.restore()
+        if self._maximized:
+            self._window.restore()
         else:
-            self.window.maximize()
-        self.maximized = not self.maximized
-        return self.maximized
+            self._window.maximize()
+        self._maximized = not self._maximized
+        return self._maximized
 
     def close(self) -> None:
-        self.window.destroy()
+        self._window.destroy()
 
     def size(self) -> list[int]:
-        return [self.window.width, self.window.height]
+        return [self._window.width, self._window.height]
 
     def resize(self, width: int, height: int, anchor: str = "nw") -> None:
         """Resize keeping the opposite side in place (anchor: the corner/side that must not move)."""
@@ -269,7 +274,7 @@ class JsApi:
         for ch, point in (("n", FixPoint.NORTH), ("s", FixPoint.SOUTH), ("w", FixPoint.WEST), ("e", FixPoint.EAST)):
             if ch in anchor:
                 fix |= point
-        self.window.resize(max(420, int(width)), max(600, int(height)), fix_point=fix or (FixPoint.NORTH | FixPoint.WEST))
+        self._window.resize(max(420, int(width)), max(600, int(height)), fix_point=fix or (FixPoint.NORTH | FixPoint.WEST))
 
     def open_url(self, url: str) -> bool:
         import webbrowser
@@ -302,7 +307,7 @@ def main() -> None:
     frameless = panel_has_titlebar(cfg.server_url)
     window = webview.create_window(APP_NAME, url, js_api=api, width=1320, height=880, min_size=(420, 600),
                                    background_color="#0b0b0e", frameless=frameless, easy_drag=False)  # fmt: skip
-    api.window = window
+    api.set_window(window)
     from mediafactory.desktop_monitor import Monitor
 
     icon = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent.parent / "packaging")) / "app.ico"

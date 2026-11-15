@@ -56,3 +56,15 @@ def test_frameless_only_when_the_panel_has_a_title_bar(tmp_path, monkeypatch):
     monkeypatch.setattr(desktop, "WEB_DIR", tmp_path)
     (tmp_path / "app.js").write_text("// an old panel without a title bar", encoding="utf-8")
     assert desktop.panel_has_titlebar("http://127.0.0.1:9") is False
+
+
+def test_js_api_exposes_only_its_methods():
+    """pywebview publishes every public attribute of the js_api object to the page, recursively. A public
+    reference to the window made it walk the native window forever: black, frozen window (v0.3.0)."""
+    from mediafactory.desktop import JsApi
+
+    api = JsApi()
+    api.set_window(object())
+    public_attrs = [k for k, v in vars(api).items() if not k.startswith("_")]
+    assert public_attrs == []
+    assert {"minimize", "toggle_maximize", "close", "size", "resize", "open_url"} <= {n for n in dir(api) if not n.startswith("_")}
