@@ -32,11 +32,11 @@
 | 7 | Otomatik güncelleme (sunucu + masaüstü) ve ayar dışa/içe aktarma | ✅ |
 | 8 | Canlı izleme, pencere başlığında canlı durum, Windows bildirimleri, Program Files kurulumu | ✅ v0.3.0 |
 | 9 | Ses klonlama ve Chatterbox'ı hızlandırma | ✅ |
-| 10 | Script Doctor, özgünlük kontrolü | ✅ |
+| 10 | Script Doctor, özgünlük kontrolü, hassas içerik ve hak kontrolü | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 385 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 394 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -198,7 +198,7 @@
 - [x] Daha doğal Türkçe ses (Chatterbox Multilingual, isteğe bağlı).
 - [x] Chatterbox'ı hızlandırma (kalıcı model süreci) ve kendi sesinle klonlama (referans ses yükleme).
 - [ ] Telaffuz sözlüğü; Chatterbox için GPU.
-- [ ] classify / rights_review aşamaları, hassas içerik işaretleme.
+- [x] Hassas içerik ve hak kontrolü: AI (`classify` rotası, yoksa `script`) senaryoda platformların kısıtladığı içeriği işaretliyor (çocuklara zarar, cinsellik, kendine zarar, nefret, tehlikeli talimat, aşırı vahşet, gerçek yakın trajedi). Korku türü sorun sayılmıyor. İşaretlenen ya da hakları "kısıtlı" olan video kalite kontrolünden geçemez; otopilotta bile yayınlanmaz, incelemeye düşer. AI kontrol yapamazsa da incelemeye düşer.
 - [ ] Coverr API ile arama ve Mixkit içe aktarma (lisans notuyla).
 - [x] Kapak görseli ve kalite kontrolü.
 - [x] Arka plan müziği (kütüphane + telifsiz ambiyanslar, kısma).
@@ -253,7 +253,7 @@
 
 1. Google OAuth istemcisiyle kanalı bağlayıp ilk gerçek YouTube gönderimini yapmak; Instagram anahtarını girip ilk Reels'i göndermek; Reddit API bilgilerini girmek.
 2. Yerel LLM'lerin testi (gece çalışıyor) ve kazananın `local` sağlayıcıya bağlanması. Not: yerel model gündüz CCSE ile aynı işlemciyi paylaştığı için yedek olarak yavaş kalıyor.
-3. classify / rights_review aşamaları, hassas içerik işaretleme.
+3. Kanallar ve konseptler: kanal başına dil/ses/stil; stok hedefi (`ready_buffer`).
 
 ---
 

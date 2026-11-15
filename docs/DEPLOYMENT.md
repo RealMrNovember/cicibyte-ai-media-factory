@@ -138,6 +138,15 @@ also appear in the source, or 12 or more words are copied in a row, the quality 
 waits in Ready for a person even when a schedule auto-approves or auto-publishes. Your own stories (AI
 stories you add) are not checked. Copying through translation is not detected.
 
+## Sensitive content and rights check
+
+After the script is written, the AI (task route `classify`; the `script` route is used when `classify` is not
+set up) checks the narration for what YouTube and Instagram restrict: harm to minors, sexual content,
+self-harm, hate, dangerous instructions, very graphic gore and real recent tragedies. Horror itself is fine.
+The first five always fail the quality check; gore and real tragedies fail only when severe. A source whose
+rights are set to *restricted* also fails. A failed check never stops the video: it waits in Ready for you,
+even on autopilot. If the AI cannot run the check, the video also waits for review.
+
 ## Update / Güncelleme
 
 ```bash

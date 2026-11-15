@@ -10,6 +10,7 @@ from mediafactory.db.models import SourceItem
 from mediafactory.pipeline.align import word_times
 from mediafactory.pipeline.backgrounds import pick_background, resolve, story_category
 from mediafactory.pipeline.captions import cues_for, to_ass, to_srt, to_vtt
+from mediafactory.pipeline.classify import classify_script, content_check, with_checks
 from mediafactory.pipeline.doctor import summary as doctor_summary
 from mediafactory.pipeline.music import MusicSettings
 from mediafactory.pipeline.originality import with_originality
@@ -46,6 +47,8 @@ def make_short(
     log(f"      -> '{script['title']}' via {script['model']} ({len(script['narration'].split())} words)")
     if script.get("doctor"):
         log(f"      Script Doctor: {doctor_summary(script['doctor'])}")
+    content = classify_script(session, script["narration"], language=language)
+    log(f"      content check: {content_check(content)['value']}")
 
     vs = VoiceSettings(**(voice or {}))
     voice_id = voice_for(language, getattr(vs, language, None))
@@ -87,11 +90,12 @@ def make_short(
     qc = check_video(video, captions=len(cues))
     if item.rights_status != "user_owned":  # your own story may be read as it is
         qc = with_originality(qc, script["narration"], item.normalized_text or "")
+    qc = with_checks(qc, content, item.rights_status)
     failed = [f"{c['name']} ({c['value']})" for c in qc["checks"] if not c["ok"]]
     log("      QC passed" if qc["passed"] else f"      QC issues: {', '.join(failed)}")
     result = {
         "item_id": item_id, "language": language, "title": script["title"], "video": str(video),
-        "thumbnail": str(thumb) if thumb else None, "qc": qc,
+        "thumbnail": str(thumb) if thumb else None, "qc": qc, "content": content,
         "duration_s": round(duration, 1), "elapsed_s": round(time.monotonic() - started, 1), "folder": str(out),
     }  # fmt: skip
     (out / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
