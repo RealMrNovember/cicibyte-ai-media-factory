@@ -13,6 +13,26 @@
     try { localStorage.setItem(KEY, lang); } catch (e) { /* storage unavailable */ }
   }
 
+  // The download button always points at the newest GitHub release; the static link is the fallback.
+  function latestRelease() {
+    if (!window.fetch) return;
+    fetch("https://api.github.com/repos/RealMrNovember/cicibyte-ai-media-factory/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rel) {
+        if (!rel || !rel.assets) return;
+        var exe = rel.assets.filter(function (a) { return /Setup-[\d.]+\.exe$/.test(a.name); })[0];
+        if (!exe) return;
+        var links = document.querySelectorAll("[data-mf-download]");
+        for (var i = 0; i < links.length; i++) links[i].setAttribute("href", exe.browser_download_url);
+        var tags = document.querySelectorAll("[data-mf-version]");
+        for (var j = 0; j < tags.length; j++) tags[j].textContent = rel.tag_name;
+        var sizes = document.querySelectorAll("[data-mf-size]");
+        for (var k = 0; k < sizes.length; k++) sizes[k].textContent = Math.round(exe.size / 1048576) + " MB";
+      })
+      .catch(function () { /* offline or rate-limited: keep the static link */ });
+  }
+  latestRelease();
+
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) { /* storage unavailable */ }
   setLang(saved || "en");
