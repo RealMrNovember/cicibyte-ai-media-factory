@@ -26,6 +26,12 @@
         for (var i = 0; i < links.length; i++) links[i].setAttribute("href", exe.browser_download_url);
         var tags = document.querySelectorAll("[data-mf-version]");
         for (var j = 0; j < tags.length; j++) tags[j].textContent = rel.tag_name;
+        var pkgs = document.querySelectorAll("[data-mf-pkg]");  // Mac and Linux files of the same release
+        for (var p = 0; p < pkgs.length; p++) {
+          var suffix = pkgs[p].getAttribute("data-mf-pkg");
+          var hit = rel.assets.filter(function (a) { return a.name.slice(-suffix.length) === suffix; })[0];
+          if (hit) pkgs[p].setAttribute("href", hit.browser_download_url);
+        }
         var sizes = document.querySelectorAll("[data-mf-size]");
         for (var k = 0; k < sizes.length; k++) sizes[k].textContent = Math.round(exe.size / 1048576) + " MB";
       })
