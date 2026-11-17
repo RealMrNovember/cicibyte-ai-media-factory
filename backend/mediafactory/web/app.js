@@ -5,9 +5,13 @@ const I18N = {
   en: {
     overview: "Overview", sources: "Sources", inbox: "Inbox", production: "Production", ready: "Ready videos",
     redditUnreadable: "Saved, but it can't be read (the server's secret key changed): enter the Reddit app again.", offTitle: "This computer can't reach your Media Factory server",
-    offWhy: "Everything — AI keys, YouTube and Instagram, sources, schedules, videos — lives on the server, not on this computer. Once this computer reaches the same server you see it all as it is: no import needed. (Export/import is for moving to another server.)",
-    offSteps: "If your server is on Tailscale: 1) install Tailscale on this computer, 2) sign in with the same account as your server, 3) press “Try again”. Otherwise enter the server's address below.",
-    offGet: "Download Tailscale", offRetry: "Try again", offAddr: "Address tried",
+    offWhy: "This app is set to use a Media Factory server on another computer, and that server does not answer.",
+    offSteps: "Check that the server is on and that its address below is right (for example http://192.168.1.20:8080), then press “Try again”. Or switch to “On this computer” below — then you don't need a server at all.",
+    engStarting: "Getting ready…", eng_database: "Starting the database", eng_migrate: "Preparing the database (the first start takes about a minute)", eng_services: "Starting the engine", eng_ready: "Ready",
+    engFailed: "The engine could not start", engLogs: "Details are in the logs folder:", engRestart: "Close and reopen the app to try again.",
+    appCard: "App", modeLabel: "Where videos are made", modeLocal: "On this computer (recommended)", modeRemote: "On my Media Factory server (advanced)",
+    modeSoon: "coming soon on this system", modeRestart: "Saved — close and reopen the app to switch.", thisComputer: "this computer", dataDir: "Data folder",
+    offRetry: "Try again", offAddr: "Address tried",
     settings: "Settings", notifLabel: "Windows notifications (video ready, published, failed, new version)", backup: "Backup & move", backupHelp: "Export all settings — AI providers and keys, task routes, sources, schedules, YouTube and Reddit — to a file, and import it on another computer or server. Import adds and updates; it never deletes. Keys are only included if you set a password (they are encrypted with it). Videos, clips and music are not included.", expPassword: "Password for the keys (optional)", expPasswordPh: "leave empty to export without keys", export: "Export settings", impFile: "Settings file", impPassword: "Password (if the file has keys)", import: "Import", exportedWithKeys: "Exported with encrypted keys", exportedNoKeys: "Exported without keys", imported: "Imported", schedulesN: "schedules", appUpdate: "A new version of the app is available:", appUpdateNow: "Update now", appUpdating: "Downloading…", appRestarting: "Installing — the app will reopen in a moment", appDownloadOpened: "The download page is open in your browser: install the new version over this one", updates: "Updates", updHelp: "The server checks GitHub every 30 minutes and installs new versions by itself. It waits while a video is being made and goes back automatically if a new version does not start.", updAuto: "Automatic", updVersion: "Running", updLatest: "Latest on GitHub", updState: "Status", updChecked: "Last check", updLast: "last update", updLog: "Update log", updNow: "Check & update now", updPending: "Update requested…", updRequested: "Update requested — the panel reloads when the server is back", updMissing: "Automatic updates are not installed on this server yet. Run once on the server:", upd_up_to_date: "Up to date", upd_available: "Update available", upd_updating: "Updating…", upd_updated: "Updated", upd_deferred: "Waiting for running jobs", upd_rolled_back: "Rolled back", upd_failed: "Failed", upd_error: "Can't reach GitHub", disabledSrc: "Paused", srcOn: "Source on — it will be collected again", srcOff: "Source paused — it won't be collected", cover: "Cover", qcTitle: "Quality check", qc_resolution: "Resolution", qc_duration: "Length", qc_audio: "Audio", qc_loudness: "Loudness", qc_peak: "Peak level", qc_silence: "Long silence", qc_black: "Black screen", qc_captions: "Captions", qc_originality: "Originality (copied from source)", qc_content: "Sensitive content (YouTube/Instagram rules)", qc_rights: "Rights status", qc_measure: "Measurement", catalog: "Source catalog", catalogHelp: "Ready-made sources in English and Turkish. Filter by language and type, add one or all.", addShown: "Add all shown", allLangs: "All languages", allTypes: "All types", added: "Added", sourcesAdded: "sources added", mySources: "My sources", server: "Server", serverHelp: "Production runs on this server. Address of your Media Factory server.", connected: "Connected", offline: "Cannot reach the server — set its address in Settings.", logout: "Log out", login: "Log in", email: "E-mail", password: "Password",
     welcome: "Your self-hosted AI media factory.", items: "Items", queued: "In production", readyN: "Ready",
     approved: "Approved", failed: "Failed", add: "Add", name: "Name", adapter: "Adapter", runNow: "Collect now",
@@ -26,9 +30,13 @@ const I18N = {
   tr: {
     overview: "Genel Bakış", sources: "Kaynaklar", inbox: "Gelen Kutusu", production: "Üretim", ready: "Hazır Videolar",
     redditUnreadable: "Kayıtlı ama okunamıyor (sunucunun gizli anahtarı değişmiş): Reddit uygulama bilgilerini yeniden gir.", offTitle: "Bu bilgisayar Media Factory sunucuna ulaşamıyor",
-    offWhy: "Her şey — AI anahtarları, YouTube ve Instagram, kaynaklar, takvimler, videolar — bu bilgisayarda değil, sunucuda duruyor. Bu bilgisayar aynı sunucuya ulaşınca hepsini olduğu gibi görürsün: içe aktarmaya gerek yok. (Dışa/içe aktarma başka bir sunucuya taşımak içindir.)",
-    offSteps: "Sunucun Tailscale üzerindeyse: 1) bu bilgisayara Tailscale kur, 2) sunucunla aynı hesapla giriş yap, 3) “Tekrar dene”ye bas. Değilse sunucunun adresini aşağıya yaz.",
-    offGet: "Tailscale'i indir", offRetry: "Tekrar dene", offAddr: "Denenen adres",
+    offWhy: "Uygulama başka bir bilgisayardaki Media Factory sunucusunu kullanacak şekilde ayarlı ve o sunucu yanıt vermiyor.",
+    offSteps: "Sunucunun açık ve aşağıdaki adresin doğru olduğunu kontrol et (ör. http://192.168.1.20:8080), sonra “Tekrar dene”ye bas. Ya da aşağıdan “Bu bilgisayarda”ya geç — o zaman sunucuya hiç gerek kalmaz.",
+    engStarting: "Hazırlanıyor…", eng_database: "Veritabanı başlatılıyor", eng_migrate: "Veritabanı hazırlanıyor (ilk açılış yaklaşık bir dakika sürer)", eng_services: "Motor başlatılıyor", eng_ready: "Hazır",
+    engFailed: "Motor başlatılamadı", engLogs: "Ayrıntılar günlük klasöründe:", engRestart: "Tekrar denemek için uygulamayı kapatıp yeniden aç.",
+    appCard: "Uygulama", modeLabel: "Videolar nerede üretilsin", modeLocal: "Bu bilgisayarda (önerilen)", modeRemote: "Media Factory sunucumda (gelişmiş)",
+    modeSoon: "bu sistemde yakında", modeRestart: "Kaydedildi — geçmek için uygulamayı kapatıp yeniden aç.", thisComputer: "bu bilgisayar", dataDir: "Veri klasörü",
+    offRetry: "Tekrar dene", offAddr: "Denenen adres",
     settings: "Ayarlar", notifLabel: "Windows bildirimleri (video hazır, yayınlandı, başarısız, yeni sürüm)", backup: "Yedekle ve taşı", backupHelp: "Bütün ayarları — AI sağlayıcıları ve anahtarları, görev rotaları, kaynaklar, takvimler, YouTube ve Reddit — bir dosyaya aktar, başka bir bilgisayarda ya da sunucuda içe al. İçe aktarma ekler ve günceller, hiçbir şeyi silmez. Anahtarlar yalnızca parola verirsen dahil edilir ve o parolayla şifrelenir. Videolar, klipler ve müzikler dahil değildir.", expPassword: "Anahtarlar için parola (isteğe bağlı)", expPasswordPh: "boş bırakırsan anahtarsız aktarılır", export: "Ayarları dışa aktar", impFile: "Ayar dosyası", impPassword: "Parola (dosyada anahtar varsa)", import: "İçe aktar", exportedWithKeys: "Şifreli anahtarlarla dışa aktarıldı", exportedNoKeys: "Anahtarsız dışa aktarıldı", imported: "İçe aktarıldı", schedulesN: "takvim", appUpdate: "Uygulamanın yeni sürümü hazır:", appUpdateNow: "Şimdi güncelle", appUpdating: "İndiriliyor…", appRestarting: "Kuruluyor — uygulama birazdan yeniden açılacak", appDownloadOpened: "İndirme sayfası tarayıcıda açıldı: yeni sürümü bunun üzerine kur", updates: "Güncellemeler", updHelp: "Sunucu 30 dakikada bir GitHub'ı kontrol eder ve yeni sürümleri kendisi kurar. Video üretilirken bekler; yeni sürüm açılmazsa otomatik olarak eskisine döner.", updAuto: "Otomatik", updVersion: "Çalışan sürüm", updLatest: "GitHub'daki son sürüm", updState: "Durum", updChecked: "Son kontrol", updLast: "son güncelleme", updLog: "Güncelleme kaydı", updNow: "Şimdi kontrol et ve güncelle", updPending: "Güncelleme istendi…", updRequested: "Güncelleme istendi — sunucu geri gelince panel yenilenecek", updMissing: "Bu sunucuda otomatik güncelleme henüz kurulu değil. Sunucuda bir kez çalıştır:", upd_up_to_date: "Güncel", upd_available: "Yeni sürüm var", upd_updating: "Güncelleniyor…", upd_updated: "Güncellendi", upd_deferred: "Çalışan işler bekleniyor", upd_rolled_back: "Geri alındı", upd_failed: "Başarısız", upd_error: "GitHub'a ulaşılamıyor", disabledSrc: "Durduruldu", srcOn: "Kaynak açıldı — yeniden toplanacak", srcOff: "Kaynak durduruldu — toplanmayacak", cover: "Kapak", qcTitle: "Kalite kontrolü", qc_resolution: "Çözünürlük", qc_duration: "Süre", qc_audio: "Ses", qc_loudness: "Ses yüksekliği", qc_peak: "Tepe seviyesi", qc_silence: "Uzun sessizlik", qc_black: "Siyah ekran", qc_captions: "Altyazı", qc_originality: "Özgünlük (kaynaktan kopya)", qc_content: "Hassas içerik (YouTube/Instagram kuralları)", qc_rights: "Hak durumu", qc_measure: "Ölçüm", catalog: "Kaynak kataloğu", catalogHelp: "Türkçe ve İngilizce hazır kaynaklar. Dile ve türe göre filtrele; tek tek ya da hepsini ekle.", addShown: "Görünenlerin hepsini ekle", allLangs: "Tüm diller", allTypes: "Tüm türler", added: "Eklendi", sourcesAdded: "kaynak eklendi", mySources: "Kaynaklarım", server: "Sunucu", serverHelp: "Üretim bu sunucuda çalışır. Media Factory sunucunuzun adresi.", connected: "Bağlandı", offline: "Sunucuya ulaşılamıyor — adresini Ayarlar'dan girin.", logout: "Çıkış", login: "Giriş", email: "E-posta", password: "Parola",
     welcome: "Kendi sunucunda çalışan yapay zekâ medya fabrikan.", items: "Öğe", queued: "Üretimde", readyN: "Hazır",
     approved: "Onaylı", failed: "Hatalı", add: "Ekle", name: "Ad", adapter: "Adaptör", runNow: "Şimdi topla",
@@ -68,6 +76,7 @@ async function api(path, opts = {}) {
     body: opts.body && !(opts.body instanceof FormData) ? JSON.stringify(opts.body) : opts.body,
   });
   if (res.status === 502 && res.headers.get("X-MF-Desktop")) { offline = true; throw new Error(t("offline")); }
+  if (res.status === 503 && res.headers.get("X-MF-Desktop")) { desktop = null; throw new Error(t("engStarting")); }
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) throw new Error((data && data.detail && (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))) || res.statusText);
   return data;
@@ -88,13 +97,14 @@ function on(sel, ev, fn) { document.querySelectorAll(sel).forEach((el) => el.add
 
 // ---------- layout ----------
 const ROUTES = ["overview", "live", "studio", "sources", "inbox", "production", "ready", "schedule", "settings"];
-function route() { const r = (location.hash || "#overview").slice(1).split("/")[0]; return ROUTES.includes(r) ? r : "overview"; }
+function route() { const r = (location.hash || "#overview").slice(1).split("/")[0]; return ROUTES.includes(r) || r === "setup" ? r : "overview"; }
+const isLocal = () => !!(desktop && desktop.mode === "local");
 
 function shell(inner) {
   const nav = ROUTES.map((r) => `<a href="#${r}" class="${route() === r ? "on" : ""}">${r === "studio" ? st(r) : r === "schedule" ? sc(r) : r === "live" ? "● " + lv(r) : t(r)}</a>`).join("");
   return `${titlebar()}<div class="shell${isDesktopWin() ? " has-titlebar" : ""}">
     <aside class="side">
-      <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(desktop.server_url) : ""}</small><a href="#live" id="liveMini" class="live-mini"></a></div>
+      <div class="brand">CiciByte AI Media Factory<small>${desktop ? esc(isLocal() ? t("thisComputer") : desktop.server_url) : ""}</small><a href="#live" id="liveMini" class="live-mini"></a></div>
       <nav class="nav">${nav}</nav>
       <div class="grow"></div>
       <div class="foot">
@@ -112,10 +122,15 @@ async function render() {
   if (typeof previewTimer !== "undefined") clearInterval(previewTimer);
   if (desktop === null) { try { desktop = await (await fetch("/desktop/config")).json(); } catch { desktop = false; } }
   offline = false;
+  if (isLocal() && desktop.engine && desktop.engine.state !== "running") return engineScreen();
   try { me = await api("/api/auth/me"); } catch { me = null; }
+  if (isLocal() && route() !== "setup" && !sessionStorage.getItem("mf_setup_seen")) {
+    const s = await api("/api/ai-setup").catch(() => null);
+    if (s && !s.setup_done && !s.configured) { sessionStorage.setItem("mf_setup_seen", "1"); location.hash = "#setup"; return; }
+  }
   $app.innerHTML = shell(`<p class="muted">…</p>`);
   bindShell();
-  const page = { overview, live, studio, sources, inbox, production, ready, schedule, settings }[route()];
+  const page = { overview, live, studio, sources, inbox, production, ready, schedule, settings, setup }[route()];
   try { await page(document.getElementById("main")); } catch (err) {
     if (offline && route() !== "settings") { $app.innerHTML = shell(`<h1>${t(route())}</h1><p class="muted">${t("offline")}</p>`); bindShell(); }
     else toast(err.message, true);
@@ -219,6 +234,18 @@ function bindAppUpdate() {
   });
 }
 
+// The local engine is starting (or failed): a simple screen that refreshes until it runs.
+function engineScreen() {
+  const e = desktop.engine;
+  const failed = e.state === "failed";
+  const body = failed
+    ? `<pre class="small" style="text-align:left;white-space:pre-wrap">${esc(e.error || "")}</pre><p class="muted small">${t("engLogs")} <code>${esc((e.data_dir || "") + "/logs")}</code></p><p>${t("engRestart")}</p>`
+    : `<p class="muted">${t("eng_" + (e.step || "database"))}</p>`;
+  $app.innerHTML = `${titlebar()}<div style="display:grid;place-items:center;min-height:90vh;padding:16px">
+    <div class="card" style="width:min(560px,100%);text-align:center"><h2>${failed ? "⚠ " + t("engFailed") : t("engStarting")}</h2>${body}</div></div>`;
+  bindTitlebar();
+  if (!failed) setTimeout(() => { desktop = null; render(); }, 1500);
+}
 function bindShell() {
   bindAppUpdate();
   bindTitlebar();
@@ -234,7 +261,9 @@ async function overview(el) {
   const [items, jobs] = await Promise.all([api("/api/items?limit=200"), api("/api/jobs?limit=200")]);
   const count = (s) => jobs.items.filter((j) => j.status === s).length;
   const running = jobs.items.filter((j) => !["needs_review", "approved", "rejected", "failed", "published", "scheduled", "script_draft"].includes(j.status)).length;
-  el.innerHTML = `<h1>${t("overview")}</h1><p class="sub">${t("welcome")}</p>
+  const ai = await api("/api/ai-setup").catch(() => null);
+  const aiHint = ai && !ai.configured ? `<div class="card banner row">🤖 ${su("notConfigured")}<span class="spacer"></span><a class="btn primary" href="#setup">${su("connectAi")}</a></div>` : "";
+  el.innerHTML = `<h1>${t("overview")}</h1><p class="sub">${t("welcome")}</p>${aiHint}
     <div class="grid g4">
       <div class="card stat"><b>${items.items.length}</b><span>${t("items")}</span></div>
       <div class="card stat"><b>${running}</b><span>${t("queued")}</span></div>
@@ -436,35 +465,45 @@ async function ready(el) {
 }
 
 function offlineCard() {
-  if (!desktop) return "";
+  if (!desktop || isLocal()) return "";
   return `<div class="card" style="margin-bottom:16px;border-color:#E0A800"><h3>⚠ ${t("offTitle")}</h3>
     <p>${t("offWhy")}</p><p>${t("offSteps")}</p>
     <p class="muted small">${t("offAddr")}: <code>${esc(desktop.server_url)}</code></p>
-    <div class="row"><button class="btn primary" id="offRetry">↻ ${t("offRetry")}</button><button class="btn" id="offGet">⬇ ${t("offGet")}</button></div></div>`;
+    <div class="row"><button class="btn primary" id="offRetry">↻ ${t("offRetry")}</button></div></div>`;
 }
 function bindOfflineCard() {
-  const r = document.getElementById("offRetry"), g = document.getElementById("offGet");
+  const r = document.getElementById("offRetry");
   r && r.addEventListener("click", () => { desktop = null; render(); });
-  g && g.addEventListener("click", () => openExternal("https://tailscale.com/download/windows"));
 }
 function serverCard() {
   if (!desktop) return "";
-  return `<div class="card" style="margin-bottom:16px"><h3>${t("server")}</h3><p class="muted small">${t("serverHelp")}</p>
-    <form id="srv" class="row"><input name="url" value="${esc(desktop.server_url)}" placeholder="http://mediafactory:8080" style="flex:1;min-width:220px">
-    <button class="btn primary">${t("save")}</button></form>
+  const local = isLocal();
+  return `<div class="card" style="margin-bottom:16px"><h3>${t("appCard")}</h3>
+    <label>${t("modeLabel")}</label>
+    <label class="row"><input type="radio" name="appMode" value="local" ${local ? "checked" : ""} ${desktop.local_supported ? "" : "disabled"} style="width:auto"> ${t("modeLocal")}${desktop.local_supported ? "" : ` <span class="muted small">(${t("modeSoon")})</span>`}</label>
+    <label class="row"><input type="radio" name="appMode" value="remote" ${local ? "" : "checked"} style="width:auto"> ${t("modeRemote")}</label>
+    ${local ? `<p class="muted small">${t("dataDir")}: <code>${esc((desktop.engine && desktop.engine.data_dir) || "")}</code></p>`
+    : `<p class="muted small">${t("serverHelp")}</p><form id="srv" class="row"><input name="url" value="${esc(desktop.server_url)}" placeholder="http://192.168.1.20:8080" style="flex:1;min-width:220px">
+    <button class="btn primary">${t("save")}</button></form>`}
     <label class="row small" style="margin-top:12px;gap:8px"><span class="switch"><input type="checkbox" id="notifToggle" ${desktop.notifications === false ? "" : "checked"}><span></span></span> ${t("notifLabel")}</label>
     <p class="muted small" style="margin:6px 0 0">v${esc(desktop.app_version || "")}</p></div>`;
 }
 function bindServerCard() {
+  document.querySelectorAll("[name=appMode]").forEach((rb) => rb.addEventListener("change", async () => {
+    const r = await fetch("/desktop/config", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
+      body: JSON.stringify({ mode: rb.value }) });
+    const d = await r.json();
+    if (!r.ok) return toast(d.detail || "error", true);
+    if (d.restart_required) toast(t("modeRestart"));
+  }));
   const f = document.getElementById("srv");
-  if (!f) return;
   const nt = document.getElementById("notifToggle");
   nt && nt.addEventListener("change", async () => {
     await fetch("/desktop/config", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
       body: JSON.stringify({ notifications: nt.checked }) });
     desktop.notifications = nt.checked; toast(t("saved"));
   });
-  f.addEventListener("submit", async (e) => {
+  f && f.addEventListener("submit", async (e) => {
     e.preventDefault();
     const r = await fetch("/desktop/config", { method: "POST", headers: { "Content-Type": "application/json", "X-MF-Client": "panel" },
       body: JSON.stringify({ server_url: new FormData(f).get("url") }) });
@@ -568,8 +607,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  const [yt, ig, tk, upd, cr, sk] = await Promise.all([youtubeCard(), instagramCard(), tiktokCard(), updatesCard(), creditCard(), stockKeyCard()]);
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · TikTok · Reddit</p>${serverCard()}${upd}${yt}${ig}${tk}${cr}${sk}${backupCard()}
+  const [yt, ig, tk, upd, cr, sk] = await Promise.all([youtubeCard(), instagramCard(), tiktokCard(), isLocal() ? "" : updatesCard(), creditCard(), stockKeyCard()]);
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · TikTok · Reddit</p>${serverCard()}${setupCard()}${upd}${yt}${ig}${tk}${cr}${sk}${backupCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
