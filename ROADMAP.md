@@ -38,9 +38,10 @@
 | 14 | YouTube: günlük sınır, kota takibi, altyazı dosyası, oynatma listesi, yeniden bağlanma uyarısı | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | 15 | TikTok: gelen kutusuna taslak, denetimden sonra doğrudan paylaşım, elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
+| 16 | Tek başına çalışan Windows uygulaması (gömülü motor) ve Kolay Kurulum | ✅ v0.5.0 · macOS/Linux yerel motoru sırada |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 510 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 561 otomatik testin hepsi geçiyor. Paketlenmiş Windows uygulaması boş bir kullanıcı profilinde kendi motoruyla 30 sn'lik gerçek bir video üretti (1080×1920, Piper ses, 23 satır altyazı). Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -133,6 +134,14 @@
 - Instagram hatası YouTube'da yayınlanmış videoyu "başarısız" yapmıyor; hata Instagram rozetinde görünüyor ve yeniden denenebiliyor. Geçici hatalar (429/5xx) 5 ve 10 dakika sonra kendiliğinden tekrar deneniyor.
 - **Kişisel hesap:** Instagram API'si kişisel hesaplardan paylaşıma izin vermiyor. Bu hesaplar için her videoda **Instagram'da elle paylaş** var: videoyu indir, hazır açıklamayı kopyala, Instagram'da Reels olarak paylaş, "Paylaştım" ile işaretle. Ayarlar ve pencerelerde bu fark açıklanıyor.
 - Instagram bağlantısı ayar yedeğine (şifreli) dahil.
+
+### Plan 16: Tek başına çalışan uygulama ve Kolay Kurulum
+- Windows uygulaması bütün motoru kendi içinde çalıştırıyor: gömülü PostgreSQL (pgserver ikili dosyaları, rastgele parolalı, yalnızca 127.0.0.1), API ve işçi aynı uygulamanın alt süreçleri. Sunucu, Docker ya da Tailscale gerekmiyor. Tasarım: `docs/superpowers/specs/2026-11-17-ai-setup-wizard-design.md`.
+- Tek pencere: ikinci açılış mevcut pencereyi öne getiriyor. Kapanışta işçi durma dosyasıyla duruyor, arkada süreç kalmıyor; çökme sonrası temizlik yalnızca başlangıç zamanı eşleşen kendi süreçlerini kapatıyor. İlk kurulum yarıda kesilirse veritabanı bozuk kalmıyor.
+- **Kolay Kurulum:** dil → sesler ve altyazı modeli (~600 MB, atlanabilir) → yapay zekâ (bu bilgisayarda bulunanlar: Ollama, LM Studio, Jan, llama.cpp, KoboldCpp, vLLM…; kendi sunucusu; ya da OpenAI, Anthropic, Gemini, OpenRouter, Groq, DeepSeek, Mistral, xAI + API anahtarı) → modeller → TR/EN deneme.
+- Eski kurulumlar (kayıtlı ya da eski varsayılan sunucu adresi) uzak modda kalıyor; Ayarlar → Uygulama'dan mod seçiliyor. Arayüzde Tailscale önerisi yok; `install.sh` paneli nerede yayınlayacağını soruyor.
+- ffmpeg pakete ayrı bir program olarak giriyor (GPL derlemesi, sabitlenmiş ve SHA-256 doğrulamalı; lisans ve kaynak bağlantısı yanında). Kurulum dosyası ~225 MB.
+- macOS ve Linux paketleri bu sürümde uzak modda; yerel motor sonraki sürümde.
 
 ### Plan 15: TikTok
 - Resmî TikTok Content Posting API; kullanıcının kendi TikTok geliştirici uygulaması (Login Kit + Content Posting API). Giriş masaüstü uygulamasının yerel adresinden yapılıyor (`http://127.0.0.1:*/api/tiktok/callback`, PKCE); sunucuya HTTPS gerekmiyor.
