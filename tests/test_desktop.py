@@ -79,3 +79,87 @@ def test_studio_fonts_are_bundled_with_the_panel():
         assert f"font-family: '{family}'" in css
     for name in __import__("re").findall(r"url\(([^)]+\.woff2)\)", css):
         assert (WEB_DIR / "fonts" / name).stat().st_size > 1000
+
+
+# ---------- local / remote mode (v0.5.0) ----------
+
+
+def test_saved_server_keeps_old_installs_in_remote_mode(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    (tmp_path / "config.json").write_text(json.dumps({"server_url": "http://mediafactory:8080"}))
+    cfg = desktop.Config(tmp_path)
+    assert cfg.mode == "remote" and cfg.target_url == "http://mediafactory:8080"
+
+
+def test_new_install_runs_locally_on_windows_and_has_no_built_in_server(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "win32")
+    cfg = desktop.Config(tmp_path)
+    assert cfg.mode == "local" and cfg.server_url == ""
+    cfg.engine_url = "http://127.0.0.1:5123"
+    assert cfg.target_url == "http://127.0.0.1:5123"
+    assert not hasattr(desktop, "DEFAULT_SERVER")
+
+
+def test_new_install_elsewhere_is_remote_until_local_mode_ships(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "linux")
+    cfg = desktop.Config(tmp_path)
+    assert cfg.mode == "remote" and cfg.server_url == "" and not desktop.local_supported()
+
+
+def test_api_waits_while_the_local_engine_starts(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "win32")
+    cfg = desktop.Config(tmp_path)
+    cfg.engine_state = {"state": "starting", "step": "migrate", "error": None}
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), desktop.make_handler(cfg))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        with pytest.raises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(base + "/api/health")
+        assert e.value.code == 503 and json.loads(e.value.read())["engine"]["step"] == "migrate"
+        with urllib.request.urlopen(base + "/desktop/config") as r:
+            conf = json.loads(r.read())
+        assert conf["mode"] == "local" and conf["local_supported"] is True and conf["engine"]["state"] == "starting"
+        req = urllib.request.Request(base + "/desktop/config", method="POST", data=json.dumps({"mode": "remote"}).encode(),
+                                     headers={"X-MF-Client": "1", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req) as r:
+            assert json.loads(r.read())["restart_required"] is True
+        assert json.loads((tmp_path / "config.json").read_text())["mode"] == "remote"
+    finally:
+        srv.shutdown()
+
+
+def test_focus_request_brings_the_window_forward(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    cfg = desktop.Config(tmp_path)
+    seen = []
+    cfg.on_focus = lambda: seen.append(1)
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), desktop.make_handler(cfg))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/__focus", method="POST", data=b"{}")
+        with urllib.request.urlopen(req) as r:
+            assert r.status == 200
+        assert seen == [1]
+    finally:
+        srv.shutdown()
+
+
+def test_entry_runs_engine_children_without_the_window(monkeypatch):
+    import importlib.util
+    from pathlib import Path
+
+    from mediafactory import desktop_engine
+
+    seen = []
+    monkeypatch.setattr(desktop_engine, "child_main", lambda argv=None: seen.append("child"))
+    monkeypatch.setattr(desktop, "main", lambda: seen.append("window"))
+    spec = importlib.util.spec_from_file_location("entry", Path(__file__).parent.parent / "packaging" / "desktop_entry.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.run(["--engine", "worker"])
+    mod.run([])
+    assert seen == ["child", "window"]

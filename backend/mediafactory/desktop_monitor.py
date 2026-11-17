@@ -104,7 +104,7 @@ class Monitor(threading.Thread):
         ticks = 0
         while not self.stop_event.wait(TITLE_EVERY_S if ticks else 1):
             ticks += 1
-            base = self.cfg.server_url
+            base = self.cfg.target_url
             try:
                 self.window.set_title(title_for(_get(base, "/api/activity"), lang=self.lang))
             except Exception:
