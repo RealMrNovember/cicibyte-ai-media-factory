@@ -13,3 +13,7 @@ build/
 .superpowers/
 .secrets/
 .claude/
+
+# Windows build: downloaded ffmpeg and its cache
+packaging/.cache/
+packaging/ffmpeg/

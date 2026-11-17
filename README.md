@@ -4,19 +4,20 @@
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/mikeross)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Self-hosted, open-source AI YouTube media factory.** Collect stories and articles from sources you
-manage, turn them into original scripts with the AI you connect, generate voice, captions and video
-locally, and publish to multiple YouTube channels — only after you approve.
+**Open-source AI short-video factory that runs on your computer.** Collect stories and articles from
+sources you manage, turn them into original scripts with the AI you connect, generate voice, captions and
+video locally, and publish to YouTube, Instagram and TikTok — only after you approve.
 
-> 🇹🇷 **Kendi sunucuna kurulan, açık kaynak AI YouTube içerik fabrikası.** Yönettiğin kaynaklardan
+> 🇹🇷 **Kendi bilgisayarında çalışan, açık kaynak AI kısa video fabrikası.** Yönettiğin kaynaklardan
 > içerik toplar, bağladığın yapay zekâ ile özgün senaryoya çevirir, sesi, altyazıyı ve videoyu yerelde
-> üretir; senin onayınla birden fazla YouTube kanalına yükler.
+> üretir; senin onayınla YouTube, Instagram ve TikTok'ta yayınlar.
 
 ## Highlights
 
 - **Your sources, fully managed:** Reddit, RSS/Atom, web pages, your own files — add, edit, pause, remove.
-- **Bring your own AI:** Ollama, llama.cpp, any OpenAI-compatible endpoint (e.g. a router), or cloud APIs.
-  Per-task ordered fallback with retries.
+- **Bring your own AI:** Easy Setup finds the AI on your computer (Ollama, LM Studio, Jan, llama.cpp…),
+  connects your own AI server, or an AI service with your API key (OpenAI, Anthropic, Gemini, OpenRouter,
+  Groq, DeepSeek, Mistral, xAI). Per-task ordered fallback with retries.
 - **Local-first:** runs on CPU, no paid API required.
 - **Multi-channel, multi-concept, multi-language** (English and Turkish).
 - **Human-approved publishing:** uploads are private by default; nothing is published without your approval.
@@ -29,14 +30,26 @@ locally, and publish to multiple YouTube channels — only after you approve.
 
 ## Quick start
 
+1. Download the app from **[mediafactory.cicibyte.com](https://mediafactory.cicibyte.com)** (Windows) and
+   install it. No server, Docker or account is needed: the whole engine runs inside the app.
+2. On first start **Easy Setup** downloads the voices and the caption model and connects your AI.
+3. Make your first video in the Studio, then connect YouTube, Instagram or TikTok in Settings.
+
+macOS and Linux: the local engine is coming in a next release; until then their apps connect to a server.
+
+### Advanced: run it as a server
+
+For a shared machine or a home server (and for macOS/Linux today):
+
 ```bash
 git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
 cd cicibyte-ai-media-factory
-bash deploy/install.sh you@example.com
+bash deploy/install.sh
 ```
 
-Requires Docker + Compose v2. The panel is bound to `127.0.0.1:8080`; see
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Tailscale/reverse-proxy access, updates and backups.
+Requires Docker + Compose v2. The installer asks who may reach it (this machine, your local network or a
+Tailscale network). In the app choose Settings → App → "On my Media Factory server". See
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for updates and backups.
 
 ## Sources
 
@@ -55,7 +68,7 @@ See [docs/SOURCE_RIGHTS.md](docs/SOURCE_RIGHTS.md).
 
 ## Status
 
-v0.3: the full pipeline runs — sources, AI script with self-review, originality and sensitive-content checks,
+v0.5: the Windows app runs everything on your computer, with Easy Setup for the AI. The full pipeline runs — sources, AI script with self-review, originality and sensitive-content checks,
 voice (Piper, Chatterbox and voice cloning), captions, music and sound effects, 9:16 or 16:9 rendering,
 cover and quality check — plus YouTube and Instagram publishing, schedules, autopilot, channel concepts and the
 Windows app. See [ROADMAP.md](ROADMAP.md).

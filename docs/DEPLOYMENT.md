@@ -1,18 +1,35 @@
 # Deployment / Kurulum
 
-CiciByte AI Media Factory runs as three Docker containers: `db` (PostgreSQL 16), `api` (REST API + panel)
-and `worker` (production queue). Everything lives in two volumes: `mf_pg` (database) and `mf_data`
-(media, models).
+## The app on your computer (recommended)
 
-## Requirements / Gereksinimler
+Most people only need the app: download it from https://mediafactory.cicibyte.com (Windows) and install it.
+The whole engine runs inside the app on that computer — an embedded PostgreSQL, the API and the production
+worker, plus ffmpeg, Piper voices and the caption model. On first start **Easy Setup**:
+
+1. downloads the default voices (Turkish, English) and the caption model (about 600 MB, once; skippable),
+2. connects the AI that writes the scripts — one running on this computer (Ollama, LM Studio, Jan,
+   llama.cpp, KoboldCpp, vLLM…, found automatically), your own OpenAI-compatible AI server, or an AI
+   service with your API key (OpenAI, Anthropic, Gemini, OpenRouter, Groq, DeepSeek, Mistral, xAI),
+3. runs a short Turkish/English test.
+
+Data lives in `%LOCALAPPDATA%\CiciByteMediaFactory\data` (videos, models, database, logs). The engine runs
+while the app is open (minimised is fine); schedules catch up when it opens again. Run Easy Setup again any
+time from **Settings**. macOS and Linux get the local engine in a next release; until then their apps
+connect to a server (below).
+
+## Server install (advanced)
+
+For a shared machine or a home server, Media Factory also runs as three Docker containers: `db`
+(PostgreSQL 16), `api` (REST API + panel) and `worker` (production queue). Everything lives in two volumes:
+`mf_pg` (database) and `mf_data` (media, models).
+
+### Requirements / Gereksinimler
 
 - Linux server (Ubuntu/Debian recommended) or any host with **Docker Engine** and **Docker Compose v2**
 - 4+ CPU cores, 8 GB+ RAM (more for local LLM/TTS), 50 GB+ free disk
 - `git`, `curl`
 
-## Install / Kurulum
-
-Install [Tailscale](https://tailscale.com) on the server first (recommended), then:
+### Install / Kurulum
 
 ```bash
 git clone https://github.com/RealMrNovember/cicibyte-ai-media-factory.git
@@ -23,19 +40,19 @@ bash deploy/install.sh
 The script:
 
 1. creates `.env` with a random `MF_SECRET_KEY` and database password (never overwrites an existing `.env`),
-2. publishes the panel on this machine's **Tailscale address** if Tailscale is running (otherwise on
-   `127.0.0.1` only) and allows its tailnet names in `MF_ALLOWED_HOSTS`,
+2. asks who may reach the server — **only this machine** (default), **your local network**, or your
+   **Tailscale network** (offered only when Tailscale runs) — and fills `MF_PUBLISH_ADDR` and
+   `MF_ALLOWED_HOSTS` accordingly (non-interactive installs keep `MF_PUBLISH_ADDR` or use this machine only),
 3. builds the image and starts `db`, `api`, `worker`, then waits for `GET /api/health`,
-4. prints the address to enter in the desktop app (**Settings → Server**), e.g. `http://my-server:8080`.
+4. prints the address to enter in the desktop app.
 
 > ⚠️ **There is no sign-in.** Anyone who can reach the port controls the factory. Keep it on a private
-> network (Tailscale or your LAN) and **never expose it to the internet** — no port forwarding, no
-> `tailscale funnel`.
+> network (your LAN or a VPN) and **never expose it to the internet** — no port forwarding.
 
-### Desktop app
+### Desktop app with a server
 
-Download the Windows installer from https://mediafactory.cicibyte.com, install it, open **Settings → Server**
-and enter the address printed by `install.sh`. All heavy work runs on the server; the app only shows the panel.
+In the app open **Settings → App**, choose **On my Media Factory server** and enter the address printed by
+`install.sh`. All heavy work then runs on the server; the app only shows the panel.
 
 ### Other networks
 
