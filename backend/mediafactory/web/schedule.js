@@ -30,7 +30,7 @@ const SC = {
     igOpen: "Open instagram.com", copied: "Copied", igMarkDone: "I've shared it", igNeedsConnect: "Connect an Instagram professional account in Settings to publish automatically.",
     stockCard: "Stock clips (Coverr)", stockHelp: "Search Coverr's free stock videos from the Studio. Create a free API key at coverr.co (Developers → API) and paste it here; it is stored encrypted. Mixkit links work without a key.", stockKey: "Coverr API key", stockSaved: "Key saved", stockRemove: "Remove key",
     pubPlatforms: "Publish to", creditTitle: "Description line",
-    creditLabel: "Add “Made with CiciByte AI Media Factory — cicibyte.com” to YouTube descriptions and Instagram captions (in the video's language)",
+    creditLabel: "Add “Made with CiciByte AI Media Factory — cicibyte.com” to YouTube descriptions and Instagram / TikTok captions (in the video's language)",
   },
   tr: {
     schedule: "Takvim", scheduleSub: "Seçtiğin saatlerde otomatik video üret ve onaylı videoları YouTube'a gönder.",
@@ -60,7 +60,7 @@ const SC = {
     igOpen: "instagram.com'u aç", copied: "Kopyalandı", igMarkDone: "Paylaştım", igNeedsConnect: "Otomatik yayın için Ayarlar'dan bir Instagram profesyonel hesabı bağla.",
     stockCard: "Stok klipler (Coverr)", stockHelp: "Stüdyo'dan Coverr'ın ücretsiz stok videolarında ara. coverr.co'da (Developers → API) ücretsiz bir API anahtarı oluştur ve buraya yapıştır; şifreli saklanır. Mixkit bağlantıları anahtarsız çalışır.", stockKey: "Coverr API anahtarı", stockSaved: "Anahtar kaydedildi", stockRemove: "Anahtarı kaldır",
     pubPlatforms: "Nerede yayınlansın", creditTitle: "Açıklama satırı",
-    creditLabel: "YouTube açıklamalarına ve Instagram metinlerine “CiciByte AI Media Factory ile üretildi — cicibyte.com” satırını ekle (videonun dilinde)",
+    creditLabel: "YouTube açıklamalarına ve Instagram / TikTok metinlerine “CiciByte AI Media Factory ile üretildi — cicibyte.com” satırını ekle (videonun dilinde)",
   },
 };
 const sc = (k) => (SC[lang] && SC[lang][k]) || st(k);
