@@ -139,6 +139,8 @@ def chat(
     url = provider.base_url.rstrip("/") + "/chat/completions"
     stream = provider.locality == "local"
     attempts = _format_attempts(json_schema, _options(provider).get("json_mode", "auto"))
+    if _options(provider).get("no_temperature"):
+        temperature = None  # e.g. Anthropic's compatibility layer rejects any value below 1 on current models
     try:
         with httpx.Client(timeout=httpx.Timeout(provider.timeout_s, connect=10)) as client:
             for i, fmt in enumerate(attempts):

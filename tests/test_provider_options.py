@@ -70,3 +70,10 @@ def test_options_travel_with_settings_export(db):
     db.flush()
     portability.import_settings(db, out, password=None)
     assert db.query(AIProvider).filter_by(name="svc").one().options == {"json_mode": "prompt"}
+
+
+@respx.mock
+def test_services_that_reject_sampling_get_no_temperature(db):
+    route = respx.post(f"{URL}/chat/completions").mock(return_value=httpx.Response(200, json=OK))
+    client.chat(_p(db, no_temperature=True), "m", [{"role": "user", "content": "hi"}], temperature=0.7)
+    assert "temperature" not in json.loads(route.calls[0].request.content)
