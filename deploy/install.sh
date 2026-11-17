@@ -18,10 +18,32 @@ rand() { python3 -c "import secrets;print(secrets.token_urlsafe($1))" 2>/dev/nul
   || head -c "$1" /dev/urandom | base64 | tr -d '/+=\n'; }
 
 if [ ! -f .env ]; then
+  # Where to publish the panel/API. Never a public address: there is no sign-in.
+  #   1) this machine only (default)  2) the local network  3) the Tailscale address (only if Tailscale runs)
+  # Non-interactive installs keep MF_PUBLISH_ADDR from the environment, or use this machine only.
   TS_IP="$(tailscale ip -4 2>/dev/null | head -n1 || true)"
   TS_FQDN="$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))' 2>/dev/null || true)"
+  LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
+  PUBLISH="${MF_PUBLISH_ADDR:-}"
+  if [ -z "$PUBLISH" ] && [ -t 0 ]; then
+    echo "Who should reach this server?"
+    echo "  1) only this machine (the desktop app runs here)   [default]"
+    echo "  2) computers on my local network${LAN_IP:+ (this machine: $LAN_IP)}"
+    [ -n "$TS_IP" ] && echo "  3) my Tailscale network ($TS_IP)"
+    read -r -p "Choose 1-$([ -n "$TS_IP" ] && echo 3 || echo 2) [1]: " CHOICE || CHOICE=1
+    case "${CHOICE:-1}" in
+      2) PUBLISH="0.0.0.0" ;;
+      3) [ -n "$TS_IP" ] && PUBLISH="$TS_IP" || PUBLISH="127.0.0.1" ;;
+      *) PUBLISH="127.0.0.1" ;;
+    esac
+  fi
+  PUBLISH="${PUBLISH:-127.0.0.1}"
   HOSTS='"localhost","127.0.0.1"'
-  if [ -n "$TS_IP" ]; then
+  if [ "$PUBLISH" = "0.0.0.0" ]; then
+    [ -n "$LAN_IP" ] && HOSTS="$HOSTS,\"$LAN_IP\""
+    HOSTS="$HOSTS,\"$(hostname)\""
+  fi
+  if [ "$PUBLISH" = "$TS_IP" ] && [ -n "$TS_IP" ]; then
     HOSTS="$HOSTS,\"$TS_IP\""
     [ -n "$TS_FQDN" ] && HOSTS="$HOSTS,\"$TS_FQDN\",\"${TS_FQDN%%.*}\""
   fi
@@ -31,7 +53,7 @@ if [ ! -f .env ]; then
     echo "MF_SECRET_KEY=$(rand 48)"
     echo "MF_DB_PASSWORD=$(rand 24)"
     echo "# Address the panel/API is published on. Never a public address: there is no sign-in."
-    echo "MF_PUBLISH_ADDR=${TS_IP:-127.0.0.1}"
+    echo "MF_PUBLISH_ADDR=$PUBLISH"
     echo "MF_BIND_PORT=${MF_BIND_PORT:-8080}"
     echo "# Host names the desktop app may use to reach this server (JSON list)."
     echo "MF_ALLOWED_HOSTS=[$HOSTS]"
@@ -53,11 +75,13 @@ for _ in $(seq 1 90); do
 done
 curl -fsS "http://${CHECK}:${PORT}/api/health" >/dev/null || { echo; echo "Server did not become healthy; see: ${COMPOSE[*]} logs api" >&2; exit 1; }
 
-NAME="$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].split(".")[0])' 2>/dev/null || true)"
 echo
-echo "Done. In the desktop app, open Settings → Server and enter:"
-if [ -n "$NAME" ] && [ "$ADDR" != "127.0.0.1" ]; then
-  echo "    http://${NAME}:${PORT}"
+LAN_IP="${LAN_IP:-$(hostname -I 2>/dev/null | awk '{print $1}' || true)}"
+echo "Done. In the desktop app open Settings → App, choose \"On my Media Factory server\" and enter:"
+if [ "$ADDR" = "0.0.0.0" ]; then
+  echo "    http://${LAN_IP:-THIS-MACHINE-IP}:${PORT}"
+elif [ "$ADDR" = "127.0.0.1" ]; then
+  echo "    http://127.0.0.1:${PORT}   (this machine only; rerun with a new .env to open it to your network)"
 else
-  echo "    http://${ADDR}:${PORT}   (bound to this machine only; see docs/DEPLOYMENT.md for remote access)"
+  echo "    http://${ADDR}:${PORT}"
 fi
