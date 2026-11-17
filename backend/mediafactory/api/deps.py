@@ -29,11 +29,17 @@ def owner_user(db: Session) -> User:
     """The single owner of this installation; created on first use. There is no sign-in."""
     user = db.scalar(select(User).where(User.role == "admin", User.is_active.is_(True)).order_by(User.id).limit(1))
     if user is None:
+        from sqlalchemy.exc import IntegrityError
+
         from mediafactory.auth.passwords import hash_password
 
         user = User(email=OWNER_EMAIL, role="admin", password_hash=hash_password(secrets.token_urlsafe(32)))
-        db.add(user)
-        db.flush()
+        try:
+            with db.begin_nested():  # several first requests at once (the app's first start): one wins
+                db.add(user)
+                db.flush()
+        except IntegrityError:
+            user = db.scalar(select(User).where(User.email == OWNER_EMAIL))
     return user
 
 
