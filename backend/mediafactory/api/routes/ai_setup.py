@@ -170,3 +170,20 @@ def done(request: Request, db: Session = Depends(get_db, scope="function"), user
         row.value = value
     record_audit(db, actor_id=user.id, action="ai_setup.done", ip=client_ip(request))
     return value
+
+
+@router.get("/assets")
+def assets_status(user: User = Depends(require_admin)) -> dict:
+    from mediafactory.pipeline import assets
+
+    return assets.shared(get_settings().data_dir).status()
+
+
+@router.post("/assets")
+def assets_start(user: User = Depends(require_admin)) -> dict:
+    """Download the default voices (TR, EN) and the caption model in the background."""
+    from mediafactory.pipeline import assets
+
+    d = assets.shared(get_settings().data_dir)
+    d.start()
+    return d.status()
