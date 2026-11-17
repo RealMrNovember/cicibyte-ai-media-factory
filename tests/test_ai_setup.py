@@ -125,3 +125,18 @@ def test_done_marks_setup_complete(client, db):
     client.post("/api/ai-setup/done", headers=H)
     assert db.get(SystemSetting, "setup").value["done"] is True
     assert client.get("/api/ai-setup", headers=H).json()["setup_done"] is True
+
+
+def test_a_service_checked_by_chat_still_offers_all_its_models(client, monkeypatch):
+    from mediafactory.ai import client as ai_client
+
+    monkeypatch.setattr(ai_client, "check_key", lambda p, model=None: [model])
+    body = client.post("/api/ai-setup/check", json={"preset": "anthropic", "api_key": "k", "model": "claude-opus-5-5"}, headers=H).json()
+    assert body["ok"] and body["models"] == presets.get("anthropic")["models"]
+
+
+def test_own_ai_servers_get_the_long_local_timeout(client, db, local_mode):
+    client.post("/api/ai-setup/apply", json={"base_url": "http://192.168.1.20:11434", "script_model": "m", "classify_model": "m"},
+                headers=H)  # fmt: skip
+    prov = db.scalar(select(AIProvider).where(AIProvider.name == "AI server"))
+    assert prov.locality == "local" and prov.timeout_s == 600

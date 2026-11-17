@@ -77,3 +77,13 @@ def test_services_that_reject_sampling_get_no_temperature(db):
     route = respx.post(f"{URL}/chat/completions").mock(return_value=httpx.Response(200, json=OK))
     client.chat(_p(db, no_temperature=True), "m", [{"role": "user", "content": "hi"}], temperature=0.7)
     assert "temperature" not in json.loads(route.calls[0].request.content)
+
+
+@respx.mock
+def test_json_is_also_asked_for_in_the_prompt_when_the_format_is_sent(db):
+    """A service may accept response_format and still ignore it: the prompt asks for JSON too."""
+    route = respx.post(f"{URL}/chat/completions").mock(return_value=httpx.Response(200, json=OK))
+    client.chat(_p(db), "m", [{"role": "user", "content": "hi"}], json_schema={"type": "object"})
+    body = json.loads(route.calls[0].request.content)
+    assert body["response_format"]["type"] == "json_schema"
+    assert body["messages"][0]["content"].startswith(client.JSON_INSTRUCTION)

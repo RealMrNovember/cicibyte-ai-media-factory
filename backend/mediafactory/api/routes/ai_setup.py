@@ -56,9 +56,9 @@ def _resolve(body: Target) -> tuple[str, str, dict, str]:
         raise HTTPException(status_code=422, detail="choose a service or enter an address")
     if not get_settings().local_mode:
         raise HTTPException(status_code=403, detail="custom AI addresses can be set up only in the app on this computer")
-    base = discovery.normalize_base(body.base_url)
-    local = "127.0.0.1" in base or "localhost" in base
-    return "AI server", base, {}, "local" if local else "remote"
+    # The user's own AI (this computer or their network): slow hardware is normal, so it gets the long
+    # "local" timeout and streaming.
+    return "AI server", discovery.normalize_base(body.base_url), {}, "local"
 
 
 def _probe_provider(name: str, base: str, options: dict, locality: str, api_key: str | None) -> AIProvider:
@@ -104,6 +104,8 @@ def check(body: Target, user: User = Depends(require_admin)) -> dict:
     except ai_client.ProviderError as exc:
         reason, message = _reason(exc)
         return {"ok": False, "reason": reason, "error": message}
+    if body.preset and options.get("check") == "chat":  # the key was proven with one model; offer them all
+        models = presets.get(body.preset)["models"]
     return {"ok": True, "models": discovery.rank(models) if locality == "local" else models, "base_url": base}
 
 

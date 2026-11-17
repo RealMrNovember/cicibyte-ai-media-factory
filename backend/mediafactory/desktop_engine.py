@@ -13,6 +13,7 @@ import secrets
 import socket
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 from collections.abc import Callable
@@ -120,26 +121,59 @@ def pg_bin_dir() -> Path:
 
 
 class EngineDB:
-    """A private PostgreSQL in <data>/pg on a free 127.0.0.1 port."""
+    """A private PostgreSQL in <data>/pg on a free 127.0.0.1 port, with a random password (not "trust":
+    other programs and users on this computer must not get a superuser)."""
 
     def __init__(self, root: Path, *, bin_dir: Path | None = None, run: Callable = subprocess.run):
-        self.pgdata = Path(root) / "pg"
+        self.root = Path(root)
+        self.pgdata = self.root / "pg"
         self._bin = bin_dir
         self._run = run
 
     def _exe(self, name: str) -> str:
         return str((self._bin or pg_bin_dir()) / name)
 
+    def password(self) -> str:
+        path = self.root / "pg.pass"
+        if path.is_file() and (pw := path.read_text(encoding="utf-8").strip()):
+            return pw
+        pw = secrets.token_urlsafe(24)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(pw)
+        return pw
+
+    def _init(self) -> None:
+        """initdb into a temporary folder and rename it only when complete: an interrupted first start
+        (closed app, power cut) never leaves a half-made database that fails on every later start."""
+        import shutil
+
+        tmp = self.root / "pg.tmp"
+        shutil.rmtree(tmp, ignore_errors=True)
+        self.root.mkdir(parents=True, exist_ok=True)
+        pwfile = self.root / f"{secrets.token_hex(6)}.pwfile"
+        pwfile.write_text(self.password(), encoding="utf-8")
+        try:
+            self._run([self._exe("initdb"), "-D", str(tmp), "-U", "postgres", "-A", "scram-sha-256", f"--pwfile={pwfile}",
+                       "-E", "UTF8", "--locale=C"], check=True, creationflags=NO_WINDOW, **QUIET)  # fmt: skip
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
+        finally:
+            pwfile.unlink(missing_ok=True)
+        tmp.rename(self.pgdata)
+
     def start(self) -> str:
         if not (self.pgdata / "PG_VERSION").exists():
-            self.pgdata.parent.mkdir(parents=True, exist_ok=True)
-            self._run([self._exe("initdb"), "-D", str(self.pgdata), "-U", "postgres", "-A", "trust", "-E", "UTF8", "--locale=C"],
-                      check=True, creationflags=NO_WINDOW, **QUIET)  # fmt: skip
+            import shutil
+
+            shutil.rmtree(self.pgdata, ignore_errors=True)  # a half-made folder from an older version
+            self._init()
         port = free_port()
         # no pipes: postgres inherits them and pg_ctl would never return on Windows
         self._run([self._exe("pg_ctl"), "-D", str(self.pgdata), "-l", str(self.pgdata / "server.log"), "-w", "-t", "60",
                    "-o", f"-h 127.0.0.1 -p {port}", "start"], check=True, creationflags=NO_WINDOW, **QUIET)  # fmt: skip
-        return f"postgresql+psycopg://postgres@127.0.0.1:{port}/postgres"
+        return f"postgresql+psycopg://postgres:{self.password()}@127.0.0.1:{port}/postgres"
 
     def stop(self) -> None:
         if (self.pgdata / "postmaster.pid").exists():
@@ -181,13 +215,14 @@ def _kill_tree(pid: int) -> None:
         pass
 
 
-def _pid_alive(pid: int) -> bool:
+def _pid_created(pid: int) -> float | None:
+    """When the process started (None if gone): tells our own process from a later one with the same PID."""
     try:
         import psutil
 
-        return psutil.pid_exists(pid)
-    except ImportError:
-        return False
+        return psutil.Process(pid).create_time()
+    except Exception:  # noqa: BLE001 - gone, no permission, or psutil missing
+        return None
 
 
 class Engine:
@@ -202,7 +237,9 @@ class Engine:
         self._popen, self._run, self._healthy, self._sleep = popen, run, healthy, sleep
         self.db = db or EngineDB(self.dir)
         self.ffmpeg_dir = ffmpeg_dir
-        self._kill, self._alive = _kill_tree, _pid_alive
+        self._kill, self._created = _kill_tree, _pid_created
+        self._lock = threading.RLock()
+        self._stopping = False
         self.state = "stopped"
         self.last_error: str | None = None
         self.port = 0
@@ -220,9 +257,9 @@ class Engine:
         return self.dir / "engine.pids"
 
     def _save_pids(self) -> None:
-        pids = {name: p.pid for name, p in self.procs.items()}
+        pids = {name: {"pid": p.pid, "created": self._created(p.pid)} for name, p in self.procs.items()}
         if (db_pid := self.db.pid()) is not None:
-            pids["db"] = db_pid
+            pids["db"] = {"pid": db_pid, "created": self._created(db_pid)}
         self.pids_file.write_text(json.dumps(pids), encoding="utf-8")
 
     def _log_tail(self, name: str, n: int = 6) -> str:
@@ -240,15 +277,24 @@ class Engine:
         except (OSError, ValueError):
             pids = {}
         for name in CHILDREN:
-            pid = pids.get(name)
-            if isinstance(pid, int) and self._alive(pid):
-                self._kill(pid)
+            entry = pids.get(name)
+            if not isinstance(entry, dict) or not isinstance(entry.get("pid"), int) or entry.get("created") is None:
+                continue  # unknown start time: never kill what might be someone else's program
+            now = self._created(entry["pid"])
+            if now is not None and abs(now - float(entry["created"])) < 1.0:
+                self._kill(entry["pid"])
         if pids or self.db.pid() is not None:
             self.db.stop()
         self.pids_file.unlink(missing_ok=True)
         self.stop_file.unlink(missing_ok=True)
 
-    def _spawn(self, name: str) -> subprocess.Popen:
+    def _spawn(self, name: str) -> subprocess.Popen | None:
+        with self._lock:
+            if self._stopping:
+                return None  # the app is closing: start nothing new
+            return self._spawn_locked(name)
+
+    def _spawn_locked(self, name: str) -> subprocess.Popen:
         cmd = [*self.exe, "--engine", name] + (["--port", str(self.port)] if name == "api" else [])
         env = {**self.env, "MF_LOG_FILE": str(self.dir / "logs" / f"{name}.log")}
         proc = self._popen(cmd, env=env, creationflags=NO_WINDOW, **QUIET)
@@ -256,6 +302,7 @@ class Engine:
         return proc
 
     def start(self, progress: Callable[[str], None] = lambda step: None) -> int:
+        self._stopping = False
         self.state, self.last_error = "starting", None
         (self.dir / "logs").mkdir(parents=True, exist_ok=True)
         self.cleanup_stale()
@@ -275,7 +322,8 @@ class Engine:
             progress("services")
             self.port = free_port()
             for name in CHILDREN:
-                self._spawn(name)
+                if self._spawn(name) is None:
+                    raise EngineError("the app is closing")
             self._save_pids()
             waited = 0.0
             while not self._healthy(self.port):
@@ -296,7 +344,7 @@ class Engine:
 
     def watch_once(self) -> None:
         """Restart a child that died, once; a second death marks the engine failed."""
-        if self.state != "running":
+        if self.state != "running" or self._stopping:
             return
         for name, proc in list(self.procs.items()):
             if proc.poll() is None:
@@ -310,6 +358,8 @@ class Engine:
             self._save_pids()
 
     def stop(self, timeout_s: float = 20) -> None:
+        with self._lock:
+            self._stopping = True  # from here on nothing is (re)started
         self.dir.mkdir(parents=True, exist_ok=True)
         self.stop_file.write_text("stop", encoding="utf-8")
         worker = self.procs.get("worker")

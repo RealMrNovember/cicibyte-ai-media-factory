@@ -19,6 +19,8 @@ from pathlib import Path
 
 APP_NAME = "CiciByte AI Media Factory"
 WEB_DIR = Path(__file__).resolve().parent / "web"
+# The address versions up to 0.4 used when none was saved; kept only for those installs (never for new ones).
+LEGACY_SERVER = "http://mediafactory:8080"
 mimetypes.add_type("font/woff2", ".woff2")  # not known to Windows' registry
 HOP_HEADERS = {"connection", "keep-alive", "transfer-encoding", "upgrade", "host", "proxy-connection", "te", "trailer"}
 
@@ -45,6 +47,7 @@ def normalize(url: str) -> str:
 class Config:
     def __init__(self, home: Path):
         self.path = home / "config.json"
+        self.existed = self.path.exists()  # an install from before v0.5
         try:
             self.data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -56,22 +59,32 @@ class Config:
         self.engine_state: dict = {"state": "stopped", "step": None, "error": None}
         self.on_focus = lambda: None  # set by main(): bring the window forward
         self.shutdown = lambda: None  # set by main(): stop the local engine before the app quits
+        self._mode = self.saved_mode  # fixed for this run; a change takes effect after a restart
 
     @property
     def server_url(self) -> str:
         """The remote Media Factory server the user entered ("" when none: there is no built-in default)."""
-        return normalize(os.environ.get("MF_SERVER_URL") or self.data.get("server_url") or "")
+        legacy = self._legacy() and not self.data.get("mode")
+        return normalize(os.environ.get("MF_SERVER_URL") or self.data.get("server_url") or (LEGACY_SERVER if legacy else ""))
+
+    def _legacy(self) -> bool:
+        return self.existed and "mode" not in self.data and "server_url" not in self.data
 
     @property
     def mode(self) -> str:
-        """"local": run the engine on this computer; "remote": use server_url. Old installs with a saved
-        server stay remote; new ones run locally where that is supported."""
+        """The mode this run uses (chosen at start)."""
+        return self._mode
+
+    @property
+    def saved_mode(self) -> str:
+        """"local": run the engine on this computer; "remote": use server_url. Installs from before v0.5 stay
+        remote (with their saved or the old default address); new ones run locally where that is supported."""
         if os.environ.get("MF_SERVER_URL"):
             return "remote"
         chosen = self.data.get("mode")
         if chosen in ("local", "remote"):
             return "local" if chosen == "local" and local_supported() else "remote"
-        if self.data.get("server_url"):
+        if self.data.get("server_url") or self._legacy():
             return "remote"
         return "local" if local_supported() else "remote"
 
@@ -140,7 +153,7 @@ def make_handler(cfg: Config):
                     if not url.startswith(("http://", "https://")):
                         return self._json(400, {"detail": "invalid address"})
                     cfg.set_server(url)
-                if body.get("mode") in ("local", "remote") and body["mode"] != cfg.mode:
+                if body.get("mode") in ("local", "remote") and body["mode"] != cfg.saved_mode:
                     if body["mode"] == "local" and not local_supported():
                         return self._json(400, {"detail": "running on this computer is not available on this system yet"})
                     cfg.set_option("mode", body["mode"])
@@ -170,16 +183,15 @@ def make_handler(cfg: Config):
                 return self._json(200, {"ok": True, "manual": True, "version": cfg.update["version"]})
             try:
                 path = desktop_update.download(cfg.update, cfg.home / "updates")
+            except Exception as exc:
+                return self._json(502, {"detail": f"update failed: {exc}"})
+            cfg.shutdown()  # stop the local engine before the installer replaces its files (no orphans, no locks)
+            try:
                 desktop_update.launch_installer(path)
             except Exception as exc:
                 return self._json(502, {"detail": f"update failed: {exc}"})
             self._json(200, {"ok": True, "version": cfg.update["version"]})
-
-            def _quit():
-                cfg.shutdown()  # stop the local engine first: no orphan database or worker
-                os._exit(0)
-
-            threading.Timer(1.5, _quit).start()  # let the installer replace our files
+            threading.Timer(1.5, lambda: os._exit(0)).start()  # let the installer replace our files
 
         def _proxy(self):
             if cfg.mode == "local" and cfg.engine_state["state"] != "running":
@@ -256,7 +268,14 @@ def make_handler(cfg: Config):
                 pass
             return self._json(200, {"ok": True})
 
+        def _host_ok(self) -> bool:
+            """Only this computer's own names: a web page using DNS rebinding gets nothing."""
+            port = self.server.server_address[1]
+            return self.headers.get("Host", "") in (f"127.0.0.1:{port}", f"localhost:{port}")
+
         def _route(self):
+            if not self._host_ok():
+                return self._json(403, {"detail": "forbidden host"})
             if self.path == "/__focus" and self.command == "POST":
                 return self._focus()
             if self.path.startswith("/desktop/config"):
@@ -348,7 +367,7 @@ class JsApi:
 
 def _start_engine(cfg: Config):
     """Start the local engine in the background; the panel shows its progress until it runs."""
-    from mediafactory.desktop_engine import Engine, EngineError
+    from mediafactory.desktop_engine import Engine
 
     bundled = Path(getattr(sys, "_MEIPASS", "")) / "ffmpeg"
     engine = Engine(cfg.home, ffmpeg_dir=bundled if bundled.is_dir() else None)
@@ -360,8 +379,8 @@ def _start_engine(cfg: Config):
     def _run() -> None:
         try:
             port = engine.start(progress=_progress)
-        except EngineError as exc:
-            cfg.engine_state = {"state": "failed", "step": None, "error": str(exc)}
+        except Exception as exc:  # noqa: BLE001 - anything that stops the start must reach the screen
+            cfg.engine_state = {"state": "failed", "step": None, "error": str(exc) or type(exc).__name__}
             return
         cfg.engine_url = f"http://127.0.0.1:{port}"
         cfg.engine_state = {"state": "running", "step": None, "error": None}

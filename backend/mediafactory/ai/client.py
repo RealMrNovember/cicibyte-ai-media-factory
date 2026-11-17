@@ -56,7 +56,7 @@ def _format_attempts(json_schema: dict | None, json_mode: str = "auto") -> list[
 
 def _payload(model, messages, json_schema, fmt, max_tokens, temperature, stream) -> dict:
     msgs = list(messages)
-    if json_schema is not None and fmt is None:
+    if json_schema is not None:  # also in the prompt: some services accept response_format and ignore it
         msgs = [{"role": "system", "content": JSON_INSTRUCTION + json.dumps(json_schema)}, *msgs]
     payload: dict = {"model": model, "messages": msgs, "stream": stream}
     if fmt == "json_schema":

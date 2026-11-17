@@ -163,3 +163,58 @@ def test_entry_runs_engine_children_without_the_window(monkeypatch):
     mod.run(["--engine", "worker"])
     mod.run([])
     assert seen == ["child", "window"]
+
+
+# ---------- review fixes ----------
+
+
+def test_an_older_install_without_a_saved_address_stays_on_its_server(tmp_path, monkeypatch):
+    """v0.4 and older used a built-in default address and wrote config.json only for other settings."""
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "win32")
+    (tmp_path / "config.json").write_text(json.dumps({"notifications": True}))
+    cfg = desktop.Config(tmp_path)
+    assert cfg.mode == "remote" and cfg.server_url == desktop.LEGACY_SERVER
+
+
+def test_switching_mode_waits_for_the_restart(tmp_path, monkeypatch):
+    monkeypatch.delenv("MF_SERVER_URL", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "win32")
+    cfg = desktop.Config(tmp_path)
+    assert cfg.mode == "local"
+    cfg.set_option("mode", "remote")
+    assert cfg.mode == "local" and cfg.saved_mode == "remote"  # this session keeps running as it started
+
+
+def test_requests_for_another_host_name_are_refused(local):
+    """DNS rebinding: a web page whose name points at 127.0.0.1 must not use the app's API or panel."""
+    base, _ = local
+    port = base.rsplit(":", 1)[1]
+    req = urllib.request.Request(base + "/desktop/config", headers={"Host": f"evil.example:{port}"})
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.urlopen(req)
+    assert e.value.code == 403
+    ok = urllib.request.Request(base + "/desktop/config", headers={"Host": f"localhost:{port}"})
+    with urllib.request.urlopen(ok) as r:
+        assert r.status == 200
+
+
+def test_update_stops_the_engine_before_the_installer_starts(tmp_path, monkeypatch):
+    from mediafactory import desktop_update
+
+    order = []
+    cfg = desktop.Config(tmp_path)
+    cfg.update = {"version": "9.9.9", "installer": "https://example/x.exe"}
+    cfg.shutdown = lambda: order.append("engine stopped")
+    monkeypatch.setattr(desktop_update, "download", lambda upd, d: tmp_path / "x.exe")
+    monkeypatch.setattr(desktop_update, "launch_installer", lambda path: order.append("installer"))
+    monkeypatch.setattr(desktop.threading, "Timer", lambda s, fn: type("T", (), {"start": lambda self: None})())
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), desktop.make_handler(cfg))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/desktop/update", method="POST", data=b"{}",
+                                     headers={"X-MF-Client": "1"})
+        urllib.request.urlopen(req).read()
+    finally:
+        srv.shutdown()
+    assert order == ["engine stopped", "installer"]
