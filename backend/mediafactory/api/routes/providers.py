@@ -27,6 +27,7 @@ class ProviderIn(BaseModel):
     timeout_s: int | None = Field(default=None, ge=5, le=3600)
     max_concurrency: int = Field(default=1, ge=1, le=32)
     enabled: bool = True
+    options: dict = Field(default_factory=dict)
 
 
 class ProviderPatch(BaseModel):
@@ -37,6 +38,7 @@ class ProviderPatch(BaseModel):
     timeout_s: int | None = Field(default=None, ge=5, le=3600)
     max_concurrency: int | None = Field(default=None, ge=1, le=32)
     enabled: bool | None = None
+    options: dict | None = None
 
 
 def out(p: AIProvider) -> dict:
@@ -50,6 +52,7 @@ def out(p: AIProvider) -> dict:
         "timeout_s": p.timeout_s,
         "max_concurrency": p.max_concurrency,
         "enabled": p.enabled,
+        "options": p.options or {},
     }
 
 
@@ -78,6 +81,7 @@ def create_provider(
         timeout_s=body.timeout_s or DEFAULT_TIMEOUT[body.locality],
         max_concurrency=body.max_concurrency,
         enabled=body.enabled,
+        options=body.options,
     )
     save_unique(db, lambda: db.add(p), CONFLICT)
     record_audit(

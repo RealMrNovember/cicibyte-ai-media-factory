@@ -52,7 +52,8 @@ def export_settings(db: Session, *, password: str | None) -> dict:
     secrets: dict = {"providers": {}, "channels": {}}
     data = {
         "providers": [{"name": p.name, "kind": p.kind, "base_url": p.base_url, "locality": p.locality,
-                       "timeout_s": p.timeout_s, "max_concurrency": p.max_concurrency, "enabled": p.enabled}
+                       "timeout_s": p.timeout_s, "max_concurrency": p.max_concurrency, "enabled": p.enabled,
+                       "options": p.options or {}}
                       for p in providers],
         "routes": [{"task": r.task, "rounds": r.rounds, "retry_delay_s": r.retry_delay_s,
                     "steps": [{"provider": names.get(s.get("provider_id")), "model": s.get("model")} for s in r.steps or []]}
@@ -135,7 +136,7 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
 
     for p in data.get("providers", []):
         row = db.scalar(select(AIProvider).where(AIProvider.name == p["name"])) or AIProvider(name=p["name"])
-        for k in ("kind", "base_url", "locality", "timeout_s", "max_concurrency", "enabled"):
+        for k in ("kind", "base_url", "locality", "timeout_s", "max_concurrency", "enabled", "options"):
             if k in p:
                 setattr(row, k, p[k])
         if p["name"] in sec.get("providers", {}):

@@ -28,8 +28,14 @@ class ProviderError(Exception):
         self.status = status
 
 
+def _options(provider: AIProvider) -> dict:
+    return provider.options if isinstance(getattr(provider, "options", None), dict) else {}
+
+
 def _headers(provider: AIProvider) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
+    extra = {str(k): str(v) for k, v in (_options(provider).get("headers") or {}).items()
+             if str(k).lower() not in ("authorization", "content-type", "host")}  # fmt: skip
+    headers = {"Content-Type": "application/json", **extra}
     if provider.api_key_enc:
         try:
             headers["Authorization"] = f"Bearer {decrypt(provider.api_key_enc)}"
@@ -40,8 +46,12 @@ def _headers(provider: AIProvider) -> dict[str, str]:
     return headers
 
 
-def _format_attempts(json_schema: dict | None) -> list[str | None]:
-    return ["json_schema", "json_object", None] if json_schema is not None else [None]
+def _format_attempts(json_schema: dict | None, json_mode: str = "auto") -> list[str | None]:
+    """Response formats to try in order. "prompt": the service ignores response_format (e.g. Anthropic's
+    OpenAI-compatible endpoint), so ask for JSON in the prompt right away."""
+    if json_schema is None or json_mode == "prompt":
+        return [None]
+    return ["json_schema", "json_object", None]
 
 
 def _payload(model, messages, json_schema, fmt, max_tokens, temperature, stream) -> dict:
@@ -128,7 +138,7 @@ def chat(
 ) -> ChatResult:
     url = provider.base_url.rstrip("/") + "/chat/completions"
     stream = provider.locality == "local"
-    attempts = _format_attempts(json_schema)
+    attempts = _format_attempts(json_schema, _options(provider).get("json_mode", "auto"))
     try:
         with httpx.Client(timeout=httpx.Timeout(provider.timeout_s, connect=10)) as client:
             for i, fmt in enumerate(attempts):
@@ -144,6 +154,23 @@ def chat(
     except httpx.HTTPError as exc:  # transport, decoding and protocol errors
         raise ProviderError(f"{type(exc).__name__}: {exc}", retryable=True) from None
     raise ProviderError("no response format accepted", retryable=False)
+
+
+def check_key(provider: AIProvider, model: str | None = None) -> list[str]:
+    """Prove the address and key work: list the models, or (options.check == "chat") send a 1-token chat."""
+    if _options(provider).get("check") == "chat":
+        if not model:
+            raise ProviderError("choose a model to test this service with", retryable=False)
+        url = provider.base_url.rstrip("/") + "/chat/completions"
+        payload = {"model": model, "messages": [{"role": "user", "content": "Hi"}], "max_tokens": 1, "stream": False}
+        try:
+            r = httpx.post(url, json=payload, headers=_headers(provider), timeout=30)
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"connection error: {exc}", retryable=True) from None
+        if r.status_code >= 400:
+            raise ProviderError(f"HTTP {r.status_code}: {r.text[:200]}", retryable=False, status=r.status_code)
+        return [model]
+    return list_models(provider)
 
 
 def list_models(provider: AIProvider) -> list[str]:

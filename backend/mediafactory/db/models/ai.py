@@ -27,6 +27,8 @@ class AIProvider(Base):
     timeout_s: Mapped[int] = mapped_column(Integer, default=120)
     max_concurrency: Mapped[int] = mapped_column(Integer, default=1)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Per-service tweaks: json_mode ("auto" | "prompt"), headers ({name: value}), check ("models" | "chat").
+    options: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
