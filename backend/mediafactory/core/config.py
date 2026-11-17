@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     script_doctor: bool = True
     # YouTube Data API quota of your Google project (units per day; 10,000 unless Google raised it).
     youtube_daily_quota: int = 10_000
+    # Set by the desktop app when it runs the engine on this computer (bound to 127.0.0.1 only).
+    local_mode: bool = False
+    # Optional log file (the desktop engine sends each child process's log here, rotated 5 x 5 MB).
+    log_file: Path | None = None
 
     @field_validator("secret_key")
     @classmethod

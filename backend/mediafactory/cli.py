@@ -1,5 +1,7 @@
 """`mf` command line entry point."""
 
+from pathlib import Path
+
 import typer
 
 app = typer.Typer(help="CiciByte AI Media Factory", no_args_is_help=True)
@@ -42,6 +44,24 @@ def wait_for_database(check, *, timeout_s: float = 60, sleep=None) -> bool:
                 return False
             sleep(2)
             waited += 2
+
+
+def stop_requested(data_dir: Path) -> bool:
+    """True when the desktop app asked the engine to stop (a file, since Windows has no gentle SIGTERM)."""
+    return (Path(data_dir) / "engine.stop").exists()
+
+
+def _setup_logging(settings) -> None:
+    import logging
+    import logging.handlers
+
+    fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    if settings.log_file:
+        handler = logging.handlers.RotatingFileHandler(settings.log_file, maxBytes=5 * 2**20, backupCount=5, encoding="utf-8")
+        handler.setFormatter(logging.Formatter(fmt))
+        logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
+    else:
+        logging.basicConfig(level=logging.INFO, format=fmt)
 
 
 def health_host(allowed: list[str]) -> str:
@@ -131,25 +151,27 @@ def api(
     from mediafactory.api.app import create_app
 
     settings = _load_settings()
+    _setup_logging(settings)
     uvicorn.run(
         create_app(settings),
         host=host or settings.bind_host,
         port=port or settings.bind_port,
         proxy_headers=False,  # handled in create_app() with MF_TRUSTED_PROXIES
+        log_config=None if settings.log_file else uvicorn.config.LOGGING_CONFIG,
     )
 
 
 @app.command("worker")
 def worker() -> None:
     """Run the background worker that processes queued production stages."""
-    import logging
     import signal
 
     import mediafactory.pipeline.handlers  # noqa: F401  (register stage handlers)
+    from mediafactory.core.config import get_settings as _gs
     from mediafactory.db.session import SessionLocal
     from mediafactory.queue.worker import run_worker
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    _setup_logging(_gs())
     stopping = {"flag": False}
 
     def _stop(*_):
@@ -176,7 +198,14 @@ def worker() -> None:
     from mediafactory.schedule.runner import Scheduler
 
     Scheduler(SessionLocal, stop_event=poller_stop).start()
-    run_worker(SessionLocal, should_stop=lambda: stopping["flag"])
+    data_dir = Path(get_settings().data_dir)
+
+    def should_stop() -> bool:
+        if not stopping["flag"] and stop_requested(data_dir):
+            _stop_all()
+        return stopping["flag"]
+
+    run_worker(SessionLocal, should_stop=should_stop)
 
 
 @app.command("create-admin")
