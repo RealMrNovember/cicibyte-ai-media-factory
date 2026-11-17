@@ -89,6 +89,27 @@ Reel waits on the server and is sent at that time. Instagram allows about 50 API
 **Share on Instagram manually**: download the video, copy the ready caption, post it in Instagram, then mark it
 as shared.
 
+## TikTok
+
+Videos are sent with the official **TikTok Content Posting API**, using your own TikTok developer app.
+
+1. At https://developers.tiktok.com create an app and add the products **Login Kit** and **Content Posting API**.
+2. In Login Kit choose the **Desktop** platform and add the redirect URI `http://127.0.0.1:*/api/tiktok/callback`
+   (any port: the desktop app picks one when it starts).
+3. In **Settings → TikTok** paste the app's *Client key* and *Client secret*, then press **Connect TikTok** in
+   the desktop app and sign in. (TikTok accepts only the app's local address, so connect from the desktop app.)
+
+**Drafts (default):** each video arrives in your TikTok inbox; open TikTok, add music or effects if you like
+and post it. The app shows the ready caption to copy (**Finish TikTok draft**). TikTok allows at most five
+drafts waiting at a time.
+
+**Direct posting:** tick "also ask for direct posting" when connecting, then choose *Post directly* and who can
+see the posts. Until TikTok has audited your app, direct posts are visible only to you — apply for the audit in
+the developer portal. Videos are labelled as AI-generated.
+
+With several platforms chosen the order is YouTube → Instagram → TikTok. Without a connection each video has
+**Share on TikTok manually** (download + caption).
+
 ## Automatic updates
 
 Turn them on once (as root, from the repository checkout):

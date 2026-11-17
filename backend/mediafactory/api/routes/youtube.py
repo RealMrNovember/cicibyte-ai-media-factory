@@ -35,7 +35,7 @@ class PublishIn(BaseModel):
     privacy: Literal["public", "unlisted", "private"] = "public"
     publish_at: datetime | None = None
     channel_id: int | None = None
-    platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    platforms: list[Literal["youtube", "instagram", "tiktok"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=3)
 
 
 class ChannelIn(BaseModel):
@@ -194,4 +194,5 @@ def publish(
     record_audit(db, actor_id=user.id, action="job.publish", target_type="production_job", target_id=str(jid),
                  details={"privacy": body.privacy, "publish_at": at.isoformat() if at else None, "platforms": body.platforms},
                  ip=client_ip(request))  # fmt: skip
-    return {"ok": True, "youtube": job.payload.get("youtube"), "instagram": job.payload.get("instagram")}
+    return {"ok": True, "youtube": job.payload.get("youtube"), "instagram": job.payload.get("instagram"),
+            "tiktok": job.payload.get("tiktok")}

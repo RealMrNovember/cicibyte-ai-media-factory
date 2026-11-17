@@ -76,4 +76,5 @@ def make_short_stage(ctx: StageContext) -> StageOutcome:
 
 # Register the YouTube upload stage with the same worker.
 import mediafactory.instagram.publish  # noqa: E402,F401
+import mediafactory.tiktok.publish  # noqa: E402,F401
 import mediafactory.youtube.publish  # noqa: E402,F401

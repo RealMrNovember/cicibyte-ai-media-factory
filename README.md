@@ -23,6 +23,8 @@ locally, and publish to multiple YouTube channels — only after you approve.
 - **YouTube and Instagram:** publish a video to YouTube Shorts, Instagram Reels or both, now, at a set time or
   on autopilot. Instagram publishing needs a professional (Creator/Business) account; personal accounts get a
   one-click manual share (video + ready caption).
+- **TikTok:** send videos to your TikTok inbox as drafts (you post them from the app) or, once TikTok has
+  approved your developer app, post them directly. Without a connection there is a manual share as well.
 - **Source- and rights-aware:** every item keeps its source, hash and rights status.
 
 ## Quick start

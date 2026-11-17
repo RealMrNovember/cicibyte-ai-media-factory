@@ -43,6 +43,7 @@ def job_out(job: ProductionJob, runs: list[JobStageRun] | None = None) -> dict:
         "has_video": bool(result.get("video")),
         "youtube": (job.payload or {}).get("youtube"),
         "instagram": (job.payload or {}).get("instagram"),
+        "tiktok": (job.payload or {}).get("tiktok"),
         "qc": result.get("qc"),
         "has_thumbnail": bool(result.get("thumbnail")),
         "created_at": job.created_at.isoformat() if job.created_at else None,

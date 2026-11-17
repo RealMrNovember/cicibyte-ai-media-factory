@@ -103,8 +103,9 @@ async function schedule(el) {
 
 const platBoxes = (sel) => `<label>${sc("pubPlatforms")}</label><div class="row">
   <label class="row"><input type="checkbox" name="pl_youtube" ${sel.includes("youtube") ? "checked" : ""} style="width:auto"> ▶ YouTube</label>
-  <label class="row"><input type="checkbox" name="pl_instagram" ${sel.includes("instagram") ? "checked" : ""} style="width:auto"> ◎ Instagram</label></div>`;
-const platValues = (f) => ["youtube", "instagram"].filter((x) => f["pl_" + x] && f["pl_" + x].checked);
+  <label class="row"><input type="checkbox" name="pl_instagram" ${sel.includes("instagram") ? "checked" : ""} style="width:auto"> ◎ Instagram</label>
+  <label class="row"><input type="checkbox" name="pl_tiktok" ${sel.includes("tiktok") ? "checked" : ""} style="width:auto"> ♪ TikTok</label></div>`;
+const platValues = (f) => ["youtube", "instagram", "tiktok"].filter((x) => f["pl_" + x] && f["pl_" + x].checked);
 
 function scheduleDialog(s, sources) {
   const p = (s && s.params) || {};
@@ -338,7 +339,7 @@ function ytBadge(j) {
     else if (g.state === "failed") out += `<span class="pill warn" title="${esc(g.error || "")}">⚠ ${sc("igFailed")}</span>`;
     else out += `<span class="pill warn">${g.state === "uploading" ? sc("igUploading") : g.publish_at ? sc("igScheduled") + " · " + when(g.publish_at) : sc("igQueued")}</span>`;
   }
-  return out;
+  return out + ttBadge(j);
 }
 
 // What can still be done with this video, per platform.
@@ -347,9 +348,9 @@ const igOpen = (j) => !j.instagram || j.instagram.state === "failed";
 
 function publishButtons(j) {
   let out = "";
-  if (ytOpen(j) || (igOpen(j) && IG_ACCOUNT)) out += `<button class="btn primary" data-pub="${j.id}">▶ ${sc("publish")}</button>`;
+  if (ytOpen(j) || (igOpen(j) && IG_ACCOUNT) || (ttOpen(j) && TT_ACCOUNT)) out += `<button class="btn primary" data-pub="${j.id}">▶ ${sc("publish")}</button>`;
   if (igOpen(j) && !IG_ACCOUNT) out += `<button class="btn" data-igman="${j.id}" title="${esc(sc("igNeedsConnect"))}">◎ ${sc("igManualBtn")}</button>`;
-  return out;
+  return out + ttButtons(j);
 }
 
 function publishDialog(jobId, j) {
@@ -357,10 +358,10 @@ function publishDialog(jobId, j) {
   const soon = new Date(Date.now() + 3 * 3600 * 1000);
   soon.setMinutes(0, 0, 0);
   const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  const canYt = ytOpen(j), canIg = igOpen(j) && !!IG_ACCOUNT;
+  const canYt = ytOpen(j), canIg = igOpen(j) && !!IG_ACCOUNT, canTt = ttOpen(j) && !!TT_ACCOUNT;
   const box = (name, label, ok) => ok ? `<label class="row"><input type="checkbox" name="pl_${name}" checked style="width:auto"> ${label}</label>` : "";
   const m = modal(`<h1>${sc("publish")}</h1><form id="pubf">
-    <label>${sc("pubPlatforms")}</label><div class="row">${box("youtube", "▶ YouTube", canYt)}${box("instagram", "◎ Instagram" + (IG_ACCOUNT ? " @" + esc(IG_ACCOUNT.username) : ""), canIg)}</div>
+    <label>${sc("pubPlatforms")}</label><div class="row">${box("youtube", "▶ YouTube", canYt)}${box("instagram", "◎ Instagram" + (IG_ACCOUNT ? " @" + esc(IG_ACCOUNT.username) : ""), canIg)}${box("tiktok", "♪ TikTok" + (TT_ACCOUNT ? " · " + esc(TT_ACCOUNT.display_name || "") + (TT_ACCOUNT.mode === "direct" ? "" : " (" + tx("inbox").toLowerCase() + ")") : ""), canTt)}</div>
     ${!IG_ACCOUNT && igOpen(j) ? `<p class="muted small">◎ ${sc("igNeedsConnect")}</p>` : ""}
     <label>${sc("privacy")} <span class="muted small">(${sc("ytOnly")})</span></label><select name="privacy"><option value="public">${sc("public")}</option><option value="unlisted">${sc("unlisted")}</option><option value="private">${sc("private")}</option></select>
     <label class="row" style="margin-top:12px"><input type="radio" name="mode" value="now" checked style="width:auto"> ${sc("now")}</label>

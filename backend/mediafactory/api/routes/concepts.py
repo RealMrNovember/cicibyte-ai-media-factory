@@ -30,7 +30,7 @@ class ConceptIn(BaseModel):
     music: MusicSettings = Field(default_factory=MusicSettings)
     background: str = Field(default="random", max_length=120)
     youtube_channel_id: int | None = None
-    platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    platforms: list[Literal["youtube", "instagram", "tiktok"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=3)
     privacy: Literal["public", "unlisted", "private"] = "public"
     ready_buffer: int = Field(default=0, ge=0, le=20)
     auto_approve: bool = False

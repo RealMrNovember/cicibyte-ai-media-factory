@@ -37,9 +37,10 @@
 | 13 | Ses efektleri ve 16:9 format | ✅ |
 | 14 | YouTube: günlük sınır, kota takibi, altyazı dosyası, oynatma listesi, yeniden bağlanma uyarısı | ✅ |
 | 11 | Instagram Reels: profesyonel hesapta otomatik yayın, kişisel hesapta elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
+| 15 | TikTok: gelen kutusuna taslak, denetimden sonra doğrudan paylaşım, elle paylaşım | ✅ kod · 🟡 gerçek hesapla denenmedi |
 | — | Showroom ve indirme sitesi (`mediafactory.cicibyte.com`) | ✅ yayında |
 
-**Test durumu:** 488 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
+**Test durumu:** 510 otomatik testin hepsi geçiyor. Sunucuda Stüdyo ayarlarıyla gerçek video üretildi (yaklaşık 110 sn; AI senaryo + Piper ses + render). YouTube tarafı testlerde sahte Google yanıtlarıyla doğrulandı.
 
 ---
 
@@ -132,6 +133,14 @@
 - Instagram hatası YouTube'da yayınlanmış videoyu "başarısız" yapmıyor; hata Instagram rozetinde görünüyor ve yeniden denenebiliyor. Geçici hatalar (429/5xx) 5 ve 10 dakika sonra kendiliğinden tekrar deneniyor.
 - **Kişisel hesap:** Instagram API'si kişisel hesaplardan paylaşıma izin vermiyor. Bu hesaplar için her videoda **Instagram'da elle paylaş** var: videoyu indir, hazır açıklamayı kopyala, Instagram'da Reels olarak paylaş, "Paylaştım" ile işaretle. Ayarlar ve pencerelerde bu fark açıklanıyor.
 - Instagram bağlantısı ayar yedeğine (şifreli) dahil.
+
+### Plan 15: TikTok
+- Resmî TikTok Content Posting API; kullanıcının kendi TikTok geliştirici uygulaması (Login Kit + Content Posting API). Giriş masaüstü uygulamasının yerel adresinden yapılıyor (`http://127.0.0.1:*/api/tiktok/callback`, PKCE); sunucuya HTTPS gerekmiyor.
+- **Taslak (varsayılan, `video.upload`):** video TikTok gelen kutusuna düşer, kullanıcı uygulamadan müzik/efekt ekleyip paylaşır. Açıklama hazır, tek tıkla kopyalanıyor. TikTok aynı anda en fazla 5 bekleyen taslağa izin veriyor.
+- **Doğrudan paylaşım (`video.publish`):** TikTok uygulamayı denetleyene (audit) kadar bu paylaşımlar yalnızca hesap sahibine görünür. Görünürlük hazır seçili gelmez, hesabın izin verdiği seçeneklerden seçilir; video "yapay zekâyla üretildi" olarak etiketlenir, hesapta kapalı olan yorum/düet/stitch kapalı gönderilir.
+- Birden çok platform seçilince sıra YouTube → Instagram → TikTok; biri kalıcı olarak başarısız olsa da sıradaki gidiyor. Zamanlı gönderim sunucuda bekliyor.
+- Erişim anahtarı gerektiğinde, kullanılmasa da haftada bir yenileniyor (TikTok her yenilemede yeni anahtar veriyor). Erişim geri alınırsa Ayarlar'da "yeniden bağlan" uyarısı çıkıyor.
+- Bağlantı ayar yedeğine (şifreli) dahil.
 
 ### Plan 6: Masaüstü uygulaması
 - Windows uygulaması (pywebview / WebView2) ve **Inno Setup kurulum sihirbazı**: Türkçe/İngilizce kurulum, Başlat menüsü ve masaüstü kısayolu, kaldırma desteği.
@@ -235,6 +244,7 @@
 | Yerel LLM'ler (Qwen3.6-35B-A3B, Gemma 4 26B-A4B) Türkçe/İngilizce kalite testi | ✅ test edildi (15 Kasım, CCSE işçileri 20 dk duraklatılarak): **Gemma 4 26B-A4B** Türkçede açık ara en doğal ve hatasız; uzunluğa en iyi uyan da o. Hız ~6,6 token/sn (mevcut Qwen3-30B ~9,5). Qwen3-30B ve Qwen3.6 Türkçede dil bilgisi hataları yapıyor. ✅ Media Factory'ye ayrı servis olarak bağlandı: CT 120'de `llama-gemma` (port 8081, 4 çekirdek, düşük öncelik); 9router'da `localg/gemma-4-26b-a4b`, `mf-senaryo` ve `mf-siniflandir` combo'larının son yedeği. CCSE kendi Qwen3-30B'sinde (8080) kaldı | — |
 | Google Cloud OAuth istemcisi (YouTube) | ⬜ | **Sen** |
 | Meta uygulaması + Instagram erişim anahtarı (profesyonel hesap) | ⬜ | **Sen** |
+| TikTok geliştirici uygulaması (Login Kit + Content Posting API); doğrudan paylaşım için TikTok denetimi | ⬜ | **Sen** |
 | Reddit API uygulaması (429 sorununu çözer) | ⬜ | **Sen** |
 | Oyun arka planı klipleri (kendi kaydın / Coverr / Mixkit) | ⬜ | Sen + ben |
 | Sohbete yazılan Proxmox parolalarının değiştirilmesi | ⬜ | **Sen** |

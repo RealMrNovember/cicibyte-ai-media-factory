@@ -405,7 +405,7 @@ async function ready(el) {
   const [data, approved, pub] = await Promise.all([api("/api/jobs?status=needs_review&limit=100"), api("/api/jobs?status=approved&limit=100"),
     Promise.all(["uploading", "scheduled", "published"].map((x) => api(`/api/jobs?status=${x}&limit=100`)))]);
   const published = pub.flatMap((r) => r.items);
-  await loadInstagram();
+  await Promise.all([loadInstagram(), loadTiktok()]);
   const byJob = Object.fromEntries([...data.items, ...approved.items, ...published].map((j) => [String(j.id), j]));
   const card = (j, actions) => `<div class="card video-card"><video controls preload="none" poster="/api/jobs/${j.id}/poster" src="/api/jobs/${j.id}/video"></video>
       <h3>${esc(j.title || "")}</h3><div class="muted small">#${j.id} · ${esc(j.language)} · ${j.duration_s ?? "?"}s</div>
@@ -422,6 +422,7 @@ async function ready(el) {
   });
   on("[data-pub]", "click", (e) => publishDialog(e.target.dataset.pub, byJob[e.target.dataset.pub]));
   on("[data-igman]", "click", (e) => manualInstagram(e.target.dataset.igman));
+  on("[data-ttman]", "click", (e) => manualTiktok(e.target.dataset.ttman, !!e.target.dataset.draft));
   on("[data-qc]", "click", (e) => {
     const j = [...data.items, ...approved.items, ...published].find((x) => String(x.id) === e.currentTarget.dataset.qc);
     if (!j || !j.qc) return;
@@ -567,8 +568,8 @@ async function settings(el) {
   const pRows = prov.items.map((p) => `<tr><td><b>${esc(p.name)}</b><div class="muted small">${esc(p.base_url)}</div></td>
       <td>${p.locality}</td><td>${p.has_api_key ? "🔑" : "—"}</td><td><button class="btn" data-test="${p.id}">${t("test")}</button></td></tr>`).join("");
   const rRows = routes.items.map((r) => `<tr><td><b>${esc(r.task)}</b></td><td class="small">${r.steps.map((s) => esc(s.model)).join(" → ")}</td><td class="small muted">${r.rounds}× / ${r.retry_delay_s}s</td></tr>`).join("");
-  const [yt, ig, upd, cr, sk] = await Promise.all([youtubeCard(), instagramCard(), updatesCard(), creditCard(), stockKeyCard()]);
-  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · Reddit</p>${serverCard()}${upd}${yt}${ig}${cr}${sk}${backupCard()}
+  const [yt, ig, tk, upd, cr, sk] = await Promise.all([youtubeCard(), instagramCard(), tiktokCard(), updatesCard(), creditCard(), stockKeyCard()]);
+  el.innerHTML = `<h1>${t("settings")}</h1><p class="sub">AI · YouTube · Instagram · TikTok · Reddit</p>${serverCard()}${upd}${yt}${ig}${tk}${cr}${sk}${backupCard()}
     <div class="card" style="margin-bottom:16px"><h3>${t("providers")}</h3>
       ${pRows ? `<table>${pRows}</table>` : `<p class="muted">${t("noData")}</p>`}
       <form id="prov" class="grid g4" style="align-items:end;margin-top:12px">
@@ -590,6 +591,7 @@ async function settings(el) {
   bindServerCard();
   bindYoutubeCard();
   bindInstagramCard();
+  bindTiktokCard();
   bindCreditCard();
   bindStockKeyCard();
   bindUpdatesCard();

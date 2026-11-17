@@ -37,7 +37,7 @@ class PublishParams(BaseModel):
     count: int = Field(default=1, ge=1, le=10)
     privacy: Literal["public", "unlisted", "private"] = "public"
     language: Literal["en", "tr"] | None = None
-    platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    platforms: list[Literal["youtube", "instagram", "tiktok"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=3)
     concept_id: int | None = None  # follow a concept: its videos, channel, platforms and visibility
 
 
@@ -53,7 +53,7 @@ class AutopilotParams(BaseModel):
     music: MusicSettings = Field(default_factory=MusicSettings)
     publish: bool = True
     privacy: Literal["public", "unlisted", "private"] = "public"
-    platforms: list[Literal["youtube", "instagram"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=2)
+    platforms: list[Literal["youtube", "instagram", "tiktok"]] = Field(default_factory=lambda: ["youtube"], min_length=1, max_length=3)
     concept_id: int | None = None  # follow a concept: its language, topic, voice, look, channel and platforms
 
 

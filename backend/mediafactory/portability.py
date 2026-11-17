@@ -94,6 +94,14 @@ def export_settings(db: Session, *, password: str | None) -> dict:
     if (acc := get_account(db)) and (tok := _safe_decrypt(acc.get("token_enc"))) is not None:
         data["instagram"] = {k: acc.get(k) for k in ("user_id", "username", "account_type", "expires_at")}
         secrets["instagram_token"] = tok
+    from mediafactory.tiktok import publish as ttp
+
+    if app := ttp.get_app(db):
+        data["tiktok_app"] = {"client_key": app["client_key"]}
+        secrets["tiktok_client_secret"] = app["client_secret"]
+    if (acc := ttp.get_account(db)) and (rt := _safe_decrypt(acc.get("refresh_enc"))) is not None:
+        data["tiktok"] = {k: acc.get(k) for k in ("open_id", "display_name", "avatar", "scope", "mode", "privacy_level")}
+        secrets["tiktok_refresh_token"] = rt
     out = {"format": FORMAT, "version": __version__, "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
            "data": data, "secrets": None}  # fmt: skip
     if password:
@@ -211,5 +219,18 @@ def import_settings(db: Session, payload: dict, *, password: str | None) -> dict
         save_account(db, sec["instagram_token"], info={k: ig.get(k) for k in ("user_id", "username", "account_type")},
                      expires_at=expires)  # fmt: skip
         counts["instagram"] = 1
+    from mediafactory.tiktok import publish as ttp
+
+    if (data.get("tiktok_app") or {}).get("client_key") and sec.get("tiktok_client_secret"):
+        ttp.set_app(db, data["tiktok_app"]["client_key"], sec["tiktok_client_secret"])
+    tk = data.get("tiktok") or {}
+    if tk.get("open_id") and sec.get("tiktok_refresh_token"):
+        # the access token is not carried: it is refreshed on first use (expiry set in the past)
+        ttp.save_tokens(db, {"access_token": "-", "refresh_token": sec["tiktok_refresh_token"], "expires_in": -1,
+                             "scope": tk.get("scope")}, info=tk)  # fmt: skip
+        acc = ttp.get_account(db)
+        if tk.get("mode") == "direct" and tk.get("privacy_level"):
+            ttp._store(db, {**acc, "mode": "direct", "privacy_level": tk["privacy_level"]})
+        counts["tiktok"] = 1
     db.flush()
     return counts

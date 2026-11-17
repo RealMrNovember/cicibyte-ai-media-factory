@@ -14,6 +14,7 @@ from mediafactory.core.crypto import decrypt, encrypt
 from mediafactory.db.models import ProductionJob, SystemSetting
 from mediafactory.instagram import client as ig
 from mediafactory.instagram.client import InstagramError
+from mediafactory.publishing import next_stage_after
 from mediafactory.queue.jobs import enqueue_stage
 from mediafactory.queue.registry import StageContext, StageOutcome, stage_handler
 
@@ -105,16 +106,15 @@ def queue_instagram(db: Session, job: ProductionJob, *, publish_at: datetime | N
 
 
 def after_youtube_stage(job: ProductionJob) -> tuple[str, str] | None:
-    """The next stage for the YouTube handler: Instagram, when the same publish asked for both."""
-    ins = (job.payload or {}).get("instagram") or {}
-    return (STAGE, "io") if ins.get("state") == "queued" and ins.get("after_youtube") else None
+    """The next stage for the YouTube handler: Instagram (or TikTok) when the same publish asked for more."""
+    return next_stage_after(job, "youtube")
 
 
 def _status_after(job: ProductionJob, *, ok: bool) -> str:
     yt = ((job.payload or {}).get("youtube") or {}).get("state")
     if yt in ("published", "scheduled"):
         return yt
-    if ok:
+    if ok or ((job.payload or {}).get("tiktok") or {}).get("state") in ("inbox", "published", "manual"):
         return "published"
     prev = ((job.payload or {}).get("instagram") or {}).get("prev_status")
     return prev if prev in ("needs_review", "approved") else "failed"
@@ -158,7 +158,8 @@ def upload_stage(ctx: StageContext) -> StageOutcome:
             return StageOutcome(next_status=job.status)
         _set(job, state="failed", error=str(exc)[:300])
         ctx.log(f"not published on Instagram: {exc}")
-        return StageOutcome(next_status=_status_after(job, ok=False))
+        return StageOutcome(next_status=_status_after(job, ok=False), next_stage=next_stage_after(job, "instagram"))
     _set(job, state="published", id=media_id, url=url, error=None)
     ctx.log(f"done: {url}")
-    return StageOutcome(next_status=_status_after(job, ok=True), outputs={"instagram_id": media_id, "url": url})
+    return StageOutcome(next_status=_status_after(job, ok=True), outputs={"instagram_id": media_id, "url": url},
+                        next_stage=next_stage_after(job, "instagram"))  # fmt: skip

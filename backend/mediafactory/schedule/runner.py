@@ -61,7 +61,7 @@ def run_publish(db: Session, schedule: Schedule) -> str:
     for job in candidates:
         if sent >= max(1, min(10, int(p.get("count", 1)))):
             break
-        if (job.payload or {}).get("youtube", {}).get("id") or (job.payload or {}).get("instagram") or (
+        if (job.payload or {}).get("youtube", {}).get("id") or (job.payload or {}).get("instagram") or (job.payload or {}).get("tiktok") or (
             p.get("language") and job.language != p["language"]
         ):
             continue
@@ -193,6 +193,15 @@ class Scheduler(threading.Thread):
                 db.commit()
             except InstagramError as exc:
                 log.warning("Instagram token refresh failed: %s", exc)
+        from mediafactory.tiktok.client import TikTokError
+        from mediafactory.tiktok.publish import keep_alive
+
+        with self.factory() as db:
+            try:
+                keep_alive(db)
+                db.commit()
+            except TikTokError as exc:
+                log.warning("TikTok token refresh failed: %s", exc)
 
     def run(self) -> None:
         log.info("scheduler started (every %ss)", self.interval_s)
